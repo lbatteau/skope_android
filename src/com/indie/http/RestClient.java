@@ -20,8 +20,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import android.util.Log;
+
 public class RestClient {
 
+	private static final String TAG = "RestClient";
+	
 	public enum RequestMethod {
 	    GET,
 	    POST
@@ -125,7 +129,7 @@ public class RestClient {
         HttpClient client = new DefaultHttpClient();
 
         HttpResponse httpResponse;
-
+        
         try {
             httpResponse = client.execute(request);
             responseCode = httpResponse.getStatusLine().getStatusCode();
@@ -144,10 +148,10 @@ public class RestClient {
 
         } catch (ClientProtocolException e)  {
             client.getConnectionManager().shutdown();
-            e.printStackTrace();
+            Log.e(TAG, e.toString());
         } catch (IOException e) {
             client.getConnectionManager().shutdown();
-            e.printStackTrace();
+            Log.e(TAG, e.toString());
         }
     }
 
