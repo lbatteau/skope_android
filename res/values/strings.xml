@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Skope</string>
-    <string name="main_no_items">Nothing found in your vicinity!</string>
+    <string name="main_no_items">Nothing found</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="ok">OK</string>
+    <string name="quit">Quit</string>
+    <string name="really_quit">Quit</string>
+    <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
+    <string name="no_location_title">Can\&apos;t locate...</string>
+    <string name="no_result_message">There seems to be a problem with connecting to the server.</string>
+    <string name="no_result_title">No server response...</string>
+    <string name="menu_user">User</string>
+    <string name="menu_range">Skope range</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_phone_number">Phone number</string>
+    <string name="location_service_stopped">Skope location service stopped</string>
+    <string name="location_service_started">Skope service running...</string>
+    <string name="location_service_label">Skope</string>
+    <string name="button_label_listview">List</string>
+    <string name="button_label_mapview">Map</string>
 </resources>

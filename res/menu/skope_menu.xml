@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/user"
+          android:title="@string/menu_user" />
+    <item android:id="@+id/range"
+          android:icon="@drawable/icon"
+          android:title="@string/menu_range" />
+    <item android:id="@+id/refresh"
+          android:icon="@drawable/icon"
+          android:title="@string/menu_refresh" />
+    <item android:id="@+id/phone_number"
+          android:icon="@drawable/icon"
+          android:title="@string/menu_phone_number" />
+    <item android:id="@+id/quit" android:title="Quit"></item>
+</menu>

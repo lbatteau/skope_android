@@ -1,4 +1,4 @@
-package com.indie.http;
+package com.indie.skope.http;
 
 import java.io.IOException;
 import java.io.InputStream;

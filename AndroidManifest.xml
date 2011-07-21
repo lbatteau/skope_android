@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.indie.skope"
       android:versionCode="1"
-      android:versionName="1.0">
+      android:versionName="1.0" package="com.indie.skope">
+      
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true" android:name=".application.SkopeApplication">
 
+	    <uses-library android:name="com.google.android.maps" />
 
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
-        <activity android:name=".SkopeActivity"
-                  android:label="@string/app_name">
+        <activity android:label="@string/app_name" android:name=".ui.SkopeListActivity"
+        			android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <service android:name=".service.LocationService"> </service>
+        <activity android:name=".ui.SplashScreen">
+        </activity>
+        <activity android:name=".ui.SkopeMapActivity" android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar">
+        </activity>
+	
     </application>
     
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
