@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.application;
+package com.skope.skope.application;
 
 import android.app.Application;
 
@@ -28,7 +28,8 @@ public class SkopeApplication extends Application {
     public static final String LOG_TAG = "SkopeApplication";
     
     /** Application wide constants **/
-	public static final String PREFS_USER = "USER";
+	public static final String PREFS_USERNAME = "USERNAME";
+	public static final String PREFS_PASSWORD = "PASSWORD";
 	public static final String PREFS_RANGE = "RANGE";
     
     /** Lazy loaded ServiceQueue. **/

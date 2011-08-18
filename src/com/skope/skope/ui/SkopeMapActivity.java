@@ -1,47 +1,31 @@
-/*
- * Copyright 2010 Mark Brady
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.skope.skope.ui;
 
-package com.indie.skope.ui;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.security.InvalidParameterException;
-
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.indie.skope.application.Cache;
-import com.indie.skope.application.ServiceQueue;
-import com.indie.skope.application.SkopeApplication;
-import com.indie.skope.application.UiQueue;
-import com.indie.skope.utils.Type;
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
+import com.skope.skope.R;
+import com.skope.skope.application.Cache;
+import com.skope.skope.application.ServiceQueue;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.UiQueue;
+import com.skope.skope.utils.Type;
 
-/***
- * BaseClass to be extended by all Activities that use the framework. This class
- * caches Application objects (ServiceQueue, UiQueue and Cache) and handles
- * incoming messages from UiQueue. The code pattern for receiving messages
- * involves overriding the post() method, but calling super() if your activity
- * does not implement the given message. The same goes with onCreateDialog(),
- * onResume() and onPause() which can also be overridden in your Activity.
- */
-public class BaseActivity extends Activity {
-
+public class SkopeMapActivity extends MapActivity {
+	
     /** Pointer to the ServiceQueue. **/
     private ServiceQueue mServiceQueue;
     /** Pointer to the Application Cache. **/
@@ -53,22 +37,45 @@ public class BaseActivity extends Activity {
      * used in the onCreateDialog() method.
      */
     private Bundle mDialogBundle;
+    
+    SkopeItemizedOverlay mItemizedOverlay;
+    List<Overlay> mMapOverlays;
 
-    /***
-     * Create the BaseActivity and cache Application objects: ServiceQueue,
-     * UiQueue and Cache.
-     *
-     * @param savedInstanceState Unused state object.
-     */
-    @Override
-    protected void onCreate(final Bundle savedInstanceState) {
+	@Override
+	protected boolean isRouteDisplayed() {
+	    return false;
+	}
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
         SkopeApplication application = (SkopeApplication) getApplication();
         mServiceQueue = application.getServiceQueue();
         mUiQueue = application.getUiQueue();
         mCache = application.getCache();
-        super.onCreate(savedInstanceState);
-    }
 
+        super.onCreate(savedInstanceState);
+	    setContentView(R.layout.map);
+
+	    MapView mapView = (MapView) findViewById(R.id.mapview);
+	    mapView.setBuiltInZoomControls(true);
+	    
+	    mMapOverlays = mapView.getOverlays();
+	    
+        MapController mapController = mapView.getController();
+        Location location = mCache.getCurrentLocation();
+ 
+        GeoPoint center = new GeoPoint((int) (location.getLatitude() * 1E6),
+        							   (int) (location.getLongitude() * 1E6));
+ 
+        mapController.setCenter(center);
+        mapController.setZoom(15); 
+        
+        populateItemizedOverlays();
+
+        mapView.invalidate();
+        
+	}	
+	
     /***
      * Subscribe the Activity to the UiQueue.
      */
@@ -131,9 +138,8 @@ public class BaseActivity extends Activity {
      */
     public void post(final Type type, final Bundle bundle) {
         switch (type) {
-        case SHOW_DIALOG:
-            mDialogBundle = bundle;
-            showDialog(Type.DIALOG_STATUS.ordinal());
+        case FIND_OBJECTS_OF_INTEREST_FINISHED:
+        	populateItemizedOverlays();
             break;
 
         default:
@@ -141,33 +147,20 @@ public class BaseActivity extends Activity {
             break;
         }
     }
+    
+    private void populateItemizedOverlays() {
+    	ArrayList<ObjectOfInterest> ooiList = getCache().getObjectOfInterestList();
+    	for (ObjectOfInterest ooi: ooiList) {
+    	    //Drawable drawable = this.getResources().getDrawable(R.drawable.icon);
+    		Drawable drawable = new BitmapDrawable(ooi.getThumbnail());
+    		mItemizedOverlay = new SkopeItemizedOverlay(drawable, this);
+        	
+        	GeoPoint point = new GeoPoint((int)(ooi.getLatitude() * 1e6), (int)(ooi.getLongitude() * 1e6));
+        	OverlayItem overlayitem = new OverlayItem(point, ooi.getUserName(), ooi.getUserEmail());
+        	mItemizedOverlay.addOverlay(overlayitem);
 
-    /***
-     * Overridable method for handling any onCreateDialog() types not caught by
-     * the Activities own onCreateDialog() method. The code pattern allows more
-     * generic dialogs to be handled here (show battery warning dialog, etc).
-     *
-     * @param id
-     *            Dialog Identifier.
-     * @return Newly create Dialog.
-     */
-    @Override
-    protected final Dialog onCreateDialog(final int id) {
-        switch (Type.getType(id)) {
-        case DIALOG_STATUS:
-            String text = "Cached dialog bundle is NULL";
-            if (mDialogBundle != null) {
-                text = mDialogBundle.getString("TEXT");
-                mDialogBundle = null;
-            }
-
-            return new AlertDialog.Builder(this).setMessage(text).create();
-
-        default:
-            throw new InvalidParameterException("BaseActivity."
-                    + "onCreateDialog() Unknown dialog type["
-                    + Type.getType(id) + "]");
-        }
+        	mMapOverlays.add(mItemizedOverlay);
+    	}
     }
 
     /**
@@ -187,4 +180,6 @@ public class BaseActivity extends Activity {
     public final Cache getCache() {
         return mCache;
     }
+	
+
 }

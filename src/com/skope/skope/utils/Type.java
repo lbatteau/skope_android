@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.utils;
+package com.skope.skope.utils;
 
 /***
  * Defines all the message types used in the framework.
@@ -29,7 +29,7 @@ public enum Type {
     /***
      * Service to UI messages.
      */
-    FIND_OBJECTS_OF_INTEREST_START, FIND_OBJECTS_OF_INTEREST_FINISHED, UPDATE_LONG_TASK, UPDATE_QUEUE, SHOW_DIALOG,
+    FIND_OBJECTS_OF_INTEREST_START, FIND_OBJECTS_OF_INTEREST_FINISHED, UNDETERMINED_LOCATION, UPDATE_LONG_TASK, UPDATE_QUEUE, SHOW_DIALOG,
 
     /***
      * UI Dialogs.

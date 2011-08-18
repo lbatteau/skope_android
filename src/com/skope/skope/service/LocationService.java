@@ -1,4 +1,4 @@
-package com.indie.skope.service;
+package com.skope.skope.service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -16,13 +16,13 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
-import com.indie.skope.R;
-import com.indie.skope.application.Cache;
-import com.indie.skope.application.ServiceQueue;
-import com.indie.skope.application.SkopeApplication;
-import com.indie.skope.application.UiQueue;
-import com.indie.skope.ui.SkopeListActivity;
-import com.indie.skope.utils.Type;
+import com.skope.skope.R;
+import com.skope.skope.application.Cache;
+import com.skope.skope.application.ServiceQueue;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.UiQueue;
+import com.skope.skope.ui.SkopeListActivity;
+import com.skope.skope.utils.Type;
 
 public class LocationService extends Service implements LocationListener  {
 	
@@ -170,7 +170,7 @@ public class LocationService extends Service implements LocationListener  {
     	
     	m_locationManager.removeUpdates(this);
 
-    	Log.i(SkopeApplication.LOG_TAG, "MyService.MyBinder.onDestroy()");
+    	Log.i(SkopeApplication.LOG_TAG, "LocationService.MyBinder.onDestroy()");
         mServiceQueue.registerServiceHandler(null);
         super.onDestroy();
     }
@@ -182,7 +182,8 @@ public class LocationService extends Service implements LocationListener  {
 			Bundle bundle = new Bundle();
             bundle.putDouble(LATITUDE, location.getLatitude());
             bundle.putDouble(LONGITUDE, location.getLongitude());
-	        mServiceQueue.postToService(Type.LOCATION_CHANGED, bundle);
+	        mServiceQueue.postToService(Type.FIND_OBJECTS_OF_INTEREST, bundle);
+	        mUiQueue.postToUi(Type.LOCATION_CHANGED, null, true);
 
 		}
 	}
@@ -212,12 +213,16 @@ public class LocationService extends Service implements LocationListener  {
         CharSequence text = getText(R.string.location_service_started);
 
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(R.drawable.icon, text,
+        Notification notification = new Notification(R.drawable.ic_launcher, text,
                 System.currentTimeMillis());
+        
+        notification.flags = Notification.FLAG_ONGOING_EVENT;
 
         // The PendingIntent to launch our activity if the user selects this notification
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, SkopeListActivity.class), 0);
+        Intent intent = new Intent(this, SkopeListActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         // Set the info for the views that show in the notification panel.
         notification.setLatestEventInfo(this, getText(R.string.location_service_label),

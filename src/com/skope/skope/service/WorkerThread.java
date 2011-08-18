@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.service;
+package com.skope.skope.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,15 +29,15 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
-import com.indie.skope.application.Cache;
-import com.indie.skope.application.SkopeApplication;
-import com.indie.skope.application.UiQueue;
-import com.indie.skope.http.BMPFromURL;
-import com.indie.skope.http.CustomHttpClient;
-import com.indie.skope.http.CustomHttpClient.RequestMethod;
-import com.indie.skope.ui.ObjectOfInterest;
-import com.indie.skope.utils.NotificationUtils;
-import com.indie.skope.utils.Type;
+import com.skope.skope.application.Cache;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.UiQueue;
+import com.skope.skope.http.BMPFromURL;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
+import com.skope.skope.ui.ObjectOfInterest;
+import com.skope.skope.utils.NotificationUtils;
+import com.skope.skope.utils.Type;
 
 /***
  * Used by the Service to perform long running tasks (e.g. network
@@ -186,6 +186,15 @@ public class WorkerThread extends Thread {
 		// Check if bundle is present
     	if (bundle == null) {
     		Location location = mCache.getCurrentLocation();
+    		
+    		// If the current location is not known, post message
+    		if (location == null) {
+    	        mCache.setStateFindObjectsOfInterest("Finished");
+    	        mUiQueue.postToUi(Type.UNDETERMINED_LOCATION, null, true);
+    	        return;
+    		}
+    		
+    		// Location known, extract lat/long
     		lat = location.getLatitude();
     		lng = location.getLongitude();
     	} else {
@@ -193,21 +202,29 @@ public class WorkerThread extends Thread {
     		lng = bundle.getDouble(LocationService.LONGITUDE);
     	}
 		
-		String user = mCache.getPreferences().getString(SkopeApplication.PREFS_USER, "lukas");		
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
 		int range = mCache.getPreferences().getInt(SkopeApplication.PREFS_RANGE, 100);
 		String serviceUrl = mCache.getProperty("skope_service_url");
 		String mediaUrl = mCache.getProperty("media_url");
 		
 		// Set up HTTP client
-        CustomHttpClient client = new CustomHttpClient(serviceUrl);
-        client.AddParam("username", user);
-        client.AddParam("range", Integer.toString(range));
-        client.AddParam("lat", String.valueOf(lat));
-        client.AddParam("lng", String.valueOf(lng));
+        CustomHttpClient client = new CustomHttpClient(m_locationService, serviceUrl);
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        // We need to add the username to our get parameters, even though we
+        // just now supplied it as our basic authentication credentials.
+        // The credentials are processed by the HTTP server, so our
+        // service would have to extract them from the request. This is easier. 
+        client.addParam("username", username);
+        client.addParam("range", Integer.toString(range));
+        client.addParam("lat", String.valueOf(lat));
+        client.addParam("lng", String.valueOf(lng));
          
         // Send HTTP request to web service
         try {
-            client.Execute(RequestMethod.GET);
+            client.execute(RequestMethod.GET);
         } catch (Exception e) {
         	// Most exceptions already handled by client
             e.printStackTrace();
@@ -253,13 +270,13 @@ public class WorkerThread extends Thread {
         mCache.setStateFindObjectsOfInterest("Finished");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_FINISHED, null, true);
 
-        if (bundle != null) {
+        /*if (bundle != null) {
             Bundle outBundle = new Bundle();
             outBundle.putString("TEXT",
                     "Searching objects of interest finished. Called from ["
                             + bundle.getString("TEXT") + "]");
             mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
-        }
+        }*/
     }
 
     /***

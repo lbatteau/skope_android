@@ -20,4 +20,7 @@
     <string name="location_service_label">Skope</string>
     <string name="button_label_listview">List</string>
     <string name="button_label_mapview">Map</string>
+    <string name="login_hint_user">User</string>
+    <string name="login_hint_password">Password</string>
+    <string name="mystore_password">g3h31m</string>
 </resources>

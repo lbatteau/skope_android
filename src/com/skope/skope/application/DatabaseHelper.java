@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.application;
+package com.skope.skope.application;
 
 /***
  * Application Database Helper class for storing information permanently.

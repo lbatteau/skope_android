@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.indie.skope.utils;
+package com.skope.skope.utils;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -22,8 +22,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
 
-import com.indie.skope.R;
-import com.indie.skope.ui.SkopeListActivity;
+import com.skope.skope.R;
+import com.skope.skope.ui.SkopeListActivity;
 
 /***
  * Utility for showing a custom Android Notification.

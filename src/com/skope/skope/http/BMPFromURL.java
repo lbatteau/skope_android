@@ -1,4 +1,4 @@
-package com.indie.skope.http;
+package com.skope.skope.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 public class BMPFromURL {
-	private Bitmap bitmap;
+	private Bitmap bitmap;	
 
 	public BMPFromURL(String imageURL) {
 		URL url = null;
@@ -25,7 +25,8 @@ public class BMPFromURL {
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream input = connection.getInputStream();
-			bitmap = BitmapFactory.decodeStream(input);
+			Bitmap bmp = BitmapFactory.decodeStream(input);
+			bitmap = Bitmap.createScaledBitmap(bmp, 80, 80, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.application;
+package com.skope.skope.application;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
-import com.indie.skope.service.LocationService;
-import com.indie.skope.utils.Type;
+import com.skope.skope.service.LocationService;
+import com.skope.skope.utils.Type;
 
 /***
  * Queue for all messages being sent from the UI to the Service. A queue is

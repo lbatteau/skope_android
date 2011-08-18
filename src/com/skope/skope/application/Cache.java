@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.indie.skope.application;
+package com.skope.skope.application;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +28,7 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.util.Log;
 
-import com.indie.skope.ui.ObjectOfInterest;
+import com.skope.skope.ui.ObjectOfInterest;
 
 /***
  * Store application state information either permanently (in a properties

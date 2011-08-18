@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<ImageView android:layout_width="fill_parent" android:src="@drawable/skope" 
+		android:layout_height="wrap_content" android:layout_centerHorizontal="true"
+		android:layout_marginTop="40sp" android:layout_marginBottom="20sp"></ImageView>
+	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal" android:layout_width="fill_parent"
+		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
+		android:layout_height="wrap_content">
+
+		<EditText android:id="@+id/txt_username"
+	        android:layout_width="0dip"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="1"
+	        android:inputType="textNoSuggestions"
+	        android:imeOptions="actionNext|flagNoExtractUi"
+	        android:maxLines="1"
+	        android:maxLength="20"
+	        android:hint="@string/login_hint_user"/>	
+	</LinearLayout>
+
+
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal" android:layout_width="fill_parent"
+		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
+		android:layout_height="wrap_content">
+
+		<EditText android:id="@+id/txt_password"
+	        android:layout_width="0dip"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="1"
+	        android:inputType="textPassword"
+	        android:imeOptions="actionNext|flagNoExtractUi"
+	        android:maxLines="1"
+	        android:maxLength="20"
+	        android:hint="@string/login_hint_password"/>
+	</LinearLayout>
+
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal" android:layout_width="fill_parent"
+		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
+		android:layout_height="wrap_content">
+
+		<Button android:id="@+id/login_button" android:text="Login"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_weight="1"/>
+	
+		<Button android:id="@+id/signup_button" android:text="Sign up"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_weight="1"/>
+	</LinearLayout>
+</LinearLayout>

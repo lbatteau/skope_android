@@ -7,7 +7,7 @@
  * 
  * Copyright notice
  */
-package com.indie.skope.ui;
+package com.skope.skope.ui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Process;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.view.LayoutInflater;
@@ -30,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -38,10 +38,11 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.indie.skope.R;
-import com.indie.skope.application.SkopeApplication;
-import com.indie.skope.utils.Type;
+import com.skope.skope.R;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.utils.Type;
 
 /**
  * Class description goes here.
@@ -64,6 +65,37 @@ public class SkopeListActivity extends BaseActivity {
     
     private ProgressBar mProgressBar;
     
+	// Create an anonymous implementation of OnClickListener
+	private OnLongClickListener mLongClickListener = new OnLongClickListener() {
+		@Override
+	    public boolean onLongClick(View v) {
+	    	final CharSequence[] items = {"List", "Map"};
+
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(SkopeListActivity.this);
+	    	//builder.setTitle("Pick a color");
+	    	builder.setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
+	    	    public void onClick(DialogInterface dialog, int item) {
+	    	    	switch(item) {
+	    	    	case 0:
+	    	    		break;
+	    	    	case 1:
+	    	    		Intent i = new Intent();
+		            	i.setClassName("com.skope.skope",
+		            				   "com.skope.skope.ui.SkopeMapActivity");
+		            	i.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+		            	startActivity(i);
+		            	finish();
+	    	    	}
+	    	    	
+	    	    }
+	    	});
+	    	AlertDialog alert = builder.create();
+	    	alert.show();
+	    	
+	    	return true;
+	    }
+	};
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
@@ -91,30 +123,38 @@ public class SkopeListActivity extends BaseActivity {
     		@Override
     		public void onClick(final View view) {
     			Intent i = new Intent();
-            	i.setClassName("com.indie.skope",
-            				   "com.indie.skope.ui.SkopeMapActivity");
+            	i.setClassName("com.skope.skope",
+            				   "com.skope.skope.ui.SkopeMapActivity");
             	startActivity(i);
 	        }
-    	});    	
+    	});
+    	
+    	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
         
     	// Set up the list adapter
-        mObjectOfInterestList = getCache().getObjectOfInterestList();
+        mObjectOfInterestList = new ArrayList<ObjectOfInterest>();
         mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(SkopeListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
-        listView.setAdapter(mObjectOfInterestListAdapter);            
+        listView.setAdapter(mObjectOfInterestListAdapter);         
         
-        mPreferences = this.getSharedPreferences("skopePreferences", MODE_WORLD_READABLE);
-        SharedPreferences.Editor prefsEditor = mPreferences.edit();
-        prefsEditor.putString(SkopeApplication.PREFS_USER, "lukas");
-        prefsEditor.putInt(SkopeApplication.PREFS_RANGE, 1000);
-        prefsEditor.commit();   
-        
+        updateListFromCache();
+
         if (!getServiceQueue().hasServiceStarted()) {
-            showSplashScreen();
+            //showSplashScreen();
+            getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
         }
-        
-        getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
     }
+
+	private void updateListFromCache() {
+		// Update list from cache
+        ArrayList<ObjectOfInterest> cacheList = getCache().getObjectOfInterestList();
+        if (cacheList != null && !cacheList.isEmpty()) {
+        	// Cache contains items
+        	mObjectOfInterestList.clear();
+        	mObjectOfInterestList.addAll(cacheList);
+        	mObjectOfInterestListAdapter.notifyDataSetChanged();
+        }
+	}
     
     /*
     
@@ -154,9 +194,18 @@ public class SkopeListActivity extends BaseActivity {
                 break;
 
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
-            	mObjectOfInterestListAdapter.notifyDataSetChanged();
-            	removeSplashScreen();
+            	updateListFromCache();
+            	//removeSplashScreen();
             	mProgressBar.setVisibility(ProgressBar.GONE);
+            	break;
+            	
+            case UNDETERMINED_LOCATION:
+            	mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            	Toast.makeText(this, "Finding your location...", Toast.LENGTH_LONG).show();
+            	break;
+            	
+            case LOCATION_CHANGED:
+            	Toast.makeText(this, "Location updated", Toast.LENGTH_LONG).show();
             	break;
 
             default:
@@ -262,7 +311,7 @@ public class SkopeListActivity extends BaseActivity {
 	    		public void onClick(DialogInterface dialog, int whichButton) {
 	    		  Editable value = userInput.getText();
 	    		  SharedPreferences.Editor prefsEditor = mPreferences.edit();
-	    	        prefsEditor.putString(SkopeApplication.PREFS_USER, value.toString());
+	    	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, value.toString());
 	    	        prefsEditor.commit();
 	    		  }
 	    		});

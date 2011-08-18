@@ -1,12 +1,12 @@
-package com.indie.skope.ui;
+package com.skope.skope.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Window;
 import android.widget.ProgressBar;
 
-import com.indie.skope.R;
-import com.indie.skope.utils.Type;
+import com.skope.skope.R;
+import com.skope.skope.utils.Type;
 
 public class SplashScreen extends BaseActivity {
 	
@@ -49,8 +49,8 @@ public class SplashScreen extends BaseActivity {
 
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
             	Intent i = new Intent();
-            	i.setClassName("com.indie.skope",
-            				   "com.indie.skope.ui.SkopeListActivity");
+            	i.setClassName("com.skope.skope",
+            				   "com.skope.skope.ui.SkopeListActivity");
             	startActivity(i);
             	break;
 
