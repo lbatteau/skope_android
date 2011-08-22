@@ -1,6 +1,9 @@
 package com.skope.skope.ui;
 
+import java.sql.Timestamp;
+
 import android.graphics.Bitmap;
+import android.location.Location;
 
 public class ObjectOfInterest {
 	public static final int SEX_MALE = 0;
@@ -12,10 +15,29 @@ public class ObjectOfInterest {
 	private String status;
 	private int sex;
 	private Bitmap thumbnail;
-	private double latitude;
-	private double longitude;
-	private int distance;
-
+	private Location location;
+	private Timestamp locationTimestamp;
+	private float distance;
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public String createReadableDistance() {
+		int distanceReadable;
+		String unit;
+		
+		if (this.distance > 1000) {
+			distanceReadable = (int) this.distance/1000;
+			unit = "km";
+		} else {
+			distanceReadable = (int) this.distance;
+			unit = "m";
+		}
+		
+		return "" + String.valueOf(distanceReadable) + " " + unit; 
+	}
+	
 	public String getUserName() {
 		return userName;
 	}
@@ -64,28 +86,28 @@ public class ObjectOfInterest {
 		this.sex = sex;
 	}
 
-	public double getLatitude() {
-		return latitude;
+	public Location getLocation() {
+		return location;
 	}
 
-	public void setLatitude(double latitude) {
-		this.latitude = latitude;
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 
-	public double getLongitude() {
-		return longitude;
-	}
-
-	public void setLongitude(double longitude) {
-		this.longitude = longitude;
-	}
-
-	public int getDistance() {
+	public float getDistance() {
 		return distance;
 	}
 
-	public void setDistance(int distance) {
+	public void setDistance(float distance) {
 		this.distance = distance;
+	}
+
+	public Timestamp getLocationTimestamp() {
+		return locationTimestamp;
+	}
+
+	public void setLocationTimestamp(Timestamp locationTimestamp) {
+		this.locationTimestamp = locationTimestamp;
 	}
 	
 }

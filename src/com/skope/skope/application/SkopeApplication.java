@@ -17,6 +17,9 @@
 package com.skope.skope.application;
 
 import android.app.Application;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 
 /***
  * Application class persists for the duration of the JRE, and is used to store
@@ -31,6 +34,11 @@ public class SkopeApplication extends Application {
 	public static final String PREFS_USERNAME = "USERNAME";
 	public static final String PREFS_PASSWORD = "PASSWORD";
 	public static final String PREFS_RANGE = "RANGE";
+
+	/** Skope server response codes **/
+	public static final int RESPONSECODE_OK = 0;
+	public static final int RESPONSECODE_UPDATE = 1;
+	public static final int RESPONSECODE_PAYMENTDUE = 2;	
     
     /** Lazy loaded ServiceQueue. **/
     private ServiceQueue mServiceQueue;
@@ -98,4 +106,5 @@ public class SkopeApplication extends Application {
         //mDb = null;
         super.onTerminate();
     }
+    
 }

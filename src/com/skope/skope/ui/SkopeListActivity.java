@@ -10,6 +10,7 @@
 package com.skope.skope.ui;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -21,8 +22,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
-import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,7 +32,6 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -41,7 +39,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.skope.skope.R;
-import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.utils.Type;
 
 /**
@@ -205,7 +202,7 @@ public class SkopeListActivity extends BaseActivity {
             	break;
             	
             case LOCATION_CHANGED:
-            	Toast.makeText(this, "Location updated", Toast.LENGTH_LONG).show();
+            	//Toast.makeText(this, "Location updated", Toast.LENGTH_LONG).show();
             	break;
 
             default:
@@ -226,7 +223,9 @@ public class SkopeListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-                View v = convertView;
+        	String unit = "";
+        	
+            View v = convertView;
                 if (v == null) {
                     LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     v = vi.inflate(R.layout.skope_item, null);
@@ -236,13 +235,58 @@ public class SkopeListActivity extends BaseActivity {
                 if (skope != null) {
                         TextView textView = (TextView) v.findViewById(R.id.toptext);
                         TextView bottomText = (TextView) v.findViewById(R.id.bottomtext);
+                        TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
+                        TextView updatedText = (TextView) v.findViewById(R.id.updated_text);
                         ImageView icon = (ImageView) v.findViewById(R.id.icon);
                         
                         if (textView != null) {
-                              textView.setText("Name: " + skope.getUserName());                            }
+                              textView.setText(skope.getUserName());                            }
                         
                         if (bottomText != null) {
                         	bottomText.setText("Email: " + skope.getUserEmail());
+                        }
+                        
+                        if (distanceText != null) {
+                        	distanceText.setText("Distance: " + String.valueOf(skope.createReadableDistance()));
+                        }
+                        
+                        if (updatedText != null) {
+                        	Date today = new Date();
+                        	// Determine the time delta between now and the last update.
+                        	long delta = (today.getTime() - skope.getLocationTimestamp().getTime())/1000;
+                        	
+                        	// Determine unit
+                        	// More than sixty seconds?
+                        	if (delta > 60) {
+                        		// Change unit to minutes
+                        		delta = delta/60;
+                        		unit = "minute";
+                        		if (delta > 1) {
+                        			unit += "s";
+                        		}
+                        		
+                        		// More than sixty minutes?
+                            	if (delta > 60) {
+                            		// Change unit to hours
+                            		delta = delta/60;
+                            		unit = "hour";
+                            		if (delta > 1) {
+                            			unit += "s";
+                            		}
+                            		
+                            		// More than twenty four hours?
+                                	if (delta > 24) {
+                                		// Change unit to days
+                                		delta = delta/24;
+                                		unit = "day";
+                                		if (delta > 1) {
+                                			unit += "s";
+                                		}
+                                	}
+                            	}
+                        	}
+
+                        	updatedText.setText("Last update: " + String.valueOf(delta) + " " + unit + " ago");
                         }
                         
                         if (icon != null) {
@@ -301,67 +345,9 @@ public class SkopeListActivity extends BaseActivity {
 	    	getServiceQueue().stopService();
             this.finish();
             return true;
-	    case R.id.user:
-	    	final EditText userInput = new EditText(this);
-	    	
-	    	AlertDialog.Builder userBuilder = new AlertDialog.Builder(this);
-	    	userBuilder.setTitle("Set username");
-	    	userBuilder.setView(userInput);
-	    	userBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-	    		public void onClick(DialogInterface dialog, int whichButton) {
-	    		  Editable value = userInput.getText();
-	    		  SharedPreferences.Editor prefsEditor = mPreferences.edit();
-	    	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, value.toString());
-	    	        prefsEditor.commit();
-	    		  }
-	    		});
-
-	    	userBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-	    		  public void onClick(DialogInterface dialog, int whichButton) {
-	    		    // Canceled.
-	    		  }
-	    		});
-
-	    	userBuilder.show();
-	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	        return true;
-	    case R.id.range:
-	    	final EditText rangeInput = new EditText(this);
-	    	
-	    	AlertDialog.Builder rangeMenuBuilder = new AlertDialog.Builder(this);
-	    	rangeMenuBuilder.setTitle("Set range");
-	    	rangeMenuBuilder.setView(rangeInput);
-	    	rangeMenuBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-	    		public void onClick(DialogInterface dialog, int whichButton) {
-	    		  int value = Integer.valueOf(rangeInput.getText().toString());
-	    		  SharedPreferences.Editor prefsEditor = mPreferences.edit();
-	    	        prefsEditor.putInt(SkopeApplication.PREFS_RANGE, value);
-	    	        prefsEditor.commit();
-	    		  }
-	    		});
-
-	    	rangeMenuBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-	    		  public void onClick(DialogInterface dialog, int whichButton) {
-	    		    // Canceled.
-	    		  }
-	    		});
-	    	
-	    	rangeMenuBuilder.show();
-	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	    	return true;
 	    case R.id.refresh:
 	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	    	return true;
-	    case R.id.phone_number:
-	    	TelephonyManager tMgr =(TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-	    	AlertDialog.Builder phoneBuilder = new AlertDialog.Builder(this);
-	    	phoneBuilder.setMessage("Your phone number is " + tMgr.getLine1Number())
-	    	       		.setCancelable(false)
-		    	       .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-		    	           public void onClick(DialogInterface dialog, int id) {
-		    	                dialog.cancel();
-		    	           }
-		    	       }).show();	    	
+	    	return true;   	
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }

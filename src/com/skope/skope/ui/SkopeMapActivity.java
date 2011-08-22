@@ -149,13 +149,16 @@ public class SkopeMapActivity extends MapActivity {
     }
     
     private void populateItemizedOverlays() {
+    	// Clear current overlays
+    	mMapOverlays.clear();
+    	
     	ArrayList<ObjectOfInterest> ooiList = getCache().getObjectOfInterestList();
     	for (ObjectOfInterest ooi: ooiList) {
     	    //Drawable drawable = this.getResources().getDrawable(R.drawable.icon);
     		Drawable drawable = new BitmapDrawable(ooi.getThumbnail());
     		mItemizedOverlay = new SkopeItemizedOverlay(drawable, this);
         	
-        	GeoPoint point = new GeoPoint((int)(ooi.getLatitude() * 1e6), (int)(ooi.getLongitude() * 1e6));
+        	GeoPoint point = new GeoPoint((int)(ooi.getLocation().getLatitude() * 1e6), (int)(ooi.getLocation().getLongitude() * 1e6));
         	OverlayItem overlayitem = new OverlayItem(point, ooi.getUserName(), ooi.getUserEmail());
         	mItemizedOverlay.addOverlay(overlayitem);
 

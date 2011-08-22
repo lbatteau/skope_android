@@ -1,12 +1,17 @@
 package com.skope.skope.ui;
 
 import org.apache.http.HttpStatus;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -72,7 +77,7 @@ public class LoginActivity extends BaseActivity {
 		); // end of launch.setOnclickListener
 	}
 	
-	private class LoginTask extends AsyncTask<String, Void, Integer> {
+	private class LoginTask extends AsyncTask<String, Void, CustomHttpClient> {
 		private ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
 		
 		// can use UI thread here
@@ -81,11 +86,18 @@ public class LoginActivity extends BaseActivity {
 			this.dialog.show();
 		}
 		
-		protected Integer doInBackground(String... args) {
+		protected CustomHttpClient doInBackground(String... args) {
 	    	// Set up HTTP client
 	        CustomHttpClient client = new CustomHttpClient(LoginActivity.this, args[0]);
 	        client.setUseBasicAuthentication(true);
 	        client.setUsernamePassword(args[1], args[2]);
+	        try {
+	        	int versionCode = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_META_DATA).versionCode;
+				client.addParam("version_code", String.valueOf(versionCode));
+			} catch (NameNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 	         
 	        // Send HTTP request to web service
 	        try {
@@ -96,22 +108,61 @@ public class LoginActivity extends BaseActivity {
 	        }
 	        
 	        // Return server response
-	        return client.getResponseCode();
+	        return client;
 	    }
 
-	    protected void onPostExecute(Integer result) {
+	    protected void onPostExecute(CustomHttpClient client) {
 	    	this.dialog.dismiss();
 	    	
-	    	// Check response code
-	        switch(result) {
-	        case HttpStatus.SC_UNAUTHORIZED:
-	        	// Login not successful, authorization required 
-	        	Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
-	        	return;
-	        case HttpStatus.SC_REQUEST_TIMEOUT:
-	        	Toast.makeText(LoginActivity.this, "Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
-	        	return;
-	        }
+	    	// Check HTTP response code
+	    	int httpResponseCode = client.getResponseCode();
+	    	// Check for server response
+	    	if (httpResponseCode == 0) {
+	    		// No server response
+	    		Toast.makeText(LoginActivity.this, "Connection failed", Toast.LENGTH_SHORT).show(); 
+	    	} else {
+	    		// Check for error
+	    		if (httpResponseCode != HttpStatus.SC_OK) {
+	    			// Server returned error code
+			        switch(client.getResponseCode()) {
+			        case HttpStatus.SC_UNAUTHORIZED:
+			        	// Login not successful, authorization required 
+			        	Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+			        	break;
+			        case HttpStatus.SC_REQUEST_TIMEOUT:
+			        case HttpStatus.SC_BAD_GATEWAY:
+			        case HttpStatus.SC_GATEWAY_TIMEOUT:
+			        	// Connection timeout
+			        	Toast.makeText(LoginActivity.this, "Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+			        }
+			        return;
+	    			
+	    		}
+	    	}
+
+	    	// Check Skope service response code
+	        JSONObject jsonObject = null;
+	        int serviceResponseCode;
+	        try {
+	        	jsonObject = new JSONObject(client.getResponse());
+				serviceResponseCode = Integer.valueOf(jsonObject.getString("response_code"));
+			} catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				return;
+			}
+			
+			if (serviceResponseCode > SkopeApplication.RESPONSECODE_OK) {
+				switch(serviceResponseCode) {
+				case SkopeApplication.RESPONSECODE_UPDATE:
+					Toast.makeText(LoginActivity.this, "Please update", Toast.LENGTH_SHORT).show();
+					break;
+				case SkopeApplication.RESPONSECODE_PAYMENTDUE:
+					Toast.makeText(LoginActivity.this, "You have a payment due", Toast.LENGTH_SHORT).show();
+					break;
+				}			
+				return;
+			}
 	        
 	        // Login successful, store credentials
 	        SharedPreferences.Editor prefsEditor = getCache().getPreferences().edit();

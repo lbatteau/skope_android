@@ -16,6 +16,7 @@
 
 package com.skope.skope.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -175,8 +176,7 @@ public class WorkerThread extends Thread {
      *            parent service. 
      */
     private void findObjectsOfInterest(final Bundle bundle) {
-    	double lat;
-    	double lng;
+    	Location currentLocation;
     	
         mCache.setStateFindObjectsOfInterest("Searching objects of interest nearby");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_START, null, true);
@@ -185,26 +185,27 @@ public class WorkerThread extends Thread {
 		
 		// Check if bundle is present
     	if (bundle == null) {
-    		Location location = mCache.getCurrentLocation();
+    		// Bundle not present
+    		currentLocation = mCache.getCurrentLocation();
     		
     		// If the current location is not known, post message
-    		if (location == null) {
+    		if (currentLocation == null) {
     	        mCache.setStateFindObjectsOfInterest("Finished");
     	        mUiQueue.postToUi(Type.UNDETERMINED_LOCATION, null, true);
     	        return;
     		}
-    		
-    		// Location known, extract lat/long
-    		lat = location.getLatitude();
-    		lng = location.getLongitude();
     	} else {
-    		lat = bundle.getDouble(LocationService.LATITUDE);
-    		lng = bundle.getDouble(LocationService.LONGITUDE);
+    		// Bundle present, extract location information
+    		double latitude = bundle.getDouble(LocationService.LATITUDE);
+    		double longitude = bundle.getDouble(LocationService.LONGITUDE);
+    		String provider = bundle.getString(LocationService.PROVIDER);
+    		currentLocation = new Location(provider);
+    		currentLocation.setLatitude(latitude);
+    		currentLocation.setLongitude(longitude);
     	}
 		
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
-		int range = mCache.getPreferences().getInt(SkopeApplication.PREFS_RANGE, 100);
 		String serviceUrl = mCache.getProperty("skope_service_url");
 		String mediaUrl = mCache.getProperty("media_url");
 		
@@ -218,9 +219,8 @@ public class WorkerThread extends Thread {
         // The credentials are processed by the HTTP server, so our
         // service would have to extract them from the request. This is easier. 
         client.addParam("username", username);
-        client.addParam("range", Integer.toString(range));
-        client.addParam("lat", String.valueOf(lat));
-        client.addParam("lng", String.valueOf(lng));
+        client.addParam("lat", String.valueOf(currentLocation.getLatitude()));
+        client.addParam("lng", String.valueOf(currentLocation.getLongitude()));
          
         // Send HTTP request to web service
         try {
@@ -248,17 +248,28 @@ public class WorkerThread extends Thread {
 			for (int i=0; i < jsonResponse.length(); i++) {
 				try {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
+					
+					// Create new object of interest
 					ObjectOfInterest objectOfInterest = new ObjectOfInterest();
+					// Set username
 					objectOfInterest.setUserName(jsonObject.getJSONObject("user").getString("username"));
+					// Set email
 					objectOfInterest.setUserEmail(jsonObject.getJSONObject("user").getString("email"));
+					// Set thumbnail
 					String imageURL = mediaUrl + jsonObject.getString("thumbnail");
 					objectOfInterest.setThumbnail(new BMPFromURL(imageURL).getMyBitmap());
+					// Set location
 					// Parse location in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
 					String[] tokens = jsonObject.getString("location").split("[ ()]");
-					double longitude = Double.parseDouble(tokens[2]);
-					double latitude = Double.parseDouble(tokens[3]);
-					objectOfInterest.setLatitude(latitude);
-					objectOfInterest.setLongitude(longitude);
+					Location location = new Location("SKOPE_SERVICE");
+					location.setLatitude(Double.parseDouble(tokens[3]));
+					location.setLongitude(Double.parseDouble(tokens[2]));
+					objectOfInterest.setLocation(location);
+					// Set location timestamp
+					objectOfInterest.setLocationTimestamp(Timestamp.valueOf(jsonObject.getString("location_timestamp")));
+					// Set distance
+					objectOfInterest.setDistance(location.distanceTo(currentLocation));
+
 					m_objectOfInterestList.add(objectOfInterest);
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block

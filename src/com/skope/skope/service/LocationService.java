@@ -37,6 +37,7 @@ public class LocationService extends Service implements LocationListener  {
 	// Constants for bundle keys
 	public static final String LATITUDE = "LAT";
 	public static final String LONGITUDE = "LONG";
+	public static final String PROVIDER = "PROVIDER";
 
 	// Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
@@ -182,6 +183,7 @@ public class LocationService extends Service implements LocationListener  {
 			Bundle bundle = new Bundle();
             bundle.putDouble(LATITUDE, location.getLatitude());
             bundle.putDouble(LONGITUDE, location.getLongitude());
+            bundle.putString(PROVIDER, location.getProvider());
 	        mServiceQueue.postToService(Type.FIND_OBJECTS_OF_INTEREST, bundle);
 	        mUiQueue.postToUi(Type.LOCATION_CHANGED, null, true);
 
