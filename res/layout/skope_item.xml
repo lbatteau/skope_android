@@ -18,7 +18,7 @@
         	android:layout_width="fill_parent" 
         	android:layout_height="wrap_content" 
         	android:text="Name" 
-        	android:id="@+id/toptext"
+        	android:id="@+id/username_text"
         	android:textStyle="bold"
         	android:textSize="20sp"></TextView>
     	<LinearLayout
@@ -30,7 +30,7 @@
 	        	android:layout_width="fill_parent" 
 	        	android:layout_height="fill_parent" 
 	        	android:text="Email" 
-	        	android:id="@+id/bottomtext"
+	        	android:id="@+id/email_text"
 	        	android:textSize="10sp">
 	        </TextView>
 		</LinearLayout>
@@ -48,7 +48,7 @@
 	        </TextView>
 	        <TextView 
 	        	android:text="Updated" 
-	        	android:id="@+id/updated_text" 
+	        	android:id="@+id/last_update_text" 
 	        	android:layout_width="wrap_content" 
 	        	android:layout_height="wrap_content"
 	        	android:textSize="10sp"></TextView>

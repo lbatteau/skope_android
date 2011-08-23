@@ -10,28 +10,22 @@
 package com.skope.skope.ui;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -50,14 +44,9 @@ import com.skope.skope.utils.Type;
 public class SkopeListActivity extends BaseActivity {	  
 	private static final String TAG = SkopeListActivity.class.getName();
 	
-	private ProgressDialog mProgressDialog = null;
     private ArrayList<ObjectOfInterest> mObjectOfInterestList = null;
     private ObjectOfInterestArrayAdapter mObjectOfInterestListAdapter;
 
-	private Properties mProperties;
-    private SharedPreferences mPreferences;
-    private ProgressBar mTitleProgressBar;
-    
     protected Dialog mSplashDialog;
     
     private ProgressBar mProgressBar;
@@ -115,6 +104,7 @@ public class SkopeListActivity extends BaseActivity {
     	mProgressBar = (ProgressBar) findViewById(R.id.titleProgressBar);
     	mProgressBar.setVisibility(ProgressBar.GONE);
     	
+    	/*
     	// Set up buttons
     	((Button) findViewById(R.id.button_mapview)).setOnClickListener(new OnClickListener() {
     		@Override
@@ -125,6 +115,7 @@ public class SkopeListActivity extends BaseActivity {
             	startActivity(i);
 	        }
     	});
+    	*/
     	
     	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
         
@@ -223,93 +214,45 @@ public class SkopeListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-        	String unit = "";
-        	
             View v = convertView;
-                if (v == null) {
-                    LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    v = vi.inflate(R.layout.skope_item, null);
-                }
-                
-                ObjectOfInterest skope = m_ooiList.get(position);
-                if (skope != null) {
-                        TextView textView = (TextView) v.findViewById(R.id.toptext);
-                        TextView bottomText = (TextView) v.findViewById(R.id.bottomtext);
-                        TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
-                        TextView updatedText = (TextView) v.findViewById(R.id.updated_text);
-                        ImageView icon = (ImageView) v.findViewById(R.id.icon);
-                        
-                        if (textView != null) {
-                              textView.setText(skope.getUserName());                            }
-                        
-                        if (bottomText != null) {
-                        	bottomText.setText("Email: " + skope.getUserEmail());
-                        }
-                        
-                        if (distanceText != null) {
-                        	distanceText.setText("Distance: " + String.valueOf(skope.createReadableDistance()));
-                        }
-                        
-                        if (updatedText != null) {
-                        	Date today = new Date();
-                        	// Determine the time delta between now and the last update.
-                        	long delta = (today.getTime() - skope.getLocationTimestamp().getTime())/1000;
-                        	
-                        	// Determine unit
-                        	// More than sixty seconds?
-                        	if (delta > 60) {
-                        		// Change unit to minutes
-                        		delta = delta/60;
-                        		unit = "minute";
-                        		if (delta > 1) {
-                        			unit += "s";
-                        		}
-                        		
-                        		// More than sixty minutes?
-                            	if (delta > 60) {
-                            		// Change unit to hours
-                            		delta = delta/60;
-                            		unit = "hour";
-                            		if (delta > 1) {
-                            			unit += "s";
-                            		}
-                            		
-                            		// More than twenty four hours?
-                                	if (delta > 24) {
-                                		// Change unit to days
-                                		delta = delta/24;
-                                		unit = "day";
-                                		if (delta > 1) {
-                                			unit += "s";
-                                		}
-                                	}
-                            	}
-                        	}
-
-                        	updatedText.setText("Last update: " + String.valueOf(delta) + " " + unit + " ago");
-                        }
-                        
-                        if (icon != null) {
-                        	icon.setImageBitmap(skope.getThumbnail());
-                        }
-                        
-                }
-                return v;
+            if (v == null) {
+                LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = vi.inflate(R.layout.skope_item, null);
+            }
+            
+            ObjectOfInterest skope = m_ooiList.get(position);
+            if (skope != null) {
+                    TextView userNameText = (TextView) v.findViewById(R.id.username_text);
+                    TextView emailText = (TextView) v.findViewById(R.id.email_text);
+                    TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
+                    TextView lastUpdateText = (TextView) v.findViewById(R.id.last_update_text);
+                    ImageView icon = (ImageView) v.findViewById(R.id.icon);
+                    
+                    if (userNameText != null) {
+                          userNameText.setText(skope.getUserName());                            }
+                    
+                    if (emailText != null) {
+                    	emailText.setText("Email: " + skope.getUserEmail());
+                    }
+                    
+                    if (distanceText != null) {
+                    	distanceText.setText("Distance: " + String.valueOf(skope.createLabelDistance()));
+                    }
+                    
+                    if (lastUpdateText != null) {
+                    	lastUpdateText.setText("Last update: " + skope.createLabelTimePassedSinceLastUpdate());
+                    }
+                    
+                    if (icon != null) {
+                    	icon.setImageBitmap(skope.getThumbnail());
+                    }
+                    
+            }
+            
+            return v;
         }
     }
     
-	/* Request updates at startup */
-	@Override
-	protected void onResume() {
-		super.onResume();
-    }
-
-	/* Remove the locationlistener updates when Activity is paused */
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();

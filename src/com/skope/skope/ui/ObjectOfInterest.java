@@ -1,6 +1,7 @@
 package com.skope.skope.ui;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -23,7 +24,7 @@ public class ObjectOfInterest {
 	 * 
 	 * @return
 	 */
-	public String createReadableDistance() {
+	public String createLabelDistance() {
 		int distanceReadable;
 		String unit;
 		
@@ -35,8 +36,80 @@ public class ObjectOfInterest {
 			unit = "m";
 		}
 		
-		return "" + String.valueOf(distanceReadable) + " " + unit; 
+		return "" + String.valueOf(distanceReadable) + unit;
 	}
+	
+	/**
+	 * Creates a description of the time passed since the last location update. 
+	 * @return The time passed since the last update. The method adjusts the 
+	 * time unit to keep things readable:
+	 *          <ul><li>If less than 10 seconds "Just now"</li>
+	 *              <li>If more than 10 and less than 60 seconds "x second(s)"</li>
+	 *              <li>If more than 60 seconds and less than 60 minutes "x minute(s)"</li>
+	 *              <li>If more than 60 minutes and less than 24 hours "x hour(s)"</li>
+	 *              <li>If more than 24 hours "x day(s)"</li></ul>
+	 */
+	public String createLabelTimePassedSinceLastUpdate() {
+		Date today = new Date();
+    	
+		// Determine the time delta between now and the last update.
+    	long delta = (today.getTime() - this.getLocationTimestamp().getTime())/1000;
+    	String label = "";
+    	String unit = "";
+    	
+    	// Determine unit
+    	
+    	// Just now? Server time could be slightly in the future 
+    	if (delta <= 10) {
+    		label = "Just now";
+    	} else {
+    		// Construct readable time delta, 
+    		// e.g. 24 seconds ago, or 5 days ago
+    		
+    		// Less than sixty seconds?
+        	if (delta < 60) {
+        		unit = "second";
+        		if (delta != 1) {
+        			unit += "s";
+        		}
+        	}
+            
+        	// More than sixty seconds?
+        	if (delta > 60) {
+        		// Change unit to minutes
+        		delta = delta/60;
+        		unit = "minute";
+        		if (delta > 1) {
+        			unit += "s";
+        		}
+        		
+        		// More than sixty minutes?
+            	if (delta > 60) {
+            		// Change unit to hours
+            		delta = delta/60;
+            		unit = "hour";
+            		if (delta > 1) {
+            			unit += "s";
+            		}
+            		
+            		// More than twenty four hours?
+                	if (delta > 24) {
+                		// Change unit to days
+                		delta = delta/24;
+                		unit = "day";
+                		if (delta > 1) {
+                			unit += "s";
+                		}
+                	}
+            	}
+        	}
+        	
+        	label = String.valueOf(delta) + " " + unit + " ago";
+    	}
+    	
+    	return label;
+	}
+	
 	
 	public String getUserName() {
 		return userName;
