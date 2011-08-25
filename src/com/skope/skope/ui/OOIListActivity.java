@@ -41,8 +41,8 @@ import com.skope.skope.utils.Type;
  * @version "%I%, %G%"
  * @author  Lukas Batteau
  */
-public class SkopeListActivity extends BaseActivity {	  
-	private static final String TAG = SkopeListActivity.class.getName();
+public class OOIListActivity extends BaseActivity {	  
+	private static final String TAG = OOIListActivity.class.getName();
 	
     private ArrayList<ObjectOfInterest> mObjectOfInterestList = null;
     private ObjectOfInterestArrayAdapter mObjectOfInterestListAdapter;
@@ -57,7 +57,7 @@ public class SkopeListActivity extends BaseActivity {
 	    public boolean onLongClick(View v) {
 	    	final CharSequence[] items = {"List", "Map"};
 
-	    	AlertDialog.Builder builder = new AlertDialog.Builder(SkopeListActivity.this);
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(OOIListActivity.this);
 	    	//builder.setTitle("Pick a color");
 	    	builder.setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
 	    	    public void onClick(DialogInterface dialog, int item) {
@@ -67,7 +67,7 @@ public class SkopeListActivity extends BaseActivity {
 	    	    	case 1:
 	    	    		Intent i = new Intent();
 		            	i.setClassName("com.skope.skope",
-		            				   "com.skope.skope.ui.SkopeMapActivity");
+		            				   "com.skope.skope.ui.OOIListMapActivity");
 		            	i.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 		            	startActivity(i);
 		            	finish();
@@ -111,7 +111,7 @@ public class SkopeListActivity extends BaseActivity {
     		public void onClick(final View view) {
     			Intent i = new Intent();
             	i.setClassName("com.skope.skope",
-            				   "com.skope.skope.ui.SkopeMapActivity");
+            				   "com.skope.skope.ui.OOIListMapActivity");
             	startActivity(i);
 	        }
     	});
@@ -121,7 +121,7 @@ public class SkopeListActivity extends BaseActivity {
         
     	// Set up the list adapter
         mObjectOfInterestList = new ArrayList<ObjectOfInterest>();
-        mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(SkopeListActivity.this, R.layout.skope_view, mObjectOfInterestList);
+        mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mObjectOfInterestListAdapter);         
         
@@ -134,11 +134,10 @@ public class SkopeListActivity extends BaseActivity {
     }
 
 	private void updateListFromCache() {
-		// Update list from cache
-        ArrayList<ObjectOfInterest> cacheList = getCache().getObjectOfInterestList();
+		mObjectOfInterestList.clear();
+    	ObjectOfInterestList cacheList = getCache().getObjectOfInterestList();
         if (cacheList != null && !cacheList.isEmpty()) {
         	// Cache contains items
-        	mObjectOfInterestList.clear();
         	mObjectOfInterestList.addAll(cacheList);
         	mObjectOfInterestListAdapter.notifyDataSetChanged();
         }
@@ -157,7 +156,7 @@ public class SkopeListActivity extends BaseActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //Stop the activity
-                SkopeListActivity.this.finish();    
+                OOIListActivity.this.finish();    
             }
 
         })
@@ -178,13 +177,13 @@ public class SkopeListActivity extends BaseActivity {
     public final void post(final Type type, final Bundle bundle) {
     	switch (type) {
             case FIND_OBJECTS_OF_INTEREST_START:
-            	mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            	//mProgressBar.setVisibility(ProgressBar.VISIBLE);
                 break;
 
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
             	updateListFromCache();
             	//removeSplashScreen();
-            	mProgressBar.setVisibility(ProgressBar.GONE);
+            	//mProgressBar.setVisibility(ProgressBar.GONE);
             	break;
             	
             case UNDETERMINED_LOCATION:
@@ -294,5 +293,11 @@ public class SkopeListActivity extends BaseActivity {
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		updateListFromCache();    	
 	}
 }

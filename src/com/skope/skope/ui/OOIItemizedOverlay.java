@@ -9,16 +9,16 @@ import android.graphics.drawable.Drawable;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
 
-public class SkopeItemizedOverlay extends ItemizedOverlay<OverlayItem> {
+public class OOIItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Context mContext;
 	
-	public SkopeItemizedOverlay(Drawable defaultMarker) {
+	public OOIItemizedOverlay(Drawable defaultMarker) {
 		  super(boundCenterBottom(defaultMarker));
 	}
 	
-	public SkopeItemizedOverlay(Drawable defaultMarker, Context context) {
+	public OOIItemizedOverlay(Drawable defaultMarker, Context context) {
 		super(boundCenterBottom(defaultMarker));
 		mContext = context;
 		populate();

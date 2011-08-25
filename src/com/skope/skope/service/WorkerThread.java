@@ -19,7 +19,6 @@ package com.skope.skope.service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,6 +36,7 @@ import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 import com.skope.skope.ui.ObjectOfInterest;
+import com.skope.skope.ui.ObjectOfInterestList;
 import com.skope.skope.utils.NotificationUtils;
 import com.skope.skope.utils.Type;
 
@@ -81,7 +81,7 @@ public class WorkerThread extends Thread {
      */
     private boolean stopping = false;
     
-    private List<ObjectOfInterest> m_objectOfInterestList;
+    private ObjectOfInterestList m_objectOfInterestList;
 
     /***
      * Constructor which stores pointers to the Application Cache, UiQueue and

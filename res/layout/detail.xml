@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:id="@+id/detail_view">
+	<LinearLayout android:id="@+id/linearLayout1"
+		android:layout_width="match_parent" android:layout_height="wrap_content"
+		android:layout_marginBottom="12dip">
+		<ImageView android:id="@+id/icon" android:layout_width="120dip"
+			android:layout_height="120dip" android:layout_marginRight="6dip"
+			android:src="@drawable/icon"/>
+		<TextView 
+        	android:layout_width="fill_parent" 
+        	android:layout_height="wrap_content" 
+        	android:text="Name" 
+        	android:id="@+id/username_text"
+        	android:textStyle="bold"
+        	android:textSize="20sp"></TextView>			
+
+	</LinearLayout>
+	<com.google.android.maps.MapView
+		xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/map"
+		android:layout_width="fill_parent" android:layout_height="fill_parent"
+		android:clickable="true" android:apiKey="0C3qD704heE4_C0KUlSEihLV2BXmLo0tmvKo0tQ" />
+</LinearLayout>
+
+<!-- Private android:apiKey="0C3qD704heE6cUdySBC0j5xKSlqJDg-fuQR9_tA" -->
+<!-- Debug android:apiKey="0C3qD704heE4_C0KUlSEihLV2BXmLo0tmvKo0tQ" -->

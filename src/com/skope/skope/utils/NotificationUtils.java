@@ -23,7 +23,7 @@ import android.content.Intent;
 import android.widget.RemoteViews;
 
 import com.skope.skope.R;
-import com.skope.skope.ui.SkopeListActivity;
+import com.skope.skope.ui.OOIListActivity;
 
 /***
  * Utility for showing a custom Android Notification.
@@ -59,7 +59,7 @@ public final class NotificationUtils {
             notification.flags = Notification.FLAG_ONGOING_EVENT
                     & Notification.FLAG_NO_CLEAR;
 
-            Intent notificationIntent = new Intent(context, SkopeListActivity.class);
+            Intent notificationIntent = new Intent(context, OOIListActivity.class);
             PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
                     notificationIntent, 0);
             notification.contentIntent = contentIntent;

@@ -7,7 +7,7 @@ import android.widget.TabHost;
 
 import com.skope.skope.R;
 
-public class SkopeMainActivity extends TabActivity {
+public class MainTabActivity extends TabActivity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.tabs);
@@ -17,7 +17,7 @@ public class SkopeMainActivity extends TabActivity {
 	    Intent intent;  // Reusable Intent for each tab
 
 	    // Create an Intent to launch an Activity for the tab (to be reused)
-	    intent = new Intent().setClass(this, SkopeListActivity.class);
+	    intent = new Intent().setClass(this, OOIListActivity.class);
 
 	    // Initialize a TabSpec for each tab and add it to the TabHost
 	    spec = tabHost.newTabSpec("list").setIndicator("List")
@@ -25,7 +25,7 @@ public class SkopeMainActivity extends TabActivity {
 	    tabHost.addTab(spec);
 
 	    // Do the same for the other tabs
-	    intent = new Intent().setClass(this, SkopeMapActivity.class);
+	    intent = new Intent().setClass(this, OOIListMapActivity.class);
 	    spec = tabHost.newTabSpec("map").setIndicator("Map")
 	                  .setContent(intent);
 	    tabHost.addTab(spec);

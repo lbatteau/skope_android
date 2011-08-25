@@ -21,7 +21,8 @@ import com.skope.skope.application.Cache;
 import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
-import com.skope.skope.ui.SkopeListActivity;
+import com.skope.skope.ui.MainTabActivity;
+import com.skope.skope.ui.OOIListActivity;
 import com.skope.skope.utils.Type;
 
 public class LocationService extends Service implements LocationListener  {
@@ -179,6 +180,7 @@ public class LocationService extends Service implements LocationListener  {
 	@Override
 	public void onLocationChanged(Location location) {
 		if (isBetterLocation(location, m_currentLocation)) {
+			Log.d(SkopeApplication.LOG_TAG, "Location changed");
 			mCache.setCurrentLocation(location);
 			Bundle bundle = new Bundle();
             bundle.putDouble(LATITUDE, location.getLatitude());
@@ -221,7 +223,7 @@ public class LocationService extends Service implements LocationListener  {
         notification.flags = Notification.FLAG_ONGOING_EVENT;
 
         // The PendingIntent to launch our activity if the user selects this notification
-        Intent intent = new Intent(this, SkopeListActivity.class);
+        Intent intent = new Intent(this, MainTabActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);

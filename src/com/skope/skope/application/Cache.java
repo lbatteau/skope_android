@@ -29,6 +29,7 @@ import android.location.Location;
 import android.util.Log;
 
 import com.skope.skope.ui.ObjectOfInterest;
+import com.skope.skope.ui.ObjectOfInterestList;
 
 /***
  * Store application state information either permanently (in a properties
@@ -57,7 +58,7 @@ public class Cache {
 	private SharedPreferences m_preferences;
     private Resources m_resources;
     
-    private ArrayList<ObjectOfInterest> m_objectOfInterestList;
+    private ObjectOfInterestList m_objectOfInterestList;
     
     private Location mCurrentLocation;
     
@@ -88,7 +89,7 @@ public class Cache {
             e.printStackTrace();
         }
         
-        m_objectOfInterestList = new ArrayList<ObjectOfInterest>();
+        m_objectOfInterestList = new ObjectOfInterestList();
     }
 
     /***
@@ -241,7 +242,7 @@ public class Cache {
 		return m_preferences;
 	}
 	
-	public ArrayList<ObjectOfInterest> getObjectOfInterestList() {
+	public ObjectOfInterestList getObjectOfInterestList() {
 		return m_objectOfInterestList;
 	}
 

@@ -8,15 +8,14 @@
 
 		<uses-library android:name="com.google.android.maps" />
 
-		<activity android:label="@string/app_name" android:name=".ui.SkopeListActivity"
-			android:theme="@android:style/Theme.NoTitleBar">
+		<activity android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.OOIListActivity">
 		</activity>
 		<service android:name=".service.LocationService">
 		</service>
 		<activity android:name=".ui.SplashScreen">
 		</activity>
-		<activity android:name=".ui.SkopeMapActivity" android:label="@string/app_name"
-			android:theme="@android:style/Theme.NoTitleBar">
+		<activity android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.OOIListMapActivity">
 		</activity>
 		<activity android:name=".ui.LoginActivity">
 			<intent-filter>
@@ -24,7 +23,7 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.SkopeMainActivity"></activity>
+		<activity android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.MainTabActivity"></activity>
 
 	</application>
 

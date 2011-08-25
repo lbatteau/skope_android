@@ -50,7 +50,7 @@ public class SplashScreen extends BaseActivity {
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
             	Intent i = new Intent();
             	i.setClassName("com.skope.skope",
-            				   "com.skope.skope.ui.SkopeListActivity");
+            				   "com.skope.skope.ui.OOIListActivity");
             	startActivity(i);
             	break;
 

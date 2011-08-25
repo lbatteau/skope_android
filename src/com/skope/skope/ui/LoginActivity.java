@@ -173,7 +173,7 @@ public class LoginActivity extends BaseActivity {
 	        // Redirect to list activity
 	        Intent i = new Intent();
         	i.setClassName("com.skope.skope",
-        				   "com.skope.skope.ui.SkopeMainActivity");
+        				   "com.skope.skope.ui.MainTabActivity");
         	startActivity(i);
         	finish();	
 	    }
