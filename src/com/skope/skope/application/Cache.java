@@ -62,6 +62,8 @@ public class Cache {
     
     private Location mCurrentLocation;
     
+    private ObjectOfInterest mSelectedObjectOfInterest;
+    
 
     /***
      * Constructor stores the application context.
@@ -252,6 +254,14 @@ public class Cache {
 
 	public void setCurrentLocation(Location currentLocation) {
 		this.mCurrentLocation = currentLocation;
+	}
+
+	public ObjectOfInterest getSelectedObjectOfInterest() {
+		return mSelectedObjectOfInterest;
+	}
+
+	public void setSelectedObjectOfInterest(ObjectOfInterest selectedObjectOfInterest) {
+		this.mSelectedObjectOfInterest = selectedObjectOfInterest;
 	}
 	
 }

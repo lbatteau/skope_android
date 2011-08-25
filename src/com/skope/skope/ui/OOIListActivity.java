@@ -23,9 +23,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -44,7 +48,7 @@ import com.skope.skope.utils.Type;
 public class OOIListActivity extends BaseActivity {	  
 	private static final String TAG = OOIListActivity.class.getName();
 	
-    private ArrayList<ObjectOfInterest> mObjectOfInterestList = null;
+    private ObjectOfInterestList mObjectOfInterestList = null;
     private ObjectOfInterestArrayAdapter mObjectOfInterestListAdapter;
 
     protected Dialog mSplashDialog;
@@ -81,6 +85,22 @@ public class OOIListActivity extends BaseActivity {
 	    	return true;
 	    }
 	};
+	
+	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
+		@Override
+		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+			// Retrieve object of interest and store in shared cache
+			TextView userNameText = (TextView) v.findViewById(R.id.username_text);
+			ObjectOfInterest ooi = mObjectOfInterestList.find(userNameText.getText().toString());
+			getCache().setSelectedObjectOfInterest(ooi);
+			
+			// Redirect to list activity
+	        Intent i = new Intent();
+        	i.setClassName("com.skope.skope",
+        				   "com.skope.skope.ui.OOIDetailMapActivity");
+        	startActivity(i);
+		}
+	};	
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,23 +124,13 @@ public class OOIListActivity extends BaseActivity {
     	mProgressBar = (ProgressBar) findViewById(R.id.titleProgressBar);
     	mProgressBar.setVisibility(ProgressBar.GONE);
     	
-    	/*
-    	// Set up buttons
-    	((Button) findViewById(R.id.button_mapview)).setOnClickListener(new OnClickListener() {
-    		@Override
-    		public void onClick(final View view) {
-    			Intent i = new Intent();
-            	i.setClassName("com.skope.skope",
-            				   "com.skope.skope.ui.OOIListMapActivity");
-            	startActivity(i);
-	        }
-    	});
-    	*/
-    	
+    	((ListView) findViewById(R.id.list)).setOnItemClickListener(mOOISelectListener);
     	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
+    	
+    	
         
     	// Set up the list adapter
-        mObjectOfInterestList = new ArrayList<ObjectOfInterest>();
+        mObjectOfInterestList = new ObjectOfInterestList();
         mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mObjectOfInterestListAdapter);         
@@ -219,8 +229,8 @@ public class OOIListActivity extends BaseActivity {
                 v = vi.inflate(R.layout.skope_item, null);
             }
             
-            ObjectOfInterest skope = m_ooiList.get(position);
-            if (skope != null) {
+            ObjectOfInterest ooi = m_ooiList.get(position);
+            if (ooi != null) {
                     TextView userNameText = (TextView) v.findViewById(R.id.username_text);
                     TextView emailText = (TextView) v.findViewById(R.id.email_text);
                     TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
@@ -228,22 +238,22 @@ public class OOIListActivity extends BaseActivity {
                     ImageView icon = (ImageView) v.findViewById(R.id.icon);
                     
                     if (userNameText != null) {
-                          userNameText.setText(skope.getUserName());                            }
+                          userNameText.setText(ooi.getUserName());                            }
                     
                     if (emailText != null) {
-                    	emailText.setText("Email: " + skope.getUserEmail());
+                    	emailText.setText("Email: " + ooi.getUserEmail());
                     }
                     
                     if (distanceText != null) {
-                    	distanceText.setText("Distance: " + String.valueOf(skope.createLabelDistance()));
+                    	distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
                     }
                     
                     if (lastUpdateText != null) {
-                    	lastUpdateText.setText("Last update: " + skope.createLabelTimePassedSinceLastUpdate());
+                    	lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
                     }
                     
                     if (icon != null) {
-                    	icon.setImageBitmap(skope.getThumbnail());
+                    	icon.setImageBitmap(ooi.getThumbnail());
                     }
                     
             }
@@ -252,13 +262,6 @@ public class OOIListActivity extends BaseActivity {
         }
     }
     
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.skope_menu, menu);
-	    return true;
-	}
-	
 	/**
 	 * Shows the splash screen over the full Activity
 	 */
@@ -279,6 +282,13 @@ public class OOIListActivity extends BaseActivity {
 	    }
 	}
 	 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.skope_menu, menu);
+	    return true;
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection

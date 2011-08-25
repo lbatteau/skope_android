@@ -24,5 +24,20 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
         }
 		return farthestOOI;
 	}
+	
+	/**
+	 * Finds the object of interest with the given username.
+	 * @param username
+	 * @return The object of interest with the given username.
+	 * If not found it returns null.
+	 */
+	public ObjectOfInterest find(String username) {
+		for (ObjectOfInterest ooi : this) {
+            if (ooi.getUserName().equals(username)) {
+            	return ooi;
+            }
+        }
+		return null;
+	}
 
 }

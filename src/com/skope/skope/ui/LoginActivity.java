@@ -54,8 +54,6 @@ public class LoginActivity extends BaseActivity {
 
 		// this is the action listener
 		launch.setOnClickListener(new OnClickListener() {
-			String username, password;
-
 			public void onClick(View viewParam) {
 				// this gets the resources in the xml file and assigns it to a
 				// local variable of type EditText
