@@ -2,5 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/refresh"
           android:title="@string/menu_refresh" />
-    <item android:id="@+id/quit" android:title="Quit"></item>
+    <item android:id="@+id/signout" android:title="Sign out"></item>
+    <item android:id="@+id/options" android:title="Options"></item>
 </menu>

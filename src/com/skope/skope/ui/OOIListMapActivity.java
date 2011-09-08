@@ -69,19 +69,12 @@ public class OOIListMapActivity extends OOIMapActivity {
 	}
 	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.skope_menu, menu);
-	    return true;
-	}
-	
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
 	    switch (item.getItemId()) {
-	    case R.id.quit:
+	    case R.id.signout:
+	    	new LogoutTask().execute(this);
 	    	getServiceQueue().stopService();
-            this.finish();
             return true;
 	    case R.id.refresh:
 	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);

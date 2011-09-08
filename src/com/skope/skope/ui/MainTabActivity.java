@@ -3,9 +3,13 @@ package com.skope.skope.ui;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TabHost;
 
 import com.skope.skope.R;
+import com.skope.skope.utils.Type;
 
 public class MainTabActivity extends TabActivity {
 	public void onCreate(Bundle savedInstanceState) {
@@ -32,5 +36,12 @@ public class MainTabActivity extends TabActivity {
 
 	    tabHost.setCurrentTab(0);
 	}	
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.skope_menu, menu);
+	    return true;
+	}
 
 }

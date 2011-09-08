@@ -23,4 +23,6 @@
     <string name="login_hint_user">User</string>
     <string name="login_hint_password">Password</string>
     <string name="mystore_password">g3h31m</string>
+    <string name="prefs_gps_title">Enable GPS</string>
+    <string name="prefs_gps_summary">Click here to change the GPS settings</string>
 </resources>

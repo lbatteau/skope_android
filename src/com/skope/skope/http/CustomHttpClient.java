@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -36,8 +35,6 @@ import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
-import android.R;
-import android.content.Context;
 import android.util.Log;
 
 public class CustomHttpClient {
@@ -48,8 +45,6 @@ public class CustomHttpClient {
 		GET, POST
 	}
 	
-	private final Context context;
-
 	private ArrayList<NameValuePair> params;
 	private ArrayList<NameValuePair> headers;
 
@@ -76,8 +71,7 @@ public class CustomHttpClient {
 		return responseCode;
 	}
 
-	public CustomHttpClient(Context context, String url) {
-		this.context = context;
+	public CustomHttpClient(String url) {
 		this.url = url;
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();

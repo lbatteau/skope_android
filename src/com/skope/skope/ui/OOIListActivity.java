@@ -9,7 +9,6 @@
  */
 package com.skope.skope.ui;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -19,17 +18,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -283,23 +278,18 @@ public class OOIListActivity extends BaseActivity {
 	}
 	 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.skope_menu, menu);
-	    return true;
-	}
-	
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
 	    switch (item.getItemId()) {
-	    case R.id.quit:
+	    case R.id.signout:
 	    	getServiceQueue().stopService();
-            this.finish();
+            new LogoutTask().execute(this);
             return true;
 	    case R.id.refresh:
 	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
 	    	return true;   	
+	    case R.id.options:
+	    	startActivity(new Intent(this, SkopePreferenceActivity.class));
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }

@@ -85,8 +85,8 @@ public class LoginActivity extends BaseActivity {
 		}
 		
 		protected CustomHttpClient doInBackground(String... args) {
-	    	// Set up HTTP client
-	        CustomHttpClient client = new CustomHttpClient(LoginActivity.this, args[0]);
+	    	// Set up HTTP client with url as argument
+	        CustomHttpClient client = new CustomHttpClient(args[0]);
 	        client.setUseBasicAuthentication(true);
 	        client.setUsernamePassword(args[1], args[2]);
 	        try {

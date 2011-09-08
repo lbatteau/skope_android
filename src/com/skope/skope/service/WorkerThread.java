@@ -210,7 +210,7 @@ public class WorkerThread extends Thread {
 		String mediaUrl = mCache.getProperty("media_url");
 		
 		// Set up HTTP client
-        CustomHttpClient client = new CustomHttpClient(m_locationService, serviceUrl);
+        CustomHttpClient client = new CustomHttpClient(serviceUrl);
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
         
