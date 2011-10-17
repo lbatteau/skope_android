@@ -17,7 +17,7 @@ import com.skope.skope.R;
  * 
  * It contains the following items:<br>
  *  <ul><li>GPS enabled - A check box indicating whether GPS positioning is 
- *  enabled. When the user clicks on this preference the system location 
+ *  enabled. When the user clicks on this preference the system mLocation 
  *  settings menu ({@code ACTION_LOCATION_SOURCE_SETTINGS}) is opened.</li></ul> 
  */
 public class SkopePreferenceActivity extends PreferenceActivity {
@@ -32,7 +32,7 @@ public class SkopePreferenceActivity extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.menu.preferences);
+            addPreferencesFromResource(R.layout.preferences);
 
             // Setup the GPS preference
             mGPSPreference = (CheckBoxPreference) findPreference("prefs_gps");
@@ -43,7 +43,7 @@ public class SkopePreferenceActivity extends PreferenceActivity {
             // Setup the GPS preference click listener
             mGPSPreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             	public boolean onPreferenceClick(Preference preference) {
-            		// Redirect the user to the system location settings menu
+            		// Redirect the user to the system mLocation settings menu
             		Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             		startActivity(intent);
             		return true;

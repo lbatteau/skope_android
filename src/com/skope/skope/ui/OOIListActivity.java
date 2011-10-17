@@ -26,12 +26,16 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.skope.skope.R;
+import com.skope.skope.application.ObjectOfInterest;
+import com.skope.skope.application.ObjectOfInterestList;
+import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.utils.Type;
 
 /**
@@ -85,8 +89,7 @@ public class OOIListActivity extends BaseActivity {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
 			// Retrieve object of interest and store in shared cache
-			TextView userNameText = (TextView) v.findViewById(R.id.username_text);
-			ObjectOfInterest ooi = mObjectOfInterestList.find(userNameText.getText().toString());
+			ObjectOfInterest ooi = mObjectOfInterestList.get(position);
 			getCache().setSelectedObjectOfInterest(ooi);
 			
 			// Redirect to list activity
@@ -122,8 +125,6 @@ public class OOIListActivity extends BaseActivity {
     	((ListView) findViewById(R.id.list)).setOnItemClickListener(mOOISelectListener);
     	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
     	
-    	
-        
     	// Set up the list adapter
         mObjectOfInterestList = new ObjectOfInterestList();
         mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
@@ -193,7 +194,7 @@ public class OOIListActivity extends BaseActivity {
             	
             case UNDETERMINED_LOCATION:
             	mProgressBar.setVisibility(ProgressBar.VISIBLE);
-            	Toast.makeText(this, "Finding your location...", Toast.LENGTH_LONG).show();
+            	Toast.makeText(this, "Finding your mLocation...", Toast.LENGTH_LONG).show();
             	break;
             	
             case LOCATION_CHANGED:
@@ -218,38 +219,33 @@ public class OOIListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View v = convertView;
+            LinearLayout v = (LinearLayout) convertView;
+            LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             if (v == null) {
-                LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate(R.layout.skope_item, null);
+                v = (LinearLayout) vi.inflate(R.layout.skope_item, null);
             }
             
             ObjectOfInterest ooi = m_ooiList.get(position);
             if (ooi != null) {
-                    TextView userNameText = (TextView) v.findViewById(R.id.username_text);
-                    TextView emailText = (TextView) v.findViewById(R.id.email_text);
-                    TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
-                    TextView lastUpdateText = (TextView) v.findViewById(R.id.last_update_text);
-                    ImageView icon = (ImageView) v.findViewById(R.id.icon);
-                    
-                    if (userNameText != null) {
-                          userNameText.setText(ooi.getUserName());                            }
-                    
-                    if (emailText != null) {
-                    	emailText.setText("Email: " + ooi.getUserEmail());
-                    }
-                    
-                    if (distanceText != null) {
-                    	distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
-                    }
-                    
-                    if (lastUpdateText != null) {
-                    	lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
-                    }
-                    
-                    if (icon != null) {
-                    	icon.setImageBitmap(ooi.getThumbnail());
-                    }
+            	TextView nameText = (TextView) v.findViewById(R.id.name_text);
+                TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
+                TextView lastUpdateText = (TextView) v.findViewById(R.id.last_update_text);
+                ImageView icon = (ImageView) v.findViewById(R.id.icon);
+                
+                if (nameText != null) {
+                	nameText.setText(ooi.createName());                            }
+                
+                if (distanceText != null) {
+                	distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
+                }
+                
+                if (lastUpdateText != null) {
+                	lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
+                }
+                
+                if (icon != null) {
+                	icon.setImageBitmap(ooi.createThumbnail(getCache().getProperty("media_url")));
+                }
                     
             }
             
@@ -283,7 +279,10 @@ public class OOIListActivity extends BaseActivity {
 	    switch (item.getItemId()) {
 	    case R.id.signout:
 	    	getServiceQueue().stopService();
-            new LogoutTask().execute(this);
+	    	String logoutURL = getCache().getProperty("skope_logout_url");
+	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+	    	new LogoutTask().execute(this, logoutURL, username, password);
             return true;
 	    case R.id.refresh:
 	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);

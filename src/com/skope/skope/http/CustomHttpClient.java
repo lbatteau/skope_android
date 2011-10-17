@@ -25,6 +25,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -103,8 +104,10 @@ public class CustomHttpClient {
 			if (!params.isEmpty()) {
 				combinedParams += "?";
 				for (NameValuePair p : params) {
-					String paramString = p.getName() + "="
-							+ URLEncoder.encode(p.getValue(), "UTF-8");
+					String paramString = p.getName() + "=";
+					if (p.getValue() != null) {
+						paramString += URLEncoder.encode(p.getValue(), "UTF-8"); 
+					}
 					if (combinedParams.length() > 1) {
 						combinedParams += "&" + paramString;
 					} else {
@@ -147,6 +150,7 @@ public class CustomHttpClient {
 		HttpClient client = new DefaultHttpClient();
 
 		SchemeRegistry registry = new SchemeRegistry();
+		registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
 		SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
 		socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
 		registry.register(new Scheme("https", socketFactory, 443));

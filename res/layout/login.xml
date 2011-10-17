@@ -6,7 +6,7 @@
 
 	<ImageView android:layout_width="fill_parent" android:src="@drawable/skope" 
 		android:layout_height="wrap_content" android:layout_centerHorizontal="true"
-		android:layout_marginTop="40sp" android:layout_marginBottom="20sp"></ImageView>
+		android:layout_marginTop="20sp" android:layout_marginBottom="20sp"></ImageView>
 	
 	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 		android:orientation="horizontal" android:layout_width="fill_parent"
@@ -50,8 +50,12 @@
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
 			android:layout_weight="1"/>
 	
-		<Button android:id="@+id/signup_button" android:text="Sign up"
+		<!-- <Button android:id="@+id/signup_button" android:text="Sign up"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:layout_weight="1"/>
+			android:layout_weight="1"/> -->
 	</LinearLayout>
+	<TextView android:text="Sample text" android:id="@+id/text_closedbeta" android:layout_width="wrap_content" 
+	android:textAppearance="?android:attr/textAppearanceSmall" android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal" android:layout_centerInParent="true"
+	android:layout_alignParentBottom="true"></TextView>
 </LinearLayout>

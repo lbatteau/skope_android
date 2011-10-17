@@ -2,6 +2,8 @@ package com.skope.skope.ui;
 
 import org.apache.http.HttpStatus;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -11,14 +13,14 @@ import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
 public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
-	BaseActivity mContext;
+	Activity mActivity;
 	
 	@Override
 	protected CustomHttpClient doInBackground(Object... args) {
-		mContext = (BaseActivity) args[0];
-		String logoutUrl = mContext.getCache().getProperty("skope_logout_url");
-		String username = mContext.getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
-		String password = mContext.getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		mActivity = (Activity) args[0];
+		String logoutUrl = (String) args[1];
+		String username = (String) args[2];
+		String password =(String) args[3];
 
 		// Set up HTTP client with url as argument
         CustomHttpClient client = new CustomHttpClient(logoutUrl);
@@ -63,12 +65,12 @@ public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
     		}
     	}
 		
-		// Redirect to list activity
+		// Redirect to login activity
         Intent i = new Intent();
     	i.setClassName("com.skope.skope",
     				   "com.skope.skope.ui.LoginActivity");
-    	mContext.startActivity(i);
-    	mContext.finish();	
+    	mActivity.startActivity(i);
+    	mActivity.finish();	
 	}
 
 }

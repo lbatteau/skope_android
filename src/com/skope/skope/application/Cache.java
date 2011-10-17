@@ -28,8 +28,6 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.util.Log;
 
-import com.skope.skope.ui.ObjectOfInterest;
-import com.skope.skope.ui.ObjectOfInterestList;
 
 /***
  * Store application state information either permanently (in a properties
@@ -54,15 +52,25 @@ public class Cache {
     /** Cached application context. **/
     private final Context mContext;
     
+    /** The custom properties for this project */
 	private Properties m_properties;
+	
+	/** The preferences shared throughout the application */
 	private SharedPreferences m_preferences;
+	
     private Resources m_resources;
     
+    /** The current list of objects of interest nearby **/
     private ObjectOfInterestList m_objectOfInterestList;
     
+    /** The current mLocation */
     private Location mCurrentLocation;
     
+    /** The current selected object of interest */
     private ObjectOfInterest mSelectedObjectOfInterest;
+    
+    /** The current user */
+    private User user;
     
 
     /***
@@ -262,6 +270,14 @@ public class Cache {
 
 	public void setSelectedObjectOfInterest(ObjectOfInterest selectedObjectOfInterest) {
 		this.mSelectedObjectOfInterest = selectedObjectOfInterest;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
 	}
 	
 }

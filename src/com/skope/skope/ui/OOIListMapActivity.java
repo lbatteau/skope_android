@@ -12,6 +12,9 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 import com.skope.skope.R;
+import com.skope.skope.application.ObjectOfInterest;
+import com.skope.skope.application.ObjectOfInterestList;
+import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.utils.Type;
 
 public class OOIListMapActivity extends OOIMapActivity {
@@ -36,7 +39,7 @@ public class OOIListMapActivity extends OOIMapActivity {
         GeoPoint farthestPoint = new GeoPoint((int) (farthestOOI.getLocation().getLatitude() * 1E6 * 1.005),
         		        				      (int) (farthestOOI.getLocation().getLongitude() * 1E6 * 1.005)) ;
         // Set zoom level by passing the longest span:
-        // The difference between our location and the farthest OOI
+        // The difference between our mLocation and the farthest OOI
         mapController.zoomToSpan(Math.abs(farthestPoint.getLatitudeE6() - center.getLatitudeE6()), 
         		                 Math.abs(farthestPoint.getLongitudeE6() - center.getLongitudeE6()));
 		
@@ -54,7 +57,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 		for (ObjectOfInterest ooi : ooiList) {
 			// Drawable drawable =
 			// this.getResources().getDrawable(R.drawable.icon);
-			Drawable drawable = new BitmapDrawable(ooi.getThumbnail());
+			Drawable drawable = new BitmapDrawable(ooi.createThumbnail(getCache().getProperty("media_url")));
 			mItemizedOverlay = new OOIItemizedOverlay(drawable, this);
 
 			GeoPoint point = new GeoPoint((int) (ooi.getLocation()
@@ -73,7 +76,10 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    // Handle item selection
 	    switch (item.getItemId()) {
 	    case R.id.signout:
-	    	new LogoutTask().execute(this);
+	    	String logoutURL = getCache().getProperty("skope_logout_url");
+	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+	    	new LogoutTask().execute(this, logoutURL, username, password);
 	    	getServiceQueue().stopService();
             return true;
 	    case R.id.refresh:

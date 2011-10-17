@@ -11,15 +11,19 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.skope.skope.R;
 import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.User;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
@@ -35,6 +39,13 @@ public class LoginActivity extends BaseActivity {
 		// load up the layout
 		setContentView(R.layout.login);
 		
+		// Set the closed beta text
+		TextView text = (TextView) findViewById(R.id.text_closedbeta);
+		text.setText(Html.fromHtml("This is a closed beta release.<br> Please visit <a href=\"http://www.skope.net\">www.skope.net</a> to join!"));
+		// Otherwise link has no response
+		// http://stackoverflow.com/questions/2734270/how-do-i-make-links-in-a-textview-clickable
+		text.setMovementMethod(LinkMovementMethod.getInstance());
+
 		// Read username and password from shared preferences
 		String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
@@ -117,7 +128,8 @@ public class LoginActivity extends BaseActivity {
 	    	// Check for server response
 	    	if (httpResponseCode == 0) {
 	    		// No server response
-	    		Toast.makeText(LoginActivity.this, "Connection failed", Toast.LENGTH_SHORT).show(); 
+	    		Toast.makeText(LoginActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
+	    		return;
 	    	} else {
 	    		// Check for error
 	    		if (httpResponseCode != HttpStatus.SC_OK) {
@@ -139,11 +151,11 @@ public class LoginActivity extends BaseActivity {
 	    	}
 
 	    	// Check Skope service response code
-	        JSONObject jsonObject = null;
+	        JSONObject jsonResponse = null;
 	        int serviceResponseCode;
 	        try {
-	        	jsonObject = new JSONObject(client.getResponse());
-				serviceResponseCode = Integer.valueOf(jsonObject.getString("response_code"));
+	        	jsonResponse = new JSONObject(client.getResponse());
+				serviceResponseCode = Integer.valueOf(jsonResponse.getString("response_code"));
 			} catch (JSONException e) {
 				// Log exception
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
@@ -167,6 +179,19 @@ public class LoginActivity extends BaseActivity {
 	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
 	        prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
 	        prefsEditor.commit();
+	        
+	        // The user object is returned in the response
+	        User user;
+	        try {
+	        	user = new User(jsonResponse.getJSONObject("user"));
+	        } catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				return;
+	        }
+	        
+	        // Store the user in the cache
+	        getCache().setUser(user);
 	        
 	        // Redirect to list activity
 	        Intent i = new Intent();

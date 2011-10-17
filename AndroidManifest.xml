@@ -4,16 +4,18 @@
 
 	<application android:label="@string/app_name"
 		android:name=".application.SkopeApplication"
-		android:icon="@drawable/ic_launcher" android:debuggable="false">
+		android:icon="@drawable/ic_launcher" android:debuggable="true">
 
 		<uses-library android:name="com.google.android.maps" />
 
 		<activity android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.OOIListActivity">
 		</activity>
-		<service android:name=".service.LocationService">
+		<service android:name=".service.LocationService" android:enabled="true" android:icon="@drawable/ic_launcher" android:label="Skope" android:description="@string/service_description">
+			<intent-filter>
+	        <action
+	          android:name="com.skope.skope.service.LocationService" />
+	      	</intent-filter>
 		</service>
-		<activity android:name=".ui.SplashScreen">
-		</activity>
 		<activity android:label="@string/app_name"
 			android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.OOIListMapActivity">
 		</activity>
@@ -23,8 +25,13 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.MainTabActivity"></activity>
+		<activity android:theme="@android:style/Theme.NoTitleBar" android:name=".ui.MainTabActivity">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+			</intent-filter>
+		</activity>
 		<activity android:name=".ui.OOIDetailMapActivity"></activity>
+		<activity android:name=".ui.SkopePreferenceActivity"></activity>
 
 	</application>
 

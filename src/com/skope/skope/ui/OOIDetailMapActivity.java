@@ -11,6 +11,7 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 import com.skope.skope.R;
+import com.skope.skope.application.ObjectOfInterest;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	
@@ -23,7 +24,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		userNameText.setText(selectedObjectOfInterest.getUserName());
         TextView lastUpdateText = (TextView) findViewById(R.id.last_update_text);
         ImageView icon = (ImageView) findViewById(R.id.icon);
-        icon.setImageBitmap(selectedObjectOfInterest.getThumbnail());
+        icon.setImageBitmap(selectedObjectOfInterest.createThumbnail(getCache().getProperty("media_url")));
 	}
 
 	@Override
@@ -46,12 +47,12 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         
         //mapController.setZoom(15);
         
-        /*Location location = mCache.getCurrentLocation();
+        /*Location mLocation = mCache.getCurrentLocation();
         
-        GeoPoint center = new GeoPoint((int) (location.getLatitude() * 1E6),
-        							   (int) (location.getLongitude() * 1E6));
+        GeoPoint center = new GeoPoint((int) (mLocation.getLatitude() * 1E6),
+        							   (int) (mLocation.getLongitude() * 1E6));
         
-        // Set zoom level by passing the difference between the selected OOI and our location
+        // Set zoom level by passing the difference between the selected OOI and our mLocation
         mapController.zoomToSpan(Math.abs(center.getLatitudeE6() - selectedOOIPoint.getLatitudeE6()), 
         		                 Math.abs(center.getLongitudeE6() - selectedOOIPoint.getLongitudeE6()));*/
 		
@@ -64,7 +65,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		mMapOverlays = mMapView.getOverlays();
 	    mMapOverlays.clear();
 		ObjectOfInterest selectedObjectOfInterest = mCache.getSelectedObjectOfInterest();
-		Drawable drawable = new BitmapDrawable(selectedObjectOfInterest.getThumbnail());
+		Drawable drawable = new BitmapDrawable(selectedObjectOfInterest.createThumbnail(getCache().getProperty("media_url")));
 		mItemizedOverlay = new OOIItemizedOverlay(drawable, this);
 		GeoPoint point = new GeoPoint((int) (selectedObjectOfInterest.getLocation().getLatitude() * 1e6), 
 				                      (int) (selectedObjectOfInterest.getLocation().getLongitude() * 1e6));

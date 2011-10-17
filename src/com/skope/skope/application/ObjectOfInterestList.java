@@ -1,4 +1,4 @@
-package com.skope.skope.ui;
+package com.skope.skope.application;
 
 import java.util.ArrayList;
 

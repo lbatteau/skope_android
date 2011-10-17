@@ -113,23 +113,23 @@ public class LocationService extends Service implements LocationListener  {
             mServiceQueue.postToService(Type.DO_LONG_TASK, bundle);
         }
 
-        // Get the location manager
+        // Get the mLocation manager
 		m_locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		
 		// Get the notification manager
 		m_notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		
-		// Determine location. Start with fine.
+		// Determine mLocation. Start with fine.
 		m_currentLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 		if (m_currentLocation == null) {
-			// Fall back to coarse location.
+			// Fall back to coarse mLocation.
 			m_currentLocation = m_locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		}
 		
-		// Store current location in cache
+		// Store current mLocation in cache
 		mCache.setCurrentLocation(m_currentLocation);
 
-		// Register service as location event listener
+		// Register service as mLocation event listener
 		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
 		m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
 		
@@ -219,11 +219,11 @@ public class LocationService extends Service implements LocationListener  {
         Notification notification = new Notification(R.drawable.ic_launcher, text,
                 System.currentTimeMillis());
         
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
+        notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
         // The PendingIntent to launch our activity if the user selects this notification
         Intent intent = new Intent(this, MainTabActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
@@ -236,41 +236,41 @@ public class LocationService extends Service implements LocationListener  {
     }
     
 	/** Determines whether one Location reading is better than the current Location fix
-	  * @param location  The new Location that you want to evaluate
+	  * @param mLocation  The new Location that you want to evaluate
 	  * @param currentBestLocation  The current Location fix, to which you want to compare the new one
 	  */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
 	    if (currentBestLocation == null) {
-	        // A new location is always better than no location
+	        // A new mLocation is always better than no mLocation
 	        return true;
 	    }
 
-	    // Check whether the new location fix is newer or older
+	    // Check whether the new mLocation fix is newer or older
 	    long timeDelta = location.getTime() - currentBestLocation.getTime();
 	    boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
 	    boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
 	    boolean isNewer = timeDelta > 0;
 
-	    // If it's been more than two minutes since the current location, use the new location
+	    // If it's been more than two minutes since the current mLocation, use the new mLocation
 	    // because the user has likely moved
 	    if (isSignificantlyNewer) {
 	        return true;
-	    // If the new location is more than two minutes older, it must be worse
+	    // If the new mLocation is more than two minutes older, it must be worse
 	    } else if (isSignificantlyOlder) {
 	        return false;
 	    }
 
-	    // Check whether the new location fix is more or less accurate
+	    // Check whether the new mLocation fix is more or less accurate
 	    int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
 	    boolean isLessAccurate = accuracyDelta > 0;
 	    boolean isMoreAccurate = accuracyDelta < 0;
 	    boolean isSignificantlyLessAccurate = accuracyDelta > 200;
 
-	    // Check if the old and new location are from the same provider
+	    // Check if the old and new mLocation are from the same provider
 	    boolean isFromSameProvider = isSameProvider(location.getProvider(),
 	            currentBestLocation.getProvider());
 
-	    // Determine location quality using a combination of timeliness and accuracy
+	    // Determine mLocation quality using a combination of timeliness and accuracy
 	    if (isMoreAccurate) {
 	        return true;
 	    } else if (isNewer && !isLessAccurate) {
