@@ -88,9 +88,8 @@ public class OOIListActivity extends BaseActivity {
 	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-			// Retrieve object of interest and store in shared cache
-			ObjectOfInterest ooi = mObjectOfInterestList.get(position);
-			getCache().setSelectedObjectOfInterest(ooi);
+			// Store selected position in shared cache
+			getCache().getObjectOfInterestList().setSelectedPosition(position);
 			
 			// Redirect to list activity
 	        Intent i = new Intent();
