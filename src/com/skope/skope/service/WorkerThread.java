@@ -250,7 +250,7 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject, mCache.getProperty("media_url"));
 					
 					// If current user, skip
 					if (!objectOfInterest.getUserName().equals(username)) {

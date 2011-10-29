@@ -183,7 +183,7 @@ public class LoginActivity extends BaseActivity {
 	        // The user object is returned in the response
 	        User user;
 	        try {
-	        	user = new User(jsonResponse.getJSONObject("user"));
+	        	user = new User(jsonResponse.getJSONObject("user"), getCache().getProperty("media_url"));
 	        } catch (JSONException e) {
 				// Log exception
 				Log.e(SkopeApplication.LOG_TAG, e.toString());

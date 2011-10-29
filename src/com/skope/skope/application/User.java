@@ -2,16 +2,21 @@ package com.skope.skope.application;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Properties;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.skope.skope.http.BMPFromURL;
-
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.location.Location;
 
+import com.skope.skope.http.BMPFromURL;
+
 public class User {
+	
+	/** The thumbnail URL is relative, so we need properties to create bitmap */
+	private String mMediaURL;
 
 	protected String mUsername;
 	protected String mUserEmail;
@@ -20,16 +25,18 @@ public class User {
 	protected int mAge;
 	protected String mStatus;
 	protected int mSex;
-	protected String mThumbnail;
+	protected Bitmap mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
 	
-	public User(JSONObject jsonObject) throws JSONException {
+	public User(JSONObject jsonObject, String mediaURL) throws JSONException {
+		mMediaURL = mediaURL;
+		
 		this.setUserName(jsonObject.getJSONObject("user").getString("username"));
 		this.setUserEmail(jsonObject.getJSONObject("user").getString("email"));
 		this.setFirstName(jsonObject.getJSONObject("user").getString("first_name"));
 		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
-		this.setThumbnail(jsonObject.getString("thumbnail"));
+		this.setThumbnail(createThumbnail(jsonObject.getString("thumbnail")));
 		// Set mLocation
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
 		String[] tokens = jsonObject.getString("location").split("[ ()]");
@@ -42,10 +49,10 @@ public class User {
 	}
 	
 	/**
-	 * Creates a bitmap image from the mThumbnail URL
+	 * Creates a bitmap image from the given relative thumbnail URL
 	 */
-	public Bitmap createThumbnail(String mediaURL) {
-		return new BMPFromURL(mediaURL + this.mThumbnail).getMyBitmap();
+	protected Bitmap createThumbnail(String thumbnailURL) {
+		return new BMPFromURL(mMediaURL + thumbnailURL).getMyBitmap();
 	}
 	
 	/**
@@ -149,11 +156,11 @@ public class User {
 		this.mUserEmail = userEmail;
 	}
 
-	public String getThumbnail() {
+	public Bitmap getThumbnail() {
 		return mThumbnail;
 	}
 
-	public void setThumbnail(String thumbnail) {
+	public void setThumbnail(Bitmap thumbnail) {
 		this.mThumbnail = thumbnail;
 	}
 

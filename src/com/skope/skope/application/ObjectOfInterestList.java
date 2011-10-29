@@ -9,6 +9,12 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 */
 	private static final long serialVersionUID = -8026104533454334518L;
 	
+	/** Current position of selected object of interest */
+	private int selectedPosition;
+	
+	/** Current selected object of interest */
+	private ObjectOfInterest selectedOOI;
+	
 	/**
 	 * Determines the distance of the farthest object of interest.
 	 * Can be used to maximize the map zoom level while including all
@@ -38,6 +44,18 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
             }
         }
 		return null;
+	}
+
+	public int getSelectedPosition() {
+		return selectedPosition;
+	}
+
+	public void setSelectedPosition(int selectedPosition) {
+		this.selectedPosition = selectedPosition;
+	}
+
+	public ObjectOfInterest getSelectedOOI() {
+		return this.get(selectedPosition);
 	}
 
 }

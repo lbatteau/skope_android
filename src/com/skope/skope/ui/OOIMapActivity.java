@@ -1,23 +1,36 @@
 package com.skope.skope.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.util.TypedValue;
 
+import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapView;
+import com.google.android.maps.MapController;
 import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
+import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
+import com.skope.skope.application.User;
+import com.skope.skope.maps.OOIOverlayItem;
+import com.skope.skope.maps.SkopeMapView;
 import com.skope.skope.utils.Type;
 
 public abstract class OOIMapActivity extends MapActivity {
@@ -34,9 +47,9 @@ public abstract class OOIMapActivity extends MapActivity {
 	 * used in the onCreateDialog() method.
 	 */
 	private Bundle mDialogBundle;
-	protected MapView mMapView;
-	protected OOIItemizedOverlay mItemizedOverlay;
+	protected SkopeMapView mMapView;
 	protected List<Overlay> mMapOverlays;
+	
 	/***
 	 * Handler which is subscribed to the UiQueue whenever the Activity is on
 	 * screen.
@@ -73,17 +86,88 @@ public abstract class OOIMapActivity extends MapActivity {
 	    
 	    setContentView();
 	    
-	    mMapView = (MapView) findViewById(R.id.mapview);
-	    initializeMapView(); 
-	    
-	    populateItemizedOverlays();       
-	    
+	    mMapView = (SkopeMapView) findViewById(R.id.mapview);
 	}
 	
 	protected void setContentView() {
 		setContentView(R.layout.map);
 	}
 
+	/**
+	 * Creates the overlay pin used to display users on the map
+	 * @param user 
+	 * @return
+	 */
+	protected OOIOverlayItem createOverlay(User user) {
+		// Create the drawable containing a thumbnail 
+        LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+        // Turn off cluster indicator
+        marker.findDrawableByLayerId(R.id.marker_cluster).setAlpha(0);
+	    Drawable thumbnail = new BitmapDrawable(user.getThumbnail());
+	    marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnail);
+		
+		GeoPoint point = new GeoPoint((int) (user.getLocation()
+				.getLatitude() * 1e6), (int) (user.getLocation()
+				.getLongitude() * 1e6));
+		
+		OOIOverlayItem overlayItem = new OOIOverlayItem(point, user.getUserName(),
+				"Last update: " + user.createLabelTimePassedSinceLastUpdate());
+		
+		overlayItem.setMarker(marker);
+		
+		return overlayItem;
+	}
+	
+	/**
+	 * Creates the overlay pin used to display users on the map
+	 * @param user 
+	 * @return
+	 */
+	protected OOIOverlayItem createClusterOverlay(ArrayList<ObjectOfInterest> oois) {
+	    // Get the default overlay item
+	    LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+	    Drawable thumbnail = new BitmapDrawable(oois.get(0).getThumbnail());
+	    marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnail);
+		
+	    // Get the cluster indicator
+	    Drawable cluster = marker.findDrawableByLayerId(R.id.marker_cluster);
+	    int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth(), getResources().getDisplayMetrics());
+	    int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicHeight(), getResources().getDisplayMetrics());
+		cluster.setBounds(0, 0, width, height);
+		
+		// Create a mutable bitmap
+        Bitmap bmOverlay = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+
+        Canvas canvas = new Canvas(bmOverlay);
+		Paint paint = new Paint();
+		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+		// Draw cluster circle
+		cluster.draw(canvas);
+		// Add text
+		paint.setColor(Color.WHITE);
+		
+		String clusterSize = String.valueOf(oois.size());
+		float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20 - clusterSize.length() * 2, getResources().getDisplayMetrics());
+		float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, width/3 - clusterSize.length() * 4, getResources().getDisplayMetrics());
+		float textPosY = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, height/2 - clusterSize.length(), getResources().getDisplayMetrics());
+		paint.setTextSize(textSize);
+		canvas.drawText(clusterSize, textPosX, textPosY, paint);
+		
+		GeoPoint point = new GeoPoint((int) (oois.get(0).getLocation()
+				.getLatitude() * 1e6), (int) (oois.get(0).getLocation()
+				.getLongitude() * 1e6));
+		
+		OOIOverlayItem overlayItem = new OOIOverlayItem(point, "Cluster",
+				String.valueOf(oois.size()));
+		
+		overlayItem.setIsCluster(true);
+		
+		marker.setDrawableByLayerId(R.id.marker_cluster, new BitmapDrawable(bmOverlay));
+		overlayItem.setMarker(marker);
+		
+		return overlayItem;
+	}
+	
 	/***
 	 * Subscribe the Activity to the UiQueue.
 	 */

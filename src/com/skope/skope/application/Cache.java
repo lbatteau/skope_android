@@ -264,14 +264,6 @@ public class Cache {
 		this.mCurrentLocation = currentLocation;
 	}
 
-	public ObjectOfInterest getSelectedObjectOfInterest() {
-		return mSelectedObjectOfInterest;
-	}
-
-	public void setSelectedObjectOfInterest(ObjectOfInterest selectedObjectOfInterest) {
-		this.mSelectedObjectOfInterest = selectedObjectOfInterest;
-	}
-
 	public User getUser() {
 		return user;
 	}
