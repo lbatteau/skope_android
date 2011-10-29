@@ -67,7 +67,7 @@ public class MainTabActivity extends TabActivity {
         }
         
         if (icon != null) {
-        	icon.setImageBitmap(user.createThumbnail(mCache.getProperty("media_url")));
+        	icon.setImageBitmap(user.getThumbnail());
         }
         
         // When user clicks on bar, user can update status

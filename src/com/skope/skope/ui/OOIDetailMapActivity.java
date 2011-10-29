@@ -1,7 +1,6 @@
 package com.skope.skope.ui;
 
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,9 +12,9 @@ import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
-import com.google.android.maps.OverlayItem;
 import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
+import com.skope.skope.maps.OOIOverlay;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	
@@ -72,7 +71,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		userNameText.setText(selectedObjectOfInterest.createName());
         TextView lastUpdateText = (TextView) findViewById(R.id.last_update_text);
         ImageView icon = (ImageView) findViewById(R.id.icon);
-        icon.setImageBitmap(selectedObjectOfInterest.createThumbnail(getCache().getProperty("media_url")));
+        icon.setImageBitmap(selectedObjectOfInterest.getThumbnail());
         
         initializeMapView();
         populateItemizedOverlays();		
@@ -87,27 +86,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	protected void initializeMapView() {
 		super.initializeMapView();
 		
-		ObjectOfInterest selectedObjectOfInterest = getCache().getObjectOfInterestList().getSelectedOOI();
-		
-		MapController mapController = mMapView.getController();
-        
-               GeoPoint selectedOOIPoint = new GeoPoint((int) (selectedObjectOfInterest.getLocation().getLatitude() * 1E6),
-        							   (int) (selectedObjectOfInterest.getLocation().getLongitude() * 1E6));
- 
-        mapController.setCenter(selectedOOIPoint);
-        
-        mapController.setZoom(13);
-        
-        /*Location mLocation = mCache.getCurrentLocation();
-        
-        GeoPoint center = new GeoPoint((int) (mLocation.getLatitude() * 1E6),
-        							   (int) (mLocation.getLongitude() * 1E6));
-        
-        // Set zoom level by passing the difference between the selected OOI and our mLocation
-        mapController.zoomToSpan(Math.abs(center.getLatitudeE6() - selectedOOIPoint.getLatitudeE6()), 
-        		                 Math.abs(center.getLongitudeE6() - selectedOOIPoint.getLongitudeE6()));*/
-		
-        mMapView.invalidate();
+		mMapView.invalidate();
 	}	
 	
 	@Override
@@ -117,15 +96,28 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		// Clear current overlays
 		mMapOverlays = mMapView.getOverlays();
 	    mMapOverlays.clear();
-		Drawable drawable = new BitmapDrawable(selectedObjectOfInterest.createThumbnail(getCache().getProperty("media_url")));
-		mItemizedOverlay = new OOIItemizedOverlay(drawable, this);
-		GeoPoint point = new GeoPoint((int) (selectedObjectOfInterest.getLocation().getLatitude() * 1e6), 
-				                      (int) (selectedObjectOfInterest.getLocation().getLongitude() * 1e6));
-		OverlayItem overlayitem = new OverlayItem(point, selectedObjectOfInterest.getUserName(),
-				"Last update: " + selectedObjectOfInterest.createLabelTimePassedSinceLastUpdate());
-		mItemizedOverlay.addOverlay(overlayitem);
+	    LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+		OOIOverlay userOverlay = new OOIOverlay(marker, this);
+		userOverlay.addOverlay(createOverlay(getCache().getUser()));
+		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
+		ooiOverlay.addOverlay(createOverlay(selectedObjectOfInterest));
+		mMapOverlays.add(userOverlay);
+		mMapOverlays.add(ooiOverlay);
+		
+		MapController mapController = mMapView.getController();
+        
+		int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
+		int userLongitude = (int) (getCache().getCurrentLocation().getLongitude() * 1E6);
+		int ooiLatitude = (int) (selectedObjectOfInterest.getLocation().getLatitude() * 1E6);
+		int ooiLongitude = (int) (selectedObjectOfInterest.getLocation().getLongitude() * 1E6);
+		
+		mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
+								 Math.abs(userLongitude - ooiLongitude));
+		
+		mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
+		        							 (userLongitude + ooiLongitude) / 2));
 
-		mMapOverlays.add(mItemizedOverlay);
+		
 	}
 	
 }

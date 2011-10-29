@@ -243,7 +243,7 @@ public class OOIListActivity extends BaseActivity {
                 }
                 
                 if (icon != null) {
-                	icon.setImageBitmap(ooi.createThumbnail(getCache().getProperty("media_url")));
+                	icon.setImageBitmap(ooi.getThumbnail());
                 }
                     
             }

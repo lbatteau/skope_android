@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/marker_background"
+          android:drawable="@drawable/map_marker"/>
+    <item android:id="@+id/marker_thumbnail"
+          android:drawable="@drawable/icon"
+          android:left="2dip"
+          android:top="2dip"
+          android:right="2dip"
+          android:bottom="15dip"/>
+    <item android:id="@+id/marker_cluster"
+    	  android:drawable="@drawable/cluster_indicator"
+    	  android:left="20dip"
+    	  android:top="30dip"
+    	  android:bottom="7dip"
+    	  android:right="0dip"/>
+</layer-list>
+
