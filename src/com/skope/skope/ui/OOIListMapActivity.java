@@ -76,11 +76,11 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    
 		MapController mapController = mMapView.getController();
 		
-		mapController.zoomToSpan(Math.abs(maxLat - minLat), 
-                				 Math.abs(maxLong - minLong));
-		
 		mapController.animateTo(new GeoPoint((maxLat + minLat) / 2,
 											 (maxLong + minLong) / 2));
+
+		mapController.zoomToSpan(Math.abs(maxLat - minLat), 
+				 Math.abs(maxLong - minLong));
 
 	}
 	
