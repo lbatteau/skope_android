@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+   xmlns:android="http://schemas.android.com/apk/res/android"
+   android:layout_width="fill_parent"
+   android:layout_height="90dip"
+   android:background="@drawable/tab_selector"
+   >
+    <FrameLayout android:layout_width="wrap_content" android:id="@+id/frameLayout1" android:layout_height="wrap_content"
+    android:background="@drawable/tab_map_selector" android:layout_gravity="center"/>
+</FrameLayout>
