@@ -16,7 +16,6 @@
 
 package com.skope.skope.service;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
@@ -250,7 +250,15 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject, mCache.getProperty("media_url"));
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					
+					// Create Bitmap from thumbnail
+					BMPFromURL bmpFromURL = new BMPFromURL(mCache.getProperty("media_url") + jsonObject.getString("thumbnail"));
+					if (bmpFromURL != null) {
+						Bitmap thumbnail = bmpFromURL.getBitmap();
+						objectOfInterest.setThumbnail(thumbnail);
+					}
+					
 					
 					// If current user, skip
 					if (!objectOfInterest.getUserName().equals(username)) {

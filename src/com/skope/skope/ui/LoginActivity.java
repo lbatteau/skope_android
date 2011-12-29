@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 import com.skope.skope.R;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
+import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
@@ -35,7 +37,7 @@ public class LoginActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-
+		
 		// load up the layout
 		setContentView(R.layout.login);
 		
@@ -116,6 +118,52 @@ public class LoginActivity extends BaseActivity {
 	            e.printStackTrace();
 	        }
 	        
+	    	// Check HTTP response code
+	    	int httpResponseCode = client.getResponseCode();
+	    	// Check for server response
+	    	if (httpResponseCode == 0) {
+	    		return client;
+	    	} else {
+	    		// Check for error
+	    		if (httpResponseCode != HttpStatus.SC_OK) {
+			        return client;
+	    		}
+	    	}
+
+	    	// Check Skope service response code
+	        JSONObject jsonResponse = null;
+	        int serviceResponseCode;
+	        try {
+	        	jsonResponse = new JSONObject(client.getResponse());
+				serviceResponseCode = Integer.valueOf(jsonResponse.getString("response_code"));
+			} catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				return client;
+			}
+			
+			if (serviceResponseCode > SkopeApplication.RESPONSECODE_OK) {
+				return client;
+			}	        // The user object is returned in the response
+	        User user;
+	        try {
+	        	user = new User(jsonResponse.getJSONObject("user"));
+	        	
+	        	// Retrieve thumbnail
+	        	BMPFromURL bmpFromURL = new BMPFromURL(getCache().getProperty("media_url") + user.getThumbnailURL());
+				if (bmpFromURL != null) {
+					Bitmap thumbnail = bmpFromURL.getBitmap();
+					user.setThumbnail(thumbnail);
+				}
+	        } catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				return client;
+	        }
+	        
+	        // Store the user in the cache
+	        getCache().setUser(user);
+	        
 	        // Return server response
 	        return client;
 	    }
@@ -179,19 +227,6 @@ public class LoginActivity extends BaseActivity {
 	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
 	        prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
 	        prefsEditor.commit();
-	        
-	        // The user object is returned in the response
-	        User user;
-	        try {
-	        	user = new User(jsonResponse.getJSONObject("user"), getCache().getProperty("media_url"));
-	        } catch (JSONException e) {
-				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
-				return;
-	        }
-	        
-	        // Store the user in the cache
-	        getCache().setUser(user);
 	        
 	        // Redirect to list activity
 	        Intent i = new Intent();

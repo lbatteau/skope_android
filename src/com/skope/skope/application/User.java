@@ -1,15 +1,20 @@
 package com.skope.skope.application;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.Properties;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.os.AsyncTask;
 
 import com.skope.skope.http.BMPFromURL;
 
@@ -25,18 +30,46 @@ public class User {
 	protected int mAge;
 	protected String mStatus;
 	protected int mSex;
+	protected String mThumbnailURL;
 	protected Bitmap mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
 	
-	public User(JSONObject jsonObject, String mediaURL) throws JSONException {
-		mMediaURL = mediaURL;
+	private class ThumbnailLoader extends AsyncTask<String, Void, Void> {
+
+		@Override
+		protected Void doInBackground(String... params) {
+			URL url = null;
+			try {
+				url = new URL(params[0]);
+			} catch (MalformedURLException error) {
+				error.printStackTrace();
+			}
+
+			try {
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection.setDoInput(true);
+				connection.connect();
+				InputStream input = connection.getInputStream();
+				Bitmap bmp = BitmapFactory.decodeStream(input);
+				mThumbnail = Bitmap.createScaledBitmap(bmp, 80, 80, true);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			return null;
+		}
 		
+		
+	}
+	
+	public User(JSONObject jsonObject) throws JSONException {
 		this.setUserName(jsonObject.getJSONObject("user").getString("username"));
 		this.setUserEmail(jsonObject.getJSONObject("user").getString("email"));
 		this.setFirstName(jsonObject.getJSONObject("user").getString("first_name"));
 		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
-		this.setThumbnail(createThumbnail(jsonObject.getString("thumbnail")));
+		this.setThumbnailURL(jsonObject.getString("thumbnail"));
+		
 		// Set mLocation
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
 		String[] tokens = jsonObject.getString("location").split("[ ()]");
@@ -46,13 +79,6 @@ public class User {
 		this.setLocation(location);
 		// Set mLocation timestamp
 		this.setLocationTimestamp(Timestamp.valueOf(jsonObject.getString("location_timestamp")));
-	}
-	
-	/**
-	 * Creates a bitmap image from the given relative thumbnail URL
-	 */
-	protected Bitmap createThumbnail(String thumbnailURL) {
-		return new BMPFromURL(mMediaURL + thumbnailURL).getMyBitmap();
 	}
 	
 	/**
@@ -218,6 +244,14 @@ public class User {
 
 	public void setLastName(String lastName) {
 		this.mLastName = lastName;
+	}
+
+	public String getThumbnailURL() {
+		return mThumbnailURL;
+	}
+
+	public void setThumbnailURL(String thumbnailURL) {
+		this.mThumbnailURL = thumbnailURL;
 	}
 
 }

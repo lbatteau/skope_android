@@ -192,8 +192,7 @@ public class OOIListActivity extends BaseActivity {
             	break;
             	
             case UNDETERMINED_LOCATION:
-            	mProgressBar.setVisibility(ProgressBar.VISIBLE);
-            	Toast.makeText(this, "Finding your mLocation...", Toast.LENGTH_LONG).show();
+            	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
             	break;
             	
             case LOCATION_CHANGED:

@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.util.TypedValue;
+import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -87,6 +88,8 @@ public abstract class OOIMapActivity extends MapActivity {
 	    setContentView();
 	    
 	    mMapView = (SkopeMapView) findViewById(R.id.mapview);
+	    
+	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
 	}
 	
 	protected void setContentView() {
@@ -224,6 +227,10 @@ public abstract class OOIMapActivity extends MapActivity {
 		case FIND_OBJECTS_OF_INTEREST_FINISHED:
 			populateItemizedOverlays();
 			break;
+        case UNDETERMINED_LOCATION:
+        	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
+        	break;
+        	
 	
 		default:
 			// Do nothing.

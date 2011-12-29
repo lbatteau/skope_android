@@ -32,7 +32,7 @@ public class BMPFromURL {
 		}
 	}
 
-	public Bitmap getMyBitmap() {
+	public Bitmap getBitmap() {
 		return bitmap;
 	}
 }

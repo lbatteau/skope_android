@@ -2,60 +2,23 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
-
-	<ImageView android:layout_width="fill_parent" android:src="@drawable/skope" 
-		android:layout_height="wrap_content" android:layout_centerHorizontal="true"
-		android:layout_marginTop="20sp" android:layout_marginBottom="20sp"></ImageView>
-	
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		android:orientation="horizontal" android:layout_width="fill_parent"
-		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
-		android:layout_height="wrap_content">
-
-		<EditText android:id="@+id/txt_username"
-	        android:layout_width="0dip"
-	        android:layout_height="wrap_content"
-	        android:layout_weight="1"
-	        android:inputType="textNoSuggestions"
-	        android:imeOptions="actionNext|flagNoExtractUi"
-	        android:maxLines="1"
-	        android:maxLength="20"
-	        android:hint="@string/login_hint_user"/>	
-	</LinearLayout>
-
-
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		android:orientation="horizontal" android:layout_width="fill_parent"
-		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
-		android:layout_height="wrap_content">
-
-		<EditText android:id="@+id/txt_password"
-	        android:layout_width="0dip"
-	        android:layout_height="wrap_content"
-	        android:layout_weight="1"
-	        android:inputType="textPassword"
-	        android:imeOptions="actionNext|flagNoExtractUi"
-	        android:maxLines="1"
-	        android:maxLength="20"
-	        android:hint="@string/login_hint_password"/>
-	</LinearLayout>
-
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		android:orientation="horizontal" android:layout_width="fill_parent"
-		android:layout_marginRight="10sp" android:layout_marginLeft="10sp"
-		android:layout_height="wrap_content">
-
-		<Button android:id="@+id/login_button" android:text="Login"
-			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:layout_weight="1"/>
-	
-		<!-- <Button android:id="@+id/signup_button" android:text="Sign up"
-			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:layout_weight="1"/> -->
-	</LinearLayout>
-	<TextView android:text="Sample text" android:id="@+id/text_closedbeta" android:layout_width="wrap_content" 
-	android:textAppearance="?android:attr/textAppearanceSmall" android:layout_height="wrap_content"
-	android:layout_gravity="center_horizontal" android:layout_centerInParent="true"
-	android:layout_alignParentBottom="true"></TextView>
+	android:layout_height="fill_parent"
+	android:background="@drawable/login_gradient">
+    <FrameLayout android:layout_height="180dip" android:layout_width="fill_parent" android:id="@+id/frameLayout1"  android:background="@drawable/header_gradient">
+        <ImageView android:src="@drawable/login_header_logo" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_gravity="center|center_vertical"></ImageView>
+    </FrameLayout>
+    <FrameLayout android:background="@drawable/border_shadow" android:layout_height="wrap_content" android:layout_width="fill_parent"></FrameLayout>
+    <FrameLayout android:background="@drawable/watermark" android:layout_height="fill_parent" android:layout_width="fill_parent" android:id="@+id/frameLayout2" android:paddingTop="40dip" android:paddingRight="16dip" android:paddingLeft="16dip" android:paddingBottom="16dip	">
+		<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			android:orientation="vertical" android:layout_width="fill_parent"
+			android:layout_height="fill_parent">
+	        <EditText android:maxLength="20" android:layout_marginBottom="8dip" android:layout_height="wrap_content" android:layout_width="fill_parent" android:id="@+id/txt_username" android:maxLines="1" android:hint="@string/login_hint_user" android:inputType="textNoSuggestions" android:imeOptions="actionNext|flagNoExtractUi">
+	                <requestFocus></requestFocus>
+	            </EditText>
+	        <EditText android:maxLength="20" android:layout_marginBottom="8dip" android:layout_height="wrap_content" android:layout_width="fill_parent" android:id="@+id/txt_password" android:maxLines="1" android:hint="@string/login_hint_password" android:inputType="textPassword" android:imeOptions="actionNext|flagNoExtractUi"></EditText>
+	        <Button android:text="Login" android:layout_height="wrap_content" android:id="@+id/login_button" android:layout_width="wrap_content"></Button>
+	        <FrameLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/frameLayout3" android:layout_weight="1"></FrameLayout>
+	        <TextView android:id="@+id/text_closedbeta" android:layout_height="wrap_content" android:layout_width="wrap_content" android:textAppearance="?android:attr/textAppearanceSmall" android:text="Sample text" android:gravity="bottom|left" android:layout_gravity="bottom"></TextView>
+		</LinearLayout>
+    </FrameLayout>
 </LinearLayout>

@@ -130,8 +130,13 @@ public class LocationService extends Service implements LocationListener  {
 		mCache.setCurrentLocation(m_currentLocation);
 
 		// Register service as mLocation event listener
-		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-		m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+		try {
+			m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+			m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+		} catch(IllegalArgumentException e) {
+			// provider is disabled
+			// TODO: notify user
+		}
 		
 		showNotification();
 	}

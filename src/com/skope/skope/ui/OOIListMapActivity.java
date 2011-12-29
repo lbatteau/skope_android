@@ -30,6 +30,11 @@ public class OOIListMapActivity extends OOIMapActivity {
 		
 		MapController mapController = mMapView.getController();
 		Location location = mCache.getCurrentLocation();
+		
+		if (location == null) {
+			// Location currently unavailable
+			return;
+		}
  
         GeoPoint center = new GeoPoint((int) (location.getLatitude() * 1E6),
         							   (int) (location.getLongitude() * 1E6));

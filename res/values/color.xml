@@ -2,4 +2,8 @@
 <resources>
 	<color name="skope_light">#FFFFCC33</color>
 	<color name="skope_dark">#FFFF9900</color>
+	<color name="skope_yellow">#efb549</color>
+	<color name="skope_yellow_darker">#d29e3f</color>
+	<color name="skope_grey">#E6E6E6</color>
+	<color name="skope_grey_dark">#777</color>
 </resources>

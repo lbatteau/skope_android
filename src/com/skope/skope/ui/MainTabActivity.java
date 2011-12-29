@@ -2,9 +2,14 @@ package com.skope.skope.ui;
 
 import android.app.AlertDialog;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
@@ -51,9 +56,22 @@ public class MainTabActivity extends TabActivity {
 	    
 	    mApplication = (SkopeApplication) getApplication();
 	    mCache = mApplication.getCache();
+	    Resources res = getResources();
 	    
 	    // Set up the user bar
     	User user = mCache.getUser();
+    	
+    	// Cache empty?
+    	if (user == null) {
+    		// Redirect to login screen
+    		Intent i = new Intent();
+        	i.setClassName("com.skope.skope",
+        				   "com.skope.skope.ui.LoginActivity");
+        	startActivity(i);
+        	finish();
+        	return;
+    	}
+    	
         TextView nameText = (TextView) findViewById(R.id.user_name);
         TextView statusText = (TextView) findViewById(R.id.user_status);
         ImageView icon = (ImageView) findViewById(R.id.user_icon);
@@ -80,14 +98,18 @@ public class MainTabActivity extends TabActivity {
 	    // Create an Intent to launch an Activity for the tab (to be reused)
 	    intent = new Intent().setClass(this, OOIListActivity.class);
 
+	    LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	    View tabList = inflater.inflate(R.layout.tab_list, null); 
+	    View tabMap = inflater.inflate(R.layout.tab_map, null); 
+	    
 	    // Initialize a TabSpec for each tab and add it to the TabHost
-	    spec = tabHost.newTabSpec("list").setIndicator("List")
+	    spec = tabHost.newTabSpec("list").setIndicator(tabList)
 	                  .setContent(intent);
 	    tabHost.addTab(spec);
 
 	    // Do the same for the other tabs
 	    intent = new Intent().setClass(this, OOIListMapActivity.class);
-	    spec = tabHost.newTabSpec("map").setIndicator("Map")
+	    spec = tabHost.newTabSpec("map").setIndicator(tabMap)
 	                  .setContent(intent);
 	    tabHost.addTab(spec);
 

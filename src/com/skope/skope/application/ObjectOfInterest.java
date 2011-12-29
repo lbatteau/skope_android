@@ -1,7 +1,5 @@
 package com.skope.skope.application;
 
-import java.util.Properties;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,8 +11,8 @@ public class ObjectOfInterest extends User {
 	
 	private float distance;
 	
-	public ObjectOfInterest(JSONObject jsonObject, String mediaURL) throws JSONException {
-		super(jsonObject, mediaURL);
+	public ObjectOfInterest(JSONObject jsonObject) throws JSONException {
+		super(jsonObject);
 	}
 
 	/**

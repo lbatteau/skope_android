@@ -2,11 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
-    android:padding="3dip">
+    android:paddingLeft="10dip" android:paddingTop="10dip">
     <ImageView
         android:id="@+id/icon"
-        android:layout_width="50dip"
-        android:layout_height="50dip"
+        style="@style/Thumbnail"
         android:src="@drawable/icon"
         android:layout_marginRight="10dip" />
     <RelativeLayout
@@ -22,7 +21,7 @@
         	android:singleLine="true"
         	android:ellipsize="marquee"
             android:fadingEdge="horizontal"
-        	android:textAppearance="?android:attr/textAppearanceLarge"></TextView>
+        	android:textSize="20sp"></TextView>
     	<LinearLayout
 	        android:orientation="horizontal"
 	        android:layout_height="wrap_content"
