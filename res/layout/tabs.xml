@@ -33,14 +33,7 @@
 		        	android:textSize="20sp"
 		        	android:textColor="@android:color/white">
 		        </TextView>
-		        <TextView 
-		        	android:layout_width="fill_parent" 
-		        	android:layout_height="wrap_content" 
-		        	android:text="Your status here..."
-		        	android:id="@+id/user_status"
-		        	android:textSize="20sp"
-		       	 	android:textColor="@android:color/white">
-		        </TextView>
+		        <TextView android:singleLine="false" android:background="@drawable/status_selector" android:textColor="@color/skope_grey" android:id="@+id/user_status" android:layout_height="wrap_content" android:layout_width="fill_parent" android:clickable="true" android:text="Your status here..." android:textSize="14sp" android:lines="2"></TextView>
 		    </LinearLayout>
 		</LinearLayout>
 	    

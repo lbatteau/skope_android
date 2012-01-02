@@ -26,4 +26,5 @@
     <string name="mystore_password">g3h31m</string>
     <string name="prefs_gps_title">Enable GPS</string>
     <string name="prefs_gps_summary">Click here to change the GPS settings</string>
+    <string name="home_status_empty">Tap to update your status...</string>
 </resources>

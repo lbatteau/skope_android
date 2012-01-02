@@ -69,6 +69,7 @@ public class User {
 		this.setFirstName(jsonObject.getJSONObject("user").getString("first_name"));
 		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
 		this.setThumbnailURL(jsonObject.getString("thumbnail"));
+		this.setStatus(jsonObject.getString("status_message"));
 		
 		// Set mLocation
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"

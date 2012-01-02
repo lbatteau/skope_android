@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list
-    xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/marker_background"
-          android:drawable="@drawable/map_marker"/>
-    <item android:id="@+id/marker_thumbnail"
-          android:drawable="@drawable/icon"
-          android:left="2dip"
-          android:top="2dip"
-          android:right="2dip"
-          android:bottom="15dip"/>
-    <item android:id="@+id/marker_cluster"
-    	  android:drawable="@drawable/cluster_indicator"
-    	  android:left="20dip"
-    	  android:top="30dip"
-    	  android:bottom="7dip"
-    	  android:right="0dip"/>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/marker_background">
+		<shape android:shape="rectangle">
+			<stroke android:width="6dip" android:color="@color/skope_yellow" />
+			<solid android:color="@color/skope_grey" />
+		</shape>
+	</item>
+	<item android:id="@+id/marker_thumbnail" android:drawable="@drawable/icon"
+		android:left="6dip" android:top="6dip" android:right="6dip"
+		android:bottom="6dip" />
+	<item android:id="@+id/marker_cluster" android:drawable="@drawable/cluster_indicator"
+		android:left="22dip" android:top="22dip"/>
 </layer-list>
 

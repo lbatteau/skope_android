@@ -52,6 +52,16 @@ public class LoginActivity extends BaseActivity {
 		String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
 		
+		// Check if user already present
+		if (getCache().getUser() != null) {
+			// Already present, skip login screen
+	        Intent i = new Intent();
+        	i.setClassName("com.skope.skope",
+        				   "com.skope.skope.ui.MainTabActivity");
+        	startActivity(i);
+        	finish();
+		}
+		
 		// Check if username and password already present
 		if (!username.equals("") && !password.equals("")) {
 			// Present, fill edit fields

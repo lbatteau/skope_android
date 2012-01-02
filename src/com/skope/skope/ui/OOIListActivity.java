@@ -58,7 +58,7 @@ public class OOIListActivity extends BaseActivity {
 	private OnLongClickListener mLongClickListener = new OnLongClickListener() {
 		@Override
 	    public boolean onLongClick(View v) {
-	    	final CharSequence[] items = {"List", "Map"};
+	    	final CharSequence[] items = {"Everything", "Map"};
 
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(OOIListActivity.this);
 	    	//builder.setTitle("Pick a color");
@@ -277,6 +277,7 @@ public class OOIListActivity extends BaseActivity {
 	    switch (item.getItemId()) {
 	    case R.id.signout:
 	    	getServiceQueue().stopService();
+	    	getCache().setUser(null);
 	    	String logoutURL = getCache().getProperty("skope_logout_url");
 	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");

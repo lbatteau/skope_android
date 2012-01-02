@@ -28,4 +28,9 @@
    		<item name="android:layout_height">68dip</item>
    		<item name="android:padding">2dip</item>		        
    	</style>
+   	<style name="MapMarker">
+   		<item name="android:background">@drawable/marker</item>
+   		<item name="android:layout_width">34dip</item>
+   		<item name="android:layout_height">34dip</item>
+   	</style>
 </resources>

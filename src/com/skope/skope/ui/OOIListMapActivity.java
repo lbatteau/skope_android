@@ -128,6 +128,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    // Handle item selection
 	    switch (item.getItemId()) {
 	    case R.id.signout:
+	    	getCache().setUser(null);
 	    	String logoutURL = getCache().getProperty("skope_logout_url");
 	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
