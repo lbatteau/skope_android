@@ -144,7 +144,9 @@ public class LoginActivity extends BaseActivity {
 			
 			if (serviceResponseCode > SkopeApplication.RESPONSECODE_OK) {
 				return client;
-			}	        // The user object is returned in the response
+			}	        
+			
+			// The user object is returned in the response
 	        User user;
 	        try {
 	        	user = new User(jsonResponse.getJSONObject("user"));

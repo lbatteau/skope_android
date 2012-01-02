@@ -33,6 +33,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 		
 		if (location == null) {
 			// Location currently unavailable
+			mMapView.invalidate();
 			return;
 		}
  
