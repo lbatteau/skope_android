@@ -45,15 +45,17 @@ public class OOIListMapActivity extends OOIMapActivity {
         // Determine correct zoom level to include all oois
         ObjectOfInterest farthestOOI = mCache.getObjectOfInterestList().determineFarthestOOI();
         
-        // Create point in Google Maps format, but a little bit farther away, 
-        // because the upper part of the map is behind tabs.  
-        GeoPoint farthestPoint = new GeoPoint((int) (farthestOOI.getLocation().getLatitude() * 1E6 * 1.005),
-        		        				      (int) (farthestOOI.getLocation().getLongitude() * 1E6 * 1.005)) ;
-        // Set zoom level by passing the longest span:
-        // The difference between our mLocation and the farthest OOI
-        mapController.zoomToSpan(Math.abs(farthestPoint.getLatitudeE6() - center.getLatitudeE6()), 
-        		                 Math.abs(farthestPoint.getLongitudeE6() - center.getLongitudeE6()));
-        
+        if (farthestOOI != null) {
+            // Create point in Google Maps format, but a little bit farther away, 
+            // because the upper part of the map is behind tabs.  
+            GeoPoint farthestPoint = new GeoPoint((int) (farthestOOI.getLocation().getLatitude() * 1E6 * 1.005),
+            		        				      (int) (farthestOOI.getLocation().getLongitude() * 1E6 * 1.005)) ;
+            // Set zoom level by passing the longest span:
+            // The difference between our mLocation and the farthest OOI
+            mapController.zoomToSpan(Math.abs(farthestPoint.getLatitudeE6() - center.getLatitudeE6()), 
+            		                 Math.abs(farthestPoint.getLongitudeE6() - center.getLongitudeE6()));
+        }
+
         // Add listener to update overlays when zooming in or out
         mMapView.setOnZoomListener(new SkopeMapView.OnZoomListener() {
 			
@@ -105,7 +107,7 @@ public class OOIListMapActivity extends OOIMapActivity {
         
         // Add objects of interest
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();
-		mClusters = MapOverlayClusterer.cluster(ooiList, 20, mMapView.getZoomLevel());
+		mClusters = MapOverlayClusterer.cluster(ooiList, 50, mMapView.getZoomLevel());
         
 		//itemizedOverlay.addOverlay(overlayitem);
 		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);

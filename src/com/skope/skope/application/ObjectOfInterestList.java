@@ -22,13 +22,17 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 * @return distance
 	 */
 	public ObjectOfInterest determineFarthestOOI() {
-		ObjectOfInterest farthestOOI = this.get(0);
-		for (ObjectOfInterest ooi : this) {
-            if (farthestOOI.getDistance() < ooi.getDistance()) {
-            	farthestOOI = ooi;
-            }
-        }
-		return farthestOOI;
+		if (this.size() == 0) {
+			return null;
+		} else {
+			ObjectOfInterest farthestOOI = this.get(0);
+			for (ObjectOfInterest ooi : this) {
+	            if (farthestOOI.getDistance() < ooi.getDistance()) {
+	            	farthestOOI = ooi;
+	            }
+	        }
+			return farthestOOI;
+		}
 	}
 	
 	/**

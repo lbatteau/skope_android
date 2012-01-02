@@ -7,10 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -20,9 +20,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapController;
 import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
@@ -90,6 +88,8 @@ public abstract class OOIMapActivity extends MapActivity {
 	    mMapView = (SkopeMapView) findViewById(R.id.mapview);
 	    
 	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+	    
+	    initializeMapView();		
 	}
 	
 	protected void setContentView() {
@@ -104,8 +104,6 @@ public abstract class OOIMapActivity extends MapActivity {
 	protected OOIOverlayItem createOverlay(User user) {
 		// Create the drawable containing a thumbnail 
         LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-        // Turn off cluster indicator
-        marker.findDrawableByLayerId(R.id.marker_cluster).setAlpha(0);
 	    Drawable thumbnail = new BitmapDrawable(user.getThumbnail());
 	    marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnail);
 		
@@ -127,33 +125,31 @@ public abstract class OOIMapActivity extends MapActivity {
 	 * @return
 	 */
 	protected OOIOverlayItem createClusterOverlay(ArrayList<ObjectOfInterest> oois) {
-	    // Get the default overlay item
-	    LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-	    Drawable thumbnail = new BitmapDrawable(oois.get(0).getThumbnail());
-	    marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnail);
+	    // Get the overlay item
+	    Drawable cluster = getResources().getDrawable(R.drawable.cluster);
 		
-	    // Get the cluster indicator
-	    Drawable cluster = marker.findDrawableByLayerId(R.id.marker_cluster);
 	    int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth(), getResources().getDisplayMetrics());
 	    int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicHeight(), getResources().getDisplayMetrics());
-		cluster.setBounds(0, 0, width, height);
 		
+		cluster.setBounds(0, 0, width, height);
+
 		// Create a mutable bitmap
         Bitmap bmOverlay = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
 
         Canvas canvas = new Canvas(bmOverlay);
-		Paint paint = new Paint();
-		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
-		// Draw cluster circle
+        // Draw cluster circle
 		cluster.draw(canvas);
+		
+		Paint paint = new Paint();
+		paint.setFlags(Paint.ANTI_ALIAS_FLAG|Paint.FAKE_BOLD_TEXT_FLAG);
+		paint.setTextAlign(Align.CENTER);
 		// Add text
-		paint.setColor(Color.WHITE);
+		paint.setColor(Color.BLACK);
 		
 		String clusterSize = String.valueOf(oois.size());
-		float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20 - clusterSize.length() * 2, getResources().getDisplayMetrics());
-		float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, width/3 - clusterSize.length() * 4, getResources().getDisplayMetrics());
-		float textPosY = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, height/2 - clusterSize.length(), getResources().getDisplayMetrics());
-		paint.setTextSize(textSize);
+		float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth()/2, getResources().getDisplayMetrics());
+		float textPosY = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicHeight()/2 + 7, getResources().getDisplayMetrics());
+		paint.setTextSize(32f);
 		canvas.drawText(clusterSize, textPosX, textPosY, paint);
 		
 		GeoPoint point = new GeoPoint((int) (oois.get(0).getLocation()
@@ -165,8 +161,7 @@ public abstract class OOIMapActivity extends MapActivity {
 		
 		overlayItem.setIsCluster(true);
 		
-		marker.setDrawableByLayerId(R.id.marker_cluster, new BitmapDrawable(bmOverlay));
-		overlayItem.setMarker(marker);
+		overlayItem.setMarker(new BitmapDrawable(bmOverlay));
 		
 		return overlayItem;
 	}
@@ -178,7 +173,6 @@ public abstract class OOIMapActivity extends MapActivity {
 	protected void onResume() {
 		mUiQueue.subscribe(mHandler);
 		super.onResume();
-		initializeMapView();
 		populateItemizedOverlays();
 	}
 
