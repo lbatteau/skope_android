@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
+import android.widget.LinearLayout.LayoutParams;
 
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
@@ -44,7 +45,7 @@ public class ImageAdapter extends BaseAdapter {
         imageView.setImageBitmap(mCache.getObjectOfInterestList().get(position).getThumbnail());
         imageView.setLayoutParams(new Gallery.LayoutParams(100, 100));
         imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-        imageView.setBackgroundResource(mGalleryItemBackground);
+        imageView.setBackgroundResource(R.drawable.gallery_box);
 
         return imageView;
     }

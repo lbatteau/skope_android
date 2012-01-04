@@ -6,17 +6,21 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import util.ISO8601DateParser;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
-
-import com.skope.skope.http.BMPFromURL;
+import android.util.Log;
 
 public class User {
 	
@@ -27,7 +31,7 @@ public class User {
 	protected String mUserEmail;
 	protected String mFirstName;
 	protected String mLastName;
-	protected int mAge;
+	protected Date mDateOfBirth;
 	protected String mStatus;
 	protected int mSex;
 	protected String mThumbnailURL;
@@ -70,6 +74,16 @@ public class User {
 		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
 		this.setThumbnailURL(jsonObject.getString("thumbnail"));
 		this.setStatus(jsonObject.getString("status_message"));
+		
+		String dateOfBirth = jsonObject.getString("date_of_birth");
+		if (dateOfBirth != "null") {
+			try {
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				this.setDateOfBirth(df.parse(dateOfBirth));
+			} catch(ParseException e) {
+				Log.w(SkopeApplication.LOG_TAG, "Invalid date format: " + e);
+			}
+		}
 		
 		// Set mLocation
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
@@ -166,7 +180,29 @@ public class User {
 		
 		return label;
 	}
+	
+	public int determineAge() {
+		if (this.mDateOfBirth == null) {
+			return -1; 
+		}
+		
+		GregorianCalendar cal = new GregorianCalendar();
+        int y, m, d, a;         
 
+        y = cal.get(Calendar.YEAR);
+        m = cal.get(Calendar.MONTH);
+        d = cal.get(Calendar.DAY_OF_MONTH);
+        cal.setTime(mDateOfBirth);
+        a = y - cal.get(Calendar.YEAR);
+        if ((m < cal.get(Calendar.MONTH))
+                        || ((m == cal.get(Calendar.MONTH)) && (d < cal
+                                        .get(Calendar.DAY_OF_MONTH)))) {
+                --a;
+        }
+        
+        return a;
+	}
+	
 	public String getUserName() {
 		return mUsername;
 	}
@@ -191,12 +227,12 @@ public class User {
 		this.mThumbnail = thumbnail;
 	}
 
-	public int getAge() {
-		return mAge;
+	public Date getDateOfBirth() {
+		return mDateOfBirth;
 	}
 
-	public void setAge(int age) {
-		this.mAge = age;
+	public void setDateOfBirth(Date dateOfBirth) {
+		this.mDateOfBirth = dateOfBirth;
 	}
 
 	public String getStatus() {

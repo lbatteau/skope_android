@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:state_pressed="false" android:state_selected="false"
+		android:drawable="@drawable/details_menu_icon_chat" />
+	<item android:state_selected="true"
+		android:drawable="@drawable/details_menu_icon_chat_active" />
+	<item android:drawable="@drawable/details_menu_icon_chat" />
+</selector>

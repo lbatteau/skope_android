@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:state_pressed="false" android:state_selected="false">
+		<shape xmlns:android="http://schemas.android.com/apk/res/android"
+			android:shape="rectangle">
+			<stroke android:width="2dip" android:color="@color/skope_grey_dark" />
+			<solid android:color="@color/skope_grey_extra_dark" />
+			<padding android:left="2dip" android:top="2dip" android:right="2dip" android:bottom="2dip"/>
+		</shape>
+	</item>
+	<item android:state_selected="true">
+		<shape xmlns:android="http://schemas.android.com/apk/res/android"
+			android:shape="rectangle">
+			<stroke android:width="2dip" android:color="@color/skope_yellow" />
+			<solid android:color="@color/skope_grey_extra_dark" />
+		</shape>
+	</item>
+	
+	<item>
+		<shape xmlns:android="http://schemas.android.com/apk/res/android"
+			android:shape="rectangle">
+			<stroke android:width="2dip" android:color="@color/skope_grey_dark" />
+			<solid android:color="@color/skope_grey_extra_dark" />
+			<padding android:left="2dip" android:top="2dip" android:right="2dip" android:bottom="2dip"/>
+		</shape>
+	</item>
+</selector>

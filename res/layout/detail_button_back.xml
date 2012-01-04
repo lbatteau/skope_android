@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/detail_back_button" android:layout_width="fill_parent"
+	android:layout_height="50dip" android:background="@drawable/tab_selector"
+	android:clickable="true">
+	<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/FrameLayout1"
+		android:layout_weight="1" android:layout_width="fill_parent"
+		android:layout_height="50dip">
+		<FrameLayout android:layout_width="wrap_content"
+			android:id="@+id/frameLayout1" android:layout_height="wrap_content"
+			android:background="@drawable/detail_button_back_selector"
+			android:layout_gravity="center|center_vertical" />
+	</FrameLayout>
+	<FrameLayout android:background="@color/skope_grey_extra_dark"
+		android:layout_marginTop="10dip" android:layout_marginBottom="10dip"
+		android:layout_height="match_parent" android:layout_width="1dip"
+		android:id="@+id/frameLayout2"></FrameLayout>
+</LinearLayout>

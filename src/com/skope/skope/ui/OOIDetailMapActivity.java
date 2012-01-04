@@ -2,13 +2,20 @@ package com.skope.skope.ui;
 
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
 import android.widget.ImageView;
+import android.widget.SlidingDrawer;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
@@ -18,7 +25,13 @@ import com.skope.skope.maps.OOIOverlay;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	
-	@Override
+	private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_MAX_OFF_PATH = 250;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    private GestureDetector mGestureDetector;
+    View.OnTouchListener mGestureListener;
+
+    @Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    
@@ -27,10 +40,27 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    // called by the super class, so these are called twice. 
 	    // Needs refactoring.
 	    update();
-		
+	    
+	    // Open map drawer
+	    SlidingDrawer mapDrawer = (SlidingDrawer) findViewById(R.id.mapSlidingDrawer);
+    	// Check if present; no drawer in landscape mode
+	    if (mapDrawer != null) {
+		    mapDrawer.open();
+	    }
+	    
+	    // Back button
+	    View backButton = findViewById(R.id.detail_back_button);
+	    backButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
+	    
 	    // Set up the gallery
 		Gallery gallery = (Gallery) findViewById(R.id.gallery);
 	    gallery.setAdapter(new ImageAdapter(this, getCache()));
+	    gallery.requestFocusFromTouch();
 	    gallery.setSelection(getCache().getObjectOfInterestList().getSelectedPosition());
 	    
 	    // When the user selects a thumbnail in the gallery, update the view
@@ -66,14 +96,21 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	 * the map view. 
 	 */
 	protected void update() {
-		ObjectOfInterest selectedObjectOfInterest = getCache().getObjectOfInterestList().getSelectedOOI();
+		ObjectOfInterest selectedOOI = getCache().getObjectOfInterestList().getSelectedOOI();
+		
 		TextView userNameText = (TextView) findViewById(R.id.username_text);
-		userNameText.setText(selectedObjectOfInterest.createName());
-        TextView lastUpdateText = (TextView) findViewById(R.id.last_update_text);
+		userNameText.setText(selectedOOI.createName());
+        TextView status = (TextView) findViewById(R.id.status);
+        status.setText("\"" + selectedOOI.getStatus() + "\"");
         ImageView icon = (ImageView) findViewById(R.id.icon);
-        icon.setImageBitmap(selectedObjectOfInterest.getThumbnail());
+        icon.setImageBitmap(selectedOOI.getThumbnail());
+        TextView ageView = (TextView) findViewById(R.id.age);
+        int age = selectedOOI.determineAge();
+        if (age >= 0) {
+            ageView.setText(String.valueOf(age));
+        }
         
-        initializeMapView();
+		initializeMapView();
         populateItemizedOverlays();		
 	}
 
@@ -119,5 +156,5 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 
 		
 	}
-	
+
 }
