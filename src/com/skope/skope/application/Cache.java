@@ -252,7 +252,7 @@ public class Cache {
 		return m_preferences;
 	}
 	
-	public ObjectOfInterestList getObjectOfInterestList() {
+	public synchronized ObjectOfInterestList getObjectOfInterestList() {
 		return m_objectOfInterestList;
 	}
 

@@ -18,10 +18,6 @@
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
     </style>
-    <style name="ListView">
-        <item name="android:background">@drawable/tab_selector</item>
-        <item name="android:textColor">#FFFF0000</item>
-    </style>
    	<style name="Thumbnail">
    		<item name="android:background">@drawable/thumbnail_box</item>
    		<item name="android:layout_width">68dip</item>

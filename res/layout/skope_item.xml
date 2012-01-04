@@ -4,8 +4,9 @@
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:paddingTop="5dip"
     android:paddingBottom="5dip"
-    android:paddingLeft="10dip"
-    android:background="@drawable/list_selector" >
+    android:paddingLeft="5dip"
+    android:background="@drawable/list_selector"
+    >
 
     <ImageView
         android:id="@+id/icon"

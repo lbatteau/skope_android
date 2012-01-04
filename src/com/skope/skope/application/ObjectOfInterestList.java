@@ -12,16 +12,13 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	/** Current position of selected object of interest */
 	private int selectedPosition;
 	
-	/** Current selected object of interest */
-	private ObjectOfInterest selectedOOI;
-	
 	/**
 	 * Determines the distance of the farthest object of interest.
 	 * Can be used to maximize the map zoom level while including all
 	 * objects of interest.
 	 * @return distance
 	 */
-	public ObjectOfInterest determineFarthestOOI() {
+	public synchronized ObjectOfInterest determineFarthestOOI() {
 		if (this.size() == 0) {
 			return null;
 		} else {
@@ -41,7 +38,7 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 * @return The object of interest with the given username.
 	 * If not found it returns null.
 	 */
-	public ObjectOfInterest find(String username) {
+	public synchronized ObjectOfInterest find(String username) {
 		for (ObjectOfInterest ooi : this) {
             if (ooi.getUserName().equals(username)) {
             	return ooi;
@@ -50,16 +47,26 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		return null;
 	}
 
-	public int getSelectedPosition() {
+	public synchronized int getSelectedPosition() {
 		return selectedPosition;
 	}
 
-	public void setSelectedPosition(int selectedPosition) {
+	public synchronized void setSelectedPosition(int selectedPosition) {
 		this.selectedPosition = selectedPosition;
 	}
 
-	public ObjectOfInterest getSelectedOOI() {
+	public synchronized ObjectOfInterest getSelectedOOI() {
 		return this.get(selectedPosition);
+	}
+	
+	@Override
+	public synchronized ObjectOfInterest get(int position) {
+		return super.get(position);
+	}
+	
+	public synchronized void replaceWith(ObjectOfInterestList list) {
+		this.clear();
+		this.addAll(list);
 	}
 
 }

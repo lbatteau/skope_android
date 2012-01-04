@@ -81,7 +81,7 @@ public class WorkerThread extends Thread {
      */
     private boolean stopping = false;
     
-    private ObjectOfInterestList m_objectOfInterestList;
+    private ObjectOfInterestList mObjectOfInterestList;
 
     /***
      * Constructor which stores pointers to the Application Cache, UiQueue and
@@ -96,7 +96,7 @@ public class WorkerThread extends Thread {
         mCache = cache;
         mUiQueue = uiQueue;
         m_locationService = locationService;
-        m_objectOfInterestList = mCache.getObjectOfInterestList();		
+        mObjectOfInterestList = new ObjectOfInterestList();		
     }
 
     /***
@@ -244,7 +244,7 @@ public class WorkerThread extends Thread {
 			}
 			
 			// Copy the JSON list of objects to our OOI list
-			m_objectOfInterestList.clear();
+			mObjectOfInterestList.clear();
 			for (int i=0; i < jsonResponse.length(); i++) {
 				try {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
@@ -265,15 +265,17 @@ public class WorkerThread extends Thread {
 						// Set distance
 						objectOfInterest.setDistanceToLocation(currentLocation);
 						// Add to list
-						m_objectOfInterestList.add(objectOfInterest);
+						mObjectOfInterestList.add(objectOfInterest);
 					}
 					
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
+			}				
         }
+        
+        mCache.getObjectOfInterestList().replaceWith(mObjectOfInterestList);
        
         mCache.setStateFindObjectsOfInterest("Finished");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_FINISHED, null, true);

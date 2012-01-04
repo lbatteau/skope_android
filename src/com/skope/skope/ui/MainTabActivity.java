@@ -116,14 +116,17 @@ public class MainTabActivity extends TabActivity {
 	    TabHost.TabSpec spec;  // Reusable TabSpec for each tab
 	    Intent intent;  // Reusable Intent for each tab
 
-	    // Create an Intent to launch an Activity for the tab (to be reused)
-	    intent = new Intent().setClass(this, OOIListActivity.class);
-
 	    LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    View tabList = inflater.inflate(R.layout.tab_list, null); 
-	    View tabMap = inflater.inflate(R.layout.tab_map, null); 
+	    View tabMap = inflater.inflate(R.layout.tab_map, null);
+	    View tabProfile = inflater.inflate(R.layout.tab_profile, null);
+	    View chatProfile = inflater.inflate(R.layout.tab_chat, null);
+	    View favoritesProfile = inflater.inflate(R.layout.tab_favorites, null);
 	    
 	    // Initialize a TabSpec for each tab and add it to the TabHost
+
+	    // Create an Intent to launch an Activity for the tab (to be reused)
+	    intent = new Intent().setClass(this, OOIListActivity.class);
 	    spec = tabHost.newTabSpec("list").setIndicator(tabList)
 	                  .setContent(intent);
 	    tabHost.addTab(spec);
@@ -134,6 +137,15 @@ public class MainTabActivity extends TabActivity {
 	                  .setContent(intent);
 	    tabHost.addTab(spec);
 
+	    spec = tabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
+        tabHost.addTab(spec);
+	    
+	    spec = tabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
+        tabHost.addTab(spec);
+	    
+	    spec = tabHost.newTabSpec("favorites").setIndicator(favoritesProfile).setContent(intent);
+        tabHost.addTab(spec);
+	    
 	    tabHost.setCurrentTab(0);
 	}	
 	

@@ -7,7 +7,7 @@
 		android:layout_width="fill_parent" android:layout_height="fill_parent">
 		<FrameLayout android:layout_width="wrap_content"
 			android:id="@+id/frameLayout1" android:layout_height="wrap_content"
-			android:background="@drawable/tab_map_selector"
+			android:background="@drawable/tab_chat_selector"
 			android:layout_gravity="center|center_vertical" />
 	</FrameLayout>
 	<FrameLayout android:background="@color/skope_grey_dark" android:layout_height="match_parent" android:layout_width="1dip" android:id="@+id/frameLayout2"></FrameLayout>

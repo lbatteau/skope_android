@@ -141,11 +141,13 @@ public class OOIListActivity extends BaseActivity {
 	private void updateListFromCache() {
 		mObjectOfInterestList.clear();
     	ObjectOfInterestList cacheList = getCache().getObjectOfInterestList();
-        if (cacheList != null && !cacheList.isEmpty()) {
-        	// Cache contains items
-        	mObjectOfInterestList.addAll(cacheList);
-        	mObjectOfInterestListAdapter.notifyDataSetChanged();
-        }
+    	synchronized(cacheList) {
+	        if (cacheList != null && !cacheList.isEmpty()) {
+	        	// Cache contains items
+	        	mObjectOfInterestList.addAll(cacheList);
+	        }
+    	}
+        mObjectOfInterestListAdapter.notifyDataSetChanged();		
 	}
     
     /*

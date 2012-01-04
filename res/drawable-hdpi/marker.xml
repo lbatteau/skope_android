@@ -4,7 +4,6 @@
 		<shape android:shape="rectangle">
 			<stroke android:width="6dip" android:color="@color/skope_yellow" />
 			<solid android:color="@color/skope_grey" />
-			<size android:height="34dip" android:width="34dip" />
 		</shape>
 	</item>
 	<item android:id="@+id/marker_thumbnail" android:left="6dip"

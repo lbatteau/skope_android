@@ -3,8 +3,7 @@
    android:orientation="vertical"
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
-   android:id="@+id/listview"
-   >
+   android:id="@+id/listview">
 <ProgressBar android:id="@+id/titleProgressBar"
                 style="?android:attr/progressBarStyleSmall" 
                 android:layout_width="wrap_content"
@@ -16,5 +15,7 @@
     android:id="@+id/list"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    />
+    android:paddingLeft="5dip"
+    android:paddingRight="5dip"
+   android:listSelector="@drawable/list_background_selector"/>
 </LinearLayout>
