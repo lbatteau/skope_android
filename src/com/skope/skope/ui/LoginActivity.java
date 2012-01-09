@@ -89,7 +89,7 @@ public class LoginActivity extends BaseActivity {
 				mUsername = usernameEditText.getText().toString();
 				mPassword = passwordEditText.getText().toString();
 
-				String loginUrl = getCache().getProperty("skope_login_url");
+				String loginUrl = getCache().getProperty("skope_service_url") + "/login/";
 				
 				new LoginTask().execute(loginUrl, mUsername, mPassword);
 			}
@@ -142,27 +142,21 @@ public class LoginActivity extends BaseActivity {
 
 	    	// Check Skope service response code
 	        JSONObject jsonResponse = null;
-	        int serviceResponseCode;
 	        try {
 	        	jsonResponse = new JSONObject(client.getResponse());
-				serviceResponseCode = Integer.valueOf(jsonResponse.getString("response_code"));
 			} catch (JSONException e) {
 				// Log exception
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
 				return client;
 			}
 			
-			if (serviceResponseCode > SkopeApplication.RESPONSECODE_OK) {
-				return client;
-			}	        
-			
 			// The user object is returned in the response
 	        User user;
 	        try {
-	        	user = new User(jsonResponse.getJSONObject("user"));
+	        	user = new User(jsonResponse);
 	        	
 	        	// Retrieve thumbnail
-	        	BMPFromURL bmpFromURL = new BMPFromURL(getCache().getProperty("media_url") + user.getThumbnailURL());
+	        	BMPFromURL bmpFromURL = new BMPFromURL(user.getThumbnailURL());
 				if (bmpFromURL != null) {
 					Bitmap thumbnail = bmpFromURL.getBitmap();
 					user.setThumbnail(thumbnail);
@@ -204,37 +198,19 @@ public class LoginActivity extends BaseActivity {
 			        case HttpStatus.SC_GATEWAY_TIMEOUT:
 			        	// Connection timeout
 			        	Toast.makeText(LoginActivity.this, "Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+			        case 426: // UPGRADE_REQUIRED
+			        	Toast.makeText(LoginActivity.this, "Please update", Toast.LENGTH_SHORT).show();
+			        	break;
+			        case HttpStatus.SC_PAYMENT_REQUIRED:
+			        	Toast.makeText(LoginActivity.this, "You have a payment due", Toast.LENGTH_SHORT).show();
+			        	break;
 			        }
 			        return;
 	    			
 	    		}
 	    	}
 
-	    	// Check Skope service response code
-	        JSONObject jsonResponse = null;
-	        int serviceResponseCode;
-	        try {
-	        	jsonResponse = new JSONObject(client.getResponse());
-				serviceResponseCode = Integer.valueOf(jsonResponse.getString("response_code"));
-			} catch (JSONException e) {
-				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
-				return;
-			}
-			
-			if (serviceResponseCode > SkopeApplication.RESPONSECODE_OK) {
-				switch(serviceResponseCode) {
-				case SkopeApplication.RESPONSECODE_UPDATE:
-					Toast.makeText(LoginActivity.this, "Please update", Toast.LENGTH_SHORT).show();
-					break;
-				case SkopeApplication.RESPONSECODE_PAYMENTDUE:
-					Toast.makeText(LoginActivity.this, "You have a payment due", Toast.LENGTH_SHORT).show();
-					break;
-				}			
-				return;
-			}
-	        
-	        // Login successful, store credentials
+	    	// Store credentials
 	        SharedPreferences.Editor prefsEditor = getCache().getPreferences().edit();
 	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
 	        prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);

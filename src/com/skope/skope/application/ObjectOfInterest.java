@@ -14,7 +14,7 @@ public class ObjectOfInterest extends User {
 	public ObjectOfInterest(JSONObject jsonObject) throws JSONException {
 		super(jsonObject);
 	}
-
+	
 	/**
 	 * 
 	 * @return

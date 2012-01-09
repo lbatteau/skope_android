@@ -6,16 +6,17 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import util.ISO8601DateParser;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -26,7 +27,8 @@ public class User {
 	
 	/** The thumbnail URL is relative, so we need properties to create bitmap */
 	private String mMediaURL;
-
+	private DateFormat mDateFormat = DateFormat.getDateInstance();
+	
 	protected String mUsername;
 	protected String mUserEmail;
 	protected String mFirstName;
@@ -38,33 +40,62 @@ public class User {
 	protected Bitmap mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
+	protected String mRelationship;
 	
-	private class ThumbnailLoader extends AsyncTask<String, Void, Void> {
+	protected HashMap<String, Bitmap> mImageCache;
+	
+	public interface OnThumbnailLoadListener {
+		public void onThumbnailLoaded();
+	}
+	
+	protected class ThumbnailLoader extends AsyncTask<String, Void, Bitmap> {
+		private static final int THUMBNAIL_WIDTH = 100;
+		private static final int THUMBNAIL_HEIGHT = 100;
+		
+		OnThumbnailLoadListener mListener;
 
 		@Override
-		protected Void doInBackground(String... params) {
+		protected Bitmap doInBackground(String... params) {
 			URL url = null;
+			
 			try {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
-				error.printStackTrace();
+				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				return null;
 			}
 
 			try {
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 				connection.setDoInput(true);
+				connection.setUseCaches(true);
 				connection.connect();
 				InputStream input = connection.getInputStream();
-				Bitmap bmp = BitmapFactory.decodeStream(input);
-				mThumbnail = Bitmap.createScaledBitmap(bmp, 80, 80, true);
+				Bitmap bitmap = BitmapFactory.decodeStream(input);
+				return Bitmap.createScaledBitmap(bitmap, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, true);
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
 			}
 			
 			return null;
 		}
 		
-		
+		protected void onPostExecute(Bitmap bitmap) {
+			if (bitmap != null) {
+				// Set the user's thumbnail
+				setThumbnail(bitmap);
+				// Cache bitmap
+				if (mImageCache != null) {
+					mImageCache.put(mThumbnailURL, bitmap);
+				}
+				// Call back
+				mListener.onThumbnailLoaded();
+			}
+	     }
+
+		public void setOnThumbnailLoadListener(OnThumbnailLoadListener listener) {
+			mListener = listener;
+		}
 	}
 	
 	public User(JSONObject jsonObject) throws JSONException {
@@ -72,8 +103,9 @@ public class User {
 		this.setUserEmail(jsonObject.getJSONObject("user").getString("email"));
 		this.setFirstName(jsonObject.getJSONObject("user").getString("first_name"));
 		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
-		this.setThumbnailURL(jsonObject.getString("thumbnail"));
+		this.setThumbnailURL(jsonObject.getString("thumbnail_url"));
 		this.setStatus(jsonObject.getString("status_message"));
+		this.setRelationship(jsonObject.getString("relationship"));
 		
 		String dateOfBirth = jsonObject.getString("date_of_birth");
 		if (dateOfBirth != "null") {
@@ -96,6 +128,51 @@ public class User {
 		this.setLocationTimestamp(Timestamp.valueOf(jsonObject.getString("location_timestamp")));
 	}
 	
+	@Override
+	public boolean equals(Object user) {
+		return (this.mUsername.equals(((User) user).mUsername));		
+	}
+
+	/**
+	 * Loads the actual thumbnail bitmap for this user.  
+	 * 
+	 * When a user is retrieved the first time, it only contains an URL 
+	 * pointing to it's thumbnail. When a view needs to display the thumbnail 
+	 * it can call this method to load the bitmap. By passing it a handler, 
+	 * the view can update itself once the thumbnail is loaded.
+	 * 
+	 *    - If the thumbnail is already present, the method calls the callback 
+	 * 		method directly.
+	 *    - If not, it checks the image cache.
+	 *    - If not in cache, it uses an AsyncTask that downloads the thumbnail 
+	 *      and calls the callback when finished.
+	 *      
+	 * Note that the system cache is used to store downloaded images.
+	 *  
+	 * @param listener The callback method that is called when the thumbnail
+	 * 				   is successfully loaded. If no thumbnail is present, this
+	 * 				   method is never called.
+	 */
+	public void loadThumbnail(OnThumbnailLoadListener listener) {
+		// Check if thumbnail already loaded for this user
+		if (this.mThumbnail != null) {
+			listener.onThumbnailLoaded();
+		} else {
+			// Not loaded, check cache
+			if (mImageCache != null) {
+				Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
+				if (bitmap != null) {
+			        setThumbnail(bitmap);
+			        listener.onThumbnailLoaded();
+			    }
+			}
+
+			ThumbnailLoader loader = new ThumbnailLoader();
+			loader.setOnThumbnailLoadListener(listener);
+			loader.execute(this.getThumbnailURL());
+		}
+	}
+	
 	/**
 	 * Creates a label based on the user's name:
 	 * <ul><li>If the user's first and/or last name is filled "mFirstName mLastName"</li>
@@ -107,6 +184,22 @@ public class User {
 			return mFirstName + " " + mLastName;
 		} else {
 			return mUsername;
+		}
+	}
+	
+	public String createLabelStatus() {
+		if(mStatus == null || mStatus == "null") {
+			return "";
+		} else {
+			return "\"" + mStatus + "\"";
+		}
+	}
+	
+	public String createLabelDateOfBirth() {
+		if (mDateOfBirth == null) {
+			return "";
+		} else {
+			return mDateFormat.format(mDateOfBirth);
 		}
 	}
 
@@ -220,10 +313,20 @@ public class User {
 	}
 
 	public Bitmap getThumbnail() {
+		if (mThumbnail == null) {
+			// Not loaded, check cache
+			if (mImageCache != null) {
+				Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
+				if (bitmap != null) {
+			        setThumbnail(bitmap);
+			    }
+			}
+		}
 		return mThumbnail;
 	}
 
 	public void setThumbnail(Bitmap thumbnail) {
+		Log.i("THUMBNAIL", this.mUsername + " " + this.getThumbnailURL() + " = " + thumbnail.toString());
 		this.mThumbnail = thumbnail;
 	}
 
@@ -289,6 +392,18 @@ public class User {
 
 	public void setThumbnailURL(String thumbnailURL) {
 		this.mThumbnailURL = thumbnailURL;
+	}
+
+	public String getRelationship() {
+		return mRelationship;
+	}
+
+	public void setRelationship(String relationship) {
+		this.mRelationship = relationship;
+	}
+	
+	public void setImageCache(HashMap<String, Bitmap> imageCache) {
+		this.mImageCache = imageCache;
 	}
 
 }

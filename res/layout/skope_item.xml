@@ -12,7 +12,8 @@
         android:id="@+id/icon"
         style="@style/Thumbnail"
         android:src="@drawable/icon"
-        android:layout_marginRight="10dip" />
+        android:layout_marginRight="10dip"
+        android:scaleType="fitXY" />
     <RelativeLayout
         android:layout_width="0dip"
         android:layout_height="fill_parent"

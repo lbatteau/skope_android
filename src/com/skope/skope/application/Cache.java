@@ -18,13 +18,15 @@ package com.skope.skope.application;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
 import java.util.Properties;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.util.Log;
 
@@ -72,6 +74,8 @@ public class Cache {
     /** The current user */
     private User user;
     
+    /** Image cache using hash map on URL string */
+    protected HashMap<String,Bitmap> mImageCache;
 
     /***
      * Constructor stores the application context.
@@ -100,6 +104,8 @@ public class Cache {
         }
         
         m_objectOfInterestList = new ObjectOfInterestList();
+        
+        mImageCache = new HashMap<String,Bitmap>();
     }
 
     /***
@@ -271,5 +277,9 @@ public class Cache {
 	public void setUser(User user) {
 		this.user = user;
 	}
-	
+
+	public HashMap<String, Bitmap> getImageCache() {
+		return mImageCache;
+	}
+
 }

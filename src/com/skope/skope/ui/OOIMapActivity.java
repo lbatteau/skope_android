@@ -28,6 +28,7 @@ import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
 import com.skope.skope.application.User;
+import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.maps.OOIOverlayItem;
 import com.skope.skope.maps.SkopeMapView;
 import com.skope.skope.utils.Type;
@@ -103,9 +104,25 @@ public abstract class OOIMapActivity extends MapActivity {
 	 */
 	protected OOIOverlayItem createOverlay(User user) {
 		// Create the drawable containing a thumbnail 
-        LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-	    Drawable thumbnail = new BitmapDrawable(user.getThumbnail());
-	    marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnail);
+        final LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicWidth(), getResources().getDisplayMetrics());
+	    int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicHeight(), getResources().getDisplayMetrics());
+	    Bitmap thumbnail = user.getThumbnail();
+	    if (thumbnail != null) {
+	    	Drawable thumbnailDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(thumbnail, width, height, true));
+	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnailDrawable);
+	    } else {
+	    	// Lazy loading
+	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, new BitmapDrawable());
+	    	user.loadThumbnail(new OnThumbnailLoadListener() {
+				
+				@Override
+				public void onThumbnailLoaded() {
+					mMapView.invalidateDrawable(marker);
+					
+				}
+			});
+	    }
 		
 		GeoPoint point = new GeoPoint((int) (user.getLocation()
 				.getLatitude() * 1e6), (int) (user.getLocation()
@@ -147,9 +164,10 @@ public abstract class OOIMapActivity extends MapActivity {
 		paint.setColor(Color.BLACK);
 		
 		String clusterSize = String.valueOf(oois.size());
-		float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth()/2, getResources().getDisplayMetrics());
+        float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics());
+        float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth()/2, getResources().getDisplayMetrics());
 		float textPosY = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicHeight()/2 + 7, getResources().getDisplayMetrics());
-		paint.setTextSize(32f);
+		paint.setTextSize(textSize);
 		canvas.drawText(clusterSize, textPosX, textPosY, paint);
 		
 		GeoPoint point = new GeoPoint((int) (oois.get(0).getLocation()

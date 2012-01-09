@@ -206,7 +206,7 @@ public class WorkerThread extends Thread {
 		
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
-		String serviceUrl = mCache.getProperty("skope_service_url");
+		String serviceUrl = mCache.getProperty("skope_service_url") + "/skope/";
 		
 		// Set up HTTP client
         CustomHttpClient client = new CustomHttpClient(serviceUrl);
@@ -251,13 +251,15 @@ public class WorkerThread extends Thread {
 					
 					// Create new object of interest
 					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					// Set image cache
+					objectOfInterest.setImageCache(mCache.getImageCache());
 					
 					// Create Bitmap from thumbnail
-					BMPFromURL bmpFromURL = new BMPFromURL(mCache.getProperty("media_url") + jsonObject.getString("thumbnail"));
-					if (bmpFromURL != null) {
-						Bitmap thumbnail = bmpFromURL.getBitmap();
-						objectOfInterest.setThumbnail(thumbnail);
-					}
+					//BMPFromURL bmpFromURL = new BMPFromURL(mCache.getProperty("media_url") + jsonObject.getString("thumbnail"));
+					//if (bmpFromURL != null) {
+					//	Bitmap thumbnail = bmpFromURL.getBitmap();
+					//	objectOfInterest.setThumbnail(thumbnail);
+					//}
 					
 					
 					// If current user, skip
@@ -275,7 +277,7 @@ public class WorkerThread extends Thread {
 			}				
         }
         
-        mCache.getObjectOfInterestList().replaceWith(mObjectOfInterestList);
+        mCache.getObjectOfInterestList().update(mObjectOfInterestList);
        
         mCache.setStateFindObjectsOfInterest("Finished");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_FINISHED, null, true);

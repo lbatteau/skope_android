@@ -1,10 +1,9 @@
 package com.skope.skope.ui;
 
+import android.content.Context;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.GestureDetector;
-import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -15,22 +14,20 @@ import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
+import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.maps.OOIOverlay;
+import com.skope.skope.utils.Type;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
+	private Gallery mGallery;
+	private ImageAdapter mImageAdapter;
+	private ObjectOfInterest mSelectedOOI;
 	
-	private static final int SWIPE_MIN_DISTANCE = 120;
-    private static final int SWIPE_MAX_OFF_PATH = 250;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-    private GestureDetector mGestureDetector;
-    View.OnTouchListener mGestureListener;
-
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
@@ -57,14 +54,17 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			}
 		});
 	    
+	    // Store selected OOI
+	    mSelectedOOI = getCache().getObjectOfInterestList().getSelectedOOI();
+	    
 	    // Set up the gallery
-		Gallery gallery = (Gallery) findViewById(R.id.gallery);
-	    gallery.setAdapter(new ImageAdapter(this, getCache()));
-	    gallery.requestFocusFromTouch();
-	    gallery.setSelection(getCache().getObjectOfInterestList().getSelectedPosition());
+		mGallery = (Gallery) findViewById(R.id.gallery);
+		mImageAdapter = new ImageAdapter(this, R.id.gallery, getCache(), getCache().getObjectOfInterestList());
+	    mGallery.setAdapter(mImageAdapter);
+	    mGallery.setSelection(getCache().getObjectOfInterestList().indexOf(mSelectedOOI));
 	    
 	    // When the user selects a thumbnail in the gallery, update the view
-	    gallery.setOnItemClickListener(new OnItemClickListener() {
+	    mGallery.setOnItemClickListener(new OnItemClickListener() {
 	        public void onItemClick(AdapterView parent, View v, int position, long id) {
 	            getCache().getObjectOfInterestList().setSelectedPosition(position);
 	            update();
@@ -72,7 +72,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    });
 	    
 	    // Also update the view when browsing through the gallery
-	    gallery.setOnTouchListener(new View.OnTouchListener() {
+	    mGallery.setOnTouchListener(new View.OnTouchListener() {
 			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -101,17 +101,55 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		TextView userNameText = (TextView) findViewById(R.id.username_text);
 		userNameText.setText(selectedOOI.createName());
         TextView status = (TextView) findViewById(R.id.status);
-        status.setText("\"" + selectedOOI.getStatus() + "\"");
-        ImageView icon = (ImageView) findViewById(R.id.icon);
+        status.setText(selectedOOI.createLabelStatus());
+        final ImageView icon = (ImageView) findViewById(R.id.icon);
         icon.setImageBitmap(selectedOOI.getThumbnail());
-        TextView ageView = (TextView) findViewById(R.id.age);
-        int age = selectedOOI.determineAge();
-        if (age >= 0) {
-            ageView.setText(String.valueOf(age));
+        // Lazy loading
+        if (selectedOOI.getThumbnail() == null) {
+        	selectedOOI.loadThumbnail(new OnThumbnailLoadListener() {
+				
+				@Override
+				public void onThumbnailLoaded() {
+					icon.invalidate();					
+				}
+			});
+        }
+        
+        // Fill user info block with items that are present
+        ViewGroup userInfoBlock = (ViewGroup) findViewById(R.id.user_info_block);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        String dateOfBirth = selectedOOI.createLabelDateOfBirth();
+        if (!dateOfBirth.equals("")) {
+            View ageView = inflater.inflate(R.layout.user_info_item, null);
+            ImageView ageImage = (ImageView) ageView.findViewById(R.id.user_info_icon);
+        	ageImage.setImageResource(R.drawable.details_profile_icon_dateofbirth);
+            TextView ageText = (TextView) ageView.findViewById(R.id.user_info_description);
+            ageText.setText(String.valueOf(dateOfBirth));
+            userInfoBlock.addView(ageView);
+        }
+        
+        if (!selectedOOI.getRelationship().equals("")) {
+        	View relationshipView = inflater.inflate(R.layout.user_info_item, null);
+        	ImageView relationshipImage = (ImageView) relationshipView.findViewById(R.id.user_info_icon);
+        	relationshipImage.setImageResource(R.drawable.details_profile_icon_relationship);
+            TextView relationshipText = (TextView) relationshipView.findViewById(R.id.user_info_description);
+            relationshipText.setText(selectedOOI.getRelationship());
+            userInfoBlock.addView(relationshipView);
         }
         
 		initializeMapView();
         populateItemizedOverlays();		
+	}
+
+	public void post(final Type type, final Bundle bundle) {
+		super.post(type, bundle);
+		
+		switch (type) {
+		case FIND_OBJECTS_OF_INTEREST_FINISHED:
+			mImageAdapter.notifyDataSetChanged();
+			break;
+		}
 	}
 
 	@Override
@@ -148,11 +186,11 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		int ooiLatitude = (int) (selectedObjectOfInterest.getLocation().getLatitude() * 1E6);
 		int ooiLongitude = (int) (selectedObjectOfInterest.getLocation().getLongitude() * 1E6);
 		
-		mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
-								 Math.abs(userLongitude - ooiLongitude));
-		
 		mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
 		        							 (userLongitude + ooiLongitude) / 2));
+
+		mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
+				 Math.abs(userLongitude - ooiLongitude));
 
 		
 	}

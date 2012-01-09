@@ -12,6 +12,15 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	/** Current position of selected object of interest */
 	private int selectedPosition;
 	
+	public ObjectOfInterestList() {
+		super();
+	}
+	
+	public ObjectOfInterestList(ObjectOfInterest ooi) {
+		super();
+		this.add(ooi);
+	}
+	
 	/**
 	 * Determines the distance of the farthest object of interest.
 	 * Can be used to maximize the map zoom level while including all
@@ -64,7 +73,7 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		return super.get(position);
 	}
 	
-	public synchronized void replaceWith(ObjectOfInterestList list) {
+	public synchronized void update(ObjectOfInterestList list) {
 		this.clear();
 		this.addAll(list);
 	}

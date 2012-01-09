@@ -107,7 +107,7 @@ public class OOIListMapActivity extends OOIMapActivity {
         
         // Add objects of interest
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();
-		mClusters = MapOverlayClusterer.cluster(ooiList, 50, mMapView.getZoomLevel());
+		mClusters = MapOverlayClusterer.cluster(ooiList, 100, mMapView.getZoomLevel());
         
 		//itemizedOverlay.addOverlay(overlayitem);
 		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
@@ -131,7 +131,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    switch (item.getItemId()) {
 	    case R.id.signout:
 	    	getCache().setUser(null);
-	    	String logoutURL = getCache().getProperty("skope_logout_url");
+	    	String logoutURL = getCache().getProperty("skope_service_url") + "/logout/";
 	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
 	    	new LogoutTask().execute(this, logoutURL, username, password);

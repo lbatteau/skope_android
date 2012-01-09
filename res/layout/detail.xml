@@ -27,30 +27,7 @@
 		<FrameLayout android:id="@+id/linearLayout2"
 			android:layout_weight="1" android:background="@drawable/silver"
 			android:layout_height="fill_parent" android:layout_width="fill_parent">
-			<LinearLayout android:id="@+id/linearLayout5"
-				android:layout_height="fill_parent" android:layout_width="fill_parent"
-				android:padding="10dip">
-				<LinearLayout android:id="@+id/linearLayout3"
-					android:orientation="vertical" android:layout_weight="1"
-					android:layout_height="wrap_content" android:layout_width="fill_parent">
-					<TextView android:id="@+id/username_text"
-						android:textAppearance="?android:attr/textAppearanceLarge"
-						android:layout_width="fill_parent" android:layout_height="wrap_content"
-						android:text="Name"></TextView>
-					<TextView android:id="@+id/status"
-						android:textAppearance="?android:attr/textAppearanceSmall"
-						android:layout_width="fill_parent" android:layout_height="wrap_content"
-						android:layout_margin="3dip"
-						android:text="Status here..."></TextView>
-					<TextView android:id="@+id/age"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:layout_width="wrap_content" android:layout_height="wrap_content"
-						android:text="Age"></TextView>
-				</LinearLayout>
-				<ImageView android:src="@drawable/icon" style="@style/Thumbnail"
-					android:layout_weight="0" android:layout_height="127dip"
-					android:layout_width="127dip" android:id="@+id/icon"></ImageView>
-			</LinearLayout>
+			<include layout="@layout/user_profile"></include>
 			<SlidingDrawer android:id="@+id/mapSlidingDrawer"
 				android:handle="@+id/map_slider" android:topOffset="147dip"
 				android:layout_height="fill_parent" android:layout_width="fill_parent"

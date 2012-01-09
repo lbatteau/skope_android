@@ -1,52 +1,64 @@
 package com.skope.skope.ui;
 
+import java.util.List;
+
 import android.content.Context;
-import android.content.res.TypedArray;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
-import android.widget.LinearLayout.LayoutParams;
 
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
+import com.skope.skope.application.ObjectOfInterest;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.User.OnThumbnailLoadListener;
 
-public class ImageAdapter extends BaseAdapter {
-    int mGalleryItemBackground;
-    private Context mContext;
-    private Cache mCache;
+public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
 
-    public ImageAdapter(Context context, Cache cache) {
-        mContext = context;
-        mCache = cache;
-        
-        TypedArray attr = mContext.obtainStyledAttributes(R.styleable.Gallery);
-        mGalleryItemBackground = attr.getResourceId(
-                R.styleable.Gallery_android_galleryItemBackground, 0);
-        attr.recycle();
-    }
+	private static final int THUMBNAIL_HEIGHT = 70;
+	private static final int THUMBNAIL_WIDTH = 70;
 
-    public int getCount() {
-        return mCache.getObjectOfInterestList().size();
-    }
+	private Context mContext;
+	private Cache mCache;
+	
+	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
+		@Override
+		public void onThumbnailLoaded() {
+			ImageAdapter.this.notifyDataSetChanged();
+			Log.d(SkopeApplication.LOG_TAG, "GALLERY NOTIFY");
+		}
+	};
 
-    public Object getItem(int position) {
-        return position;
-    }
+	public ImageAdapter(Context context, int textViewResourceId,
+			Cache cache, List<ObjectOfInterest> objects) {
+		super(context, textViewResourceId, objects);
+		mContext = context;
+		mCache = cache;
+	}
 
-    public long getItemId(int position) {
-        return position;
-    }
+	public View getView(int position, View convertView, ViewGroup parent) {
+		ImageView imageView = new ImageView(mContext);
+		ObjectOfInterest ooi = getItem(position);
 
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ImageView imageView = new ImageView(mContext);
-        	
-        imageView.setImageBitmap(mCache.getObjectOfInterestList().get(position).getThumbnail());
-        imageView.setLayoutParams(new Gallery.LayoutParams(100, 100));
-        imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-        imageView.setBackgroundResource(R.drawable.gallery_box);
+		imageView.setImageBitmap(ooi.getThumbnail());
+		if (ooi.getThumbnail() == null) {
+			ooi.loadThumbnail(mThumbnailListener);
+		}
 
-        return imageView;
-    }
+		int width = (int) TypedValue.applyDimension(
+				TypedValue.COMPLEX_UNIT_DIP, THUMBNAIL_WIDTH, mContext
+						.getResources().getDisplayMetrics());
+		int height = (int) TypedValue.applyDimension(
+				TypedValue.COMPLEX_UNIT_DIP, THUMBNAIL_HEIGHT, mContext
+						.getResources().getDisplayMetrics());
+		imageView.setLayoutParams(new Gallery.LayoutParams(width, height));
+		imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+		imageView.setBackgroundResource(R.drawable.gallery_box);
+
+		return imageView;
+	}
 }

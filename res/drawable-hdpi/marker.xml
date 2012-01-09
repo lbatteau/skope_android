@@ -2,15 +2,16 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:id="@+id/marker_background">
 		<shape android:shape="rectangle">
-			<stroke android:width="6dip" android:color="@color/skope_yellow" />
+			<stroke android:width="2dip" android:color="@color/skope_grey_extra_dark" />
 			<solid android:color="@color/skope_grey" />
+			<size android:height="35dip" android:width="34dip" />
 		</shape>
 	</item>
-	<item android:id="@+id/marker_thumbnail" android:left="6dip"
-		android:top="6dip" android:right="6dip" android:bottom="6dip">
+	<item android:id="@+id/marker_thumbnail" android:left="2dip"
+		android:top="2dip" android:right="2dip" android:bottom="2dip">
 		<shape android:shape="rectangle">
 			<solid android:color="@color/skope_grey" />
-			<size android:height="20dip" android:width="20dip" />
+			<size android:height="30dip" android:width="30dip" />
 		</shape>
 	</item>
 </layer-list>

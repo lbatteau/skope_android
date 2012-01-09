@@ -61,6 +61,7 @@ public class MapOverlayClusterer {
 					// Distance is below minimum, cluster this object
 					cluster.add(ooi);
 					isClustered = true;
+					break;
 				}
 			}
 			

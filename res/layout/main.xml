@@ -17,5 +17,5 @@
     android:layout_height="wrap_content"
     android:paddingLeft="5dip"
     android:paddingRight="5dip"
-   android:listSelector="@drawable/list_background_selector"/>
+    android:cacheColorHint="#00000000"/>
 </LinearLayout>

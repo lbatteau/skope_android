@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.skope.skope" android:versionCode="72" android:versionName="0.7.2">
+	package="com.skope.skope" android:versionName="0.7.3" android:versionCode="73">
 
 	<application android:label="@string/app_name"
 		android:name=".application.SkopeApplication"
@@ -32,6 +32,7 @@
 		</activity>
 		<activity android:name=".ui.OOIDetailMapActivity"></activity>
 		<activity android:name=".ui.SkopePreferenceActivity"></activity>
+		<activity android:name=".ui.UserProfileActivity"></activity>
 
 	</application>
 

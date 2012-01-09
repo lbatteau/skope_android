@@ -25,8 +25,8 @@ public class BMPFromURL {
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream input = connection.getInputStream();
-			Bitmap bmp = BitmapFactory.decodeStream(input);
-			bitmap = Bitmap.createScaledBitmap(bmp, 80, 80, true);
+			bitmap = BitmapFactory.decodeStream(input);
+			//bitmap = Bitmap.createScaledBitmap(bmp, 80, 80, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

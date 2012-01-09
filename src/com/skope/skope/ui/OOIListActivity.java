@@ -26,7 +26,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -36,6 +35,7 @@ import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.utils.Type;
 
 /**
@@ -128,27 +128,24 @@ public class OOIListActivity extends BaseActivity {
         mObjectOfInterestList = new ObjectOfInterestList();
         mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
-        listView.setAdapter(mObjectOfInterestListAdapter);         
-        
-        updateListFromCache();
+        listView.setAdapter(mObjectOfInterestListAdapter); 
 
         if (!getServiceQueue().hasServiceStarted()) {
             //showSplashScreen();
             getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
         }
+        
     }
 
 	private void updateListFromCache() {
 		mObjectOfInterestList.clear();
     	ObjectOfInterestList cacheList = getCache().getObjectOfInterestList();
-    	synchronized(cacheList) {
-	        if (cacheList != null && !cacheList.isEmpty()) {
-	        	// Cache contains items
-	        	mObjectOfInterestList.addAll(cacheList);
-	        }
-    	}
-        mObjectOfInterestListAdapter.notifyDataSetChanged();		
-	}
+    	if (cacheList != null && !cacheList.isEmpty()) {
+        	// Cache contains items
+        	mObjectOfInterestList.addAll(cacheList);
+		}
+    	mObjectOfInterestListAdapter.notifyDataSetChanged();
+    }
     
     /*
     
@@ -208,48 +205,69 @@ public class OOIListActivity extends BaseActivity {
         }
     }
     
+    public static class ViewHolder {
+		public TextView nameText;
+		public TextView distanceText;
+		public TextView lastUpdateText;
+		public ImageView icon;
+
+	}
+    
     private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
-    	private List<ObjectOfInterest> m_ooiList;
+    	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    	
+    	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
+			@Override
+			public void onThumbnailLoaded() {
+				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
+			}
+		};
     	
     	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
     			List<ObjectOfInterest> objects) {
     		super(context, textViewResourceId, objects);
-    		this.m_ooiList = objects;
     	}
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            LinearLayout v = (LinearLayout) convertView;
-            LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            if (v == null) {
-                v = (LinearLayout) vi.inflate(R.layout.skope_item, null);
-            }
+		@Override
+        public View getView(int position, View convertView, final ViewGroup parent) {
+			ViewHolder holder;
+			if (convertView == null) {
+                convertView = (View) mInflater.inflate(R.layout.skope_item, null);
+                holder = new ViewHolder();
+                holder.nameText = (TextView) convertView.findViewById(R.id.name_text);
+                holder.distanceText = (TextView) convertView.findViewById(R.id.distance_text);
+                holder.lastUpdateText = (TextView) convertView.findViewById(R.id.last_update_text);
+                holder.icon = (ImageView) convertView.findViewById(R.id.icon);
+                convertView.setTag(holder);
+            } else {
+            	holder = (ViewHolder) convertView.getTag();
+            }             
             
-            ObjectOfInterest ooi = m_ooiList.get(position);
+            ObjectOfInterest ooi = getItem(position);
+            
             if (ooi != null) {
-            	TextView nameText = (TextView) v.findViewById(R.id.name_text);
-                TextView distanceText = (TextView) v.findViewById(R.id.distance_text);
-                TextView lastUpdateText = (TextView) v.findViewById(R.id.last_update_text);
-                ImageView icon = (ImageView) v.findViewById(R.id.icon);
-                
-                if (nameText != null) {
-                	nameText.setText(ooi.createName());                            }
-                
-                if (distanceText != null) {
-                	distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
+                if (holder.nameText != null) {
+                	holder.nameText.setText(ooi.createName());                            
                 }
                 
-                if (lastUpdateText != null) {
-                	lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
+                if (holder.distanceText != null) {
+                	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
                 }
                 
-                if (icon != null) {
-                	icon.setImageBitmap(ooi.getThumbnail());
+                if (holder.lastUpdateText != null) {
+                	holder.lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
                 }
-                    
+                
+                if (holder.icon != null) {
+                	holder.icon.setImageBitmap(ooi.getThumbnail()); // even when null, otherwise previous values remain
+            		// Lazy loading
+                	if (ooi.getThumbnail() == null) {
+                		ooi.loadThumbnail(mThumbnailListener);
+                	}
+                }
             }
             
-            return v;
+            return convertView;
         }
     }
     
@@ -280,7 +298,7 @@ public class OOIListActivity extends BaseActivity {
 	    case R.id.signout:
 	    	getServiceQueue().stopService();
 	    	getCache().setUser(null);
-	    	String logoutURL = getCache().getProperty("skope_logout_url");
+	    	String logoutURL = getCache().getProperty("skope_service_url") + "/logout/";
 	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
 	    	new LogoutTask().execute(this, logoutURL, username, password);

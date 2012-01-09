@@ -23,26 +23,7 @@
 				<include android:layout_height="fill_parent" layout="@layout/detail_button_chat"
 					android:layout_width="0dp" android:layout_weight="1"></include>
 			</LinearLayout>
-			<LinearLayout
-				android:layout_height="fill_parent" android:layout_width="fill_parent"
-				android:padding="10dip" android:layout_weight="1"
-				android:orientation="horizontal">
-				<LinearLayout android:id="@+id/linearLayout3"
-					android:orientation="vertical" android:layout_weight="1"
-					android:layout_height="wrap_content" android:layout_width="fill_parent">
-					<TextView android:id="@+id/username_text"
-						android:textAppearance="?android:attr/textAppearanceLarge"
-						android:layout_width="fill_parent" android:layout_height="wrap_content"
-						android:text="Name"></TextView>
-					<TextView android:id="@+id/status" android:textAppearance="?android:attr/textAppearanceSmall"
-						android:layout_width="fill_parent" android:layout_height="wrap_content"
-						android:layout_margin="3dip" android:text="Status here..."></TextView>
-					<TextView android:id="@+id/age" android:textAppearance="?android:attr/textAppearanceMedium"
-						android:layout_width="wrap_content" android:layout_height="wrap_content"
-						android:text="Age"></TextView>
-				</LinearLayout>
-				<ImageView android:layout_height="127dip" android:layout_weight="0" android:src="@drawable/icon" style="@style/Thumbnail" android:id="@+id/icon" android:layout_width="127dip"></ImageView>
-			</LinearLayout>
+			<include layout="@layout/user_profile"></include>
 			<Gallery android:id="@+id/gallery" android:background="@android:color/black"
 			android:layout_height="90dip" android:layout_weight="0"
 			android:layout_width="fill_parent"></Gallery>

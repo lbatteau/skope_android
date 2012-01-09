@@ -137,6 +137,7 @@ public class MainTabActivity extends TabActivity {
 	                  .setContent(intent);
 	    tabHost.addTab(spec);
 
+	    intent = new Intent().setClass(this, UserProfileActivity.class);
 	    spec = tabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
         tabHost.addTab(spec);
 	    

@@ -16,10 +16,9 @@
 
 package com.skope.skope.application;
 
+import java.text.DateFormat;
+
 import android.app.Application;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 
 /***
  * Application class persists for the duration of the JRE, and is used to store
@@ -94,7 +93,7 @@ public class SkopeApplication extends Application {
         // TODO: Implement a database helper.
         return null;
     }
-
+    
     /***
      * Terminate the application, so release all resources.
      */
