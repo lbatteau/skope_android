@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.skope.skope.utils;
+package com.skope.skope.util;
 
 /***
  * Defines all the message types used in the framework.

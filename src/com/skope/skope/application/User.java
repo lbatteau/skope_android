@@ -41,8 +41,14 @@ public class User {
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
 	protected String mRelationship;
+	protected String mHomeTown;
+	protected String mWork;
+	protected String mEducation;
+	protected String mInterests;
+	protected boolean mIsFirstTime;
 	
 	protected HashMap<String, Bitmap> mImageCache;
+	protected boolean mHasNoThumbnail; 
 	
 	public interface OnThumbnailLoadListener {
 		public void onThumbnailLoaded();
@@ -62,6 +68,7 @@ public class User {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
 				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				mHasNoThumbnail = true;
 				return null;
 			}
 
@@ -75,6 +82,7 @@ public class User {
 				return Bitmap.createScaledBitmap(bitmap, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, true);
 			} catch (IOException e) {
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				mHasNoThumbnail = true;
 			}
 			
 			return null;
@@ -99,19 +107,61 @@ public class User {
 	}
 	
 	public User(JSONObject jsonObject) throws JSONException {
-		this.setUserName(jsonObject.getJSONObject("user").getString("username"));
-		this.setUserEmail(jsonObject.getJSONObject("user").getString("email"));
-		this.setFirstName(jsonObject.getJSONObject("user").getString("first_name"));
-		this.setLastName(jsonObject.getJSONObject("user").getString("last_name"));
-		this.setThumbnailURL(jsonObject.getString("thumbnail_url"));
-		this.setStatus(jsonObject.getString("status_message"));
-		this.setRelationship(jsonObject.getString("relationship"));
+		JSONObject user = jsonObject.getJSONObject("user");
+		if (!user.isNull("username")) {
+			this.setUserName(user.getString("username"));
+		}
+		if (!user.isNull("email")) {
+			this.setUserEmail(user.getString("email"));
+		}
 		
-		String dateOfBirth = jsonObject.getString("date_of_birth");
-		if (dateOfBirth != "null") {
+		if (!user.isNull("first_name")) {
+			this.setFirstName(user.getString("first_name"));
+		}
+		
+		if (!user.isNull("last_name")) {
+			this.setLastName(user.getString("last_name"));
+		}
+		
+		if (!jsonObject.isNull("thumbnail_url")) {
+			this.setThumbnailURL(jsonObject.getString("thumbnail_url"));
+		}
+		
+		// Check if user has uploaded a thumbnail at all
+		if (this.getThumbnailURL() == null || this.getThumbnailURL().equals("")) {
+			// Nope
+			this.setHasNoThumbnail(true);
+		}
+		
+
+		if (!jsonObject.isNull("status_message")) {
+			this.setStatus(jsonObject.getString("status_message"));
+		}
+		
+		if (!jsonObject.isNull("relationship")) {
+			this.setRelationship(jsonObject.getString("relationship"));
+		}
+		
+		if (!jsonObject.isNull("home_town")) {
+			this.setHomeTown(jsonObject.getString("home_town"));
+		}
+		
+		if (!jsonObject.isNull("work")) {
+			this.setWork(jsonObject.getString("work"));
+		}
+		
+		if (!jsonObject.isNull("education")) {
+			this.setEducation(jsonObject.getString("education"));
+		}
+		
+		if (!jsonObject.isNull("interests")) {
+			this.setInterests(jsonObject.getString("interests"));
+		}
+		
+		if (!jsonObject.isNull("date_of_birth")) {
 			try {
 				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-				this.setDateOfBirth(df.parse(dateOfBirth));
+				this.setDateOfBirth(df.parse(jsonObject.getString("date_of_birth")));
 			} catch(ParseException e) {
 				Log.w(SkopeApplication.LOG_TAG, "Invalid date format: " + e);
 			}
@@ -119,13 +169,23 @@ public class User {
 		
 		// Set mLocation
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
-		String[] tokens = jsonObject.getString("location").split("[ ()]");
-		Location location = new Location("SKOPE_SERVICE");
-		location.setLatitude(Double.parseDouble(tokens[3]));
-		location.setLongitude(Double.parseDouble(tokens[2]));
-		this.setLocation(location);
+		if (!jsonObject.isNull("location")) {
+			String[] tokens = jsonObject.getString("location").split("[ ()]");
+			Location location = new Location("SKOPE_SERVICE");
+			location.setLatitude(Double.parseDouble(tokens[3]));
+			location.setLongitude(Double.parseDouble(tokens[2]));
+			this.setLocation(location);
+		}
+		
 		// Set mLocation timestamp
-		this.setLocationTimestamp(Timestamp.valueOf(jsonObject.getString("location_timestamp")));
+		if (!jsonObject.isNull("location_timestamp")) {
+			this.setLocationTimestamp(Timestamp.valueOf(jsonObject.getString("location_timestamp")));
+		}
+		
+		// First time
+		if (!jsonObject.isNull("is_first_time")) {
+			this.setIsFirstTime(jsonObject.getBoolean("is_first_time"));
+		}
 	}
 	
 	@Override
@@ -154,22 +214,24 @@ public class User {
 	 * 				   method is never called.
 	 */
 	public void loadThumbnail(OnThumbnailLoadListener listener) {
-		// Check if thumbnail already loaded for this user
-		if (this.mThumbnail != null) {
-			listener.onThumbnailLoaded();
-		} else {
-			// Not loaded, check cache
-			if (mImageCache != null) {
-				Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
-				if (bitmap != null) {
-			        setThumbnail(bitmap);
-			        listener.onThumbnailLoaded();
-			    }
-			}
+		if (!this.mHasNoThumbnail) {
+			// Check if thumbnail already loaded for this user
+			if (this.mThumbnail != null) {
+				listener.onThumbnailLoaded();
+			} else {
+				// Not loaded, check cache
+				if (mImageCache != null) {
+					Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
+					if (bitmap != null) {
+				        setThumbnail(bitmap);
+				        listener.onThumbnailLoaded();
+				    }
+				}
 
-			ThumbnailLoader loader = new ThumbnailLoader();
-			loader.setOnThumbnailLoadListener(listener);
-			loader.execute(this.getThumbnailURL());
+				ThumbnailLoader loader = new ThumbnailLoader();
+				loader.setOnThumbnailLoadListener(listener);
+				loader.execute(this.getThumbnailURL());
+			}
 		}
 	}
 	
@@ -188,10 +250,10 @@ public class User {
 	}
 	
 	public String createLabelStatus() {
-		if(mStatus == null || mStatus == "null") {
+		if(mStatus == null) {
 			return "";
 		} else {
-			return "\"" + mStatus + "\"";
+			return "\"" + mStatus.trim() + "\"";
 		}
 	}
 	
@@ -313,7 +375,7 @@ public class User {
 	}
 
 	public Bitmap getThumbnail() {
-		if (mThumbnail == null) {
+		if (mThumbnail == null && mHasNoThumbnail == false) {
 			// Not loaded, check cache
 			if (mImageCache != null) {
 				Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
@@ -326,7 +388,6 @@ public class User {
 	}
 
 	public void setThumbnail(Bitmap thumbnail) {
-		Log.i("THUMBNAIL", this.mUsername + " " + this.getThumbnailURL() + " = " + thumbnail.toString());
 		this.mThumbnail = thumbnail;
 	}
 
@@ -394,6 +455,14 @@ public class User {
 		this.mThumbnailURL = thumbnailURL;
 	}
 
+	public void setHasNoThumbnail(boolean hasNoThumbnail) {
+		this.mHasNoThumbnail = hasNoThumbnail;
+	}
+
+	public boolean hasNoThumbnail() {
+		return this.mHasNoThumbnail;
+	}
+
 	public String getRelationship() {
 		return mRelationship;
 	}
@@ -402,8 +471,48 @@ public class User {
 		this.mRelationship = relationship;
 	}
 	
+	public String getHomeTown() {
+		return mHomeTown;
+	}
+
+	public void setHomeTown(String homeTown) {
+		this.mHomeTown = homeTown;
+	}
+	
+	public String getWork() {
+		return mWork;
+	}
+
+	public void setWork(String work) {
+		this.mWork = work;
+	}
+	
+	public String getEducation() {
+		return mEducation;
+	}
+
+	public void setEducation(String education) {
+		this.mEducation = education;
+	}
+	
 	public void setImageCache(HashMap<String, Bitmap> imageCache) {
 		this.mImageCache = imageCache;
+	}
+
+	public String getInterests() {
+		return mInterests;
+	}
+
+	public void setInterests(String interests) {
+		this.mInterests = interests;
+	}
+
+	public boolean isFirstTime() {
+		return mIsFirstTime;
+	}
+
+	public void setIsFirstTime(boolean isFirstTime) {
+		this.mIsFirstTime = isFirstTime;
 	}
 
 }

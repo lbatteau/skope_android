@@ -1,21 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/user_profile" android:layout_height="fill_parent"
-	android:layout_width="fill_parent" android:padding="10dip">
-	<LinearLayout android:id="@+id/linearLayout3"
-		android:orientation="vertical" android:layout_weight="1"
-		android:layout_height="wrap_content" android:layout_width="fill_parent">
-		<TextView android:id="@+id/username_text"
-			android:textAppearance="?android:attr/textAppearanceLarge"
-			android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:text="Name"></TextView>
-		<TextView android:id="@+id/status" android:textAppearance="?android:attr/textAppearanceSmall"
-			android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:layout_margin="3dip" android:text="Status here..."></TextView>
-		<include layout="@layout/user_info_block"/>			
-	</LinearLayout>
-	<ImageView android:src="@drawable/icon" style="@style/Thumbnail"
-		android:layout_weight="0" android:layout_height="127dip"
-		android:layout_width="127dip" android:id="@+id/icon"
-		android:scaleType="fitXY"></ImageView>
-</LinearLayout>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="fill_parent" android:layout_width="fill_parent">
+	<RelativeLayout android:id="@+id/user_profile"
+		android:layout_height="wrap_content" android:layout_width="fill_parent"
+		android:layout_margin="5dip" android:padding="10dip"
+		android:layout_gravity="center_horizontal" android:orientation="vertical"
+		android:background="#FFF">
+		<TextView android:id="@+id/status" android:textSize="12sp"
+			android:layout_width="fill_parent" android:layout_height="30dip"
+			android:layout_margin="3dip" android:layout_gravity="center"
+			android:lines="2" android:text="Status here..."></TextView>
+		<LinearLayout android:id="@+id/user_main"
+			android:layout_height="fill_parent" android:layout_width="fill_parent"
+			android:layout_marginBottom="5dip" android:layout_marginTop="5dip"
+			android:layout_below="@id/status">
+			<LinearLayout android:id="@+id/linearLayout3"
+				android:orientation="vertical" android:layout_height="wrap_content"
+				android:layout_width="fill_parent" android:layout_weight="1">
+				<TextView android:id="@+id/username_text"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:layout_width="fill_parent" android:layout_height="wrap_content"
+					android:text="Name" android:layout_marginBottom="10dip"></TextView>
+				<include layout="@layout/user_info_block" />
+			</LinearLayout>
+			<ImageView android:src="@drawable/icon" style="@style/Thumbnail"
+				android:layout_weight="0" android:layout_height="100dip"
+				android:layout_width="100dip" android:id="@+id/icon"
+				android:layout_marginLeft="5dip" android:scaleType="fitXY"></ImageView>
+		</LinearLayout>
+		<TextView android:layout_height="wrap_content" android:layout_below="@id/user_main"
+			android:id="@+id/textView1" android:layout_width="wrap_content"
+			android:text="Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui."></TextView>
+	</RelativeLayout>
+</ScrollView>

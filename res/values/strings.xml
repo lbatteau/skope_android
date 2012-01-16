@@ -21,10 +21,23 @@
     <string name="location_service_label">Skope</string>
     <string name="button_label_listview">List</string>
     <string name="button_label_mapview">Map</string>
-    <string name="login_hint_user">User</string>
+    <string name="login_button_login">Login</string>
+    <string name="login_button_signup">Sign up</string>
+    <string name="login_hint_user">Email</string>
     <string name="login_hint_password">Password</string>
     <string name="mystore_password">g3h31m</string>
     <string name="prefs_gps_title">Enable GPS</string>
     <string name="prefs_gps_summary">Click here to change the GPS settings</string>
     <string name="home_status_empty">Tap to update your status...</string>
+    <string name="signup_title">Create a Skope account</string>
+    <string name="signup_hint_email">Email</string>
+    <string name="signup_hint_password">Password</string>
+    <string name="signup_hint_confirm">Confirm</string>
+    <string name="signup_email_text">Will never be published or shared</string>
+    <string name="signup_hint_first_name">First name</string>
+    <string name="signup_hint_last_name">Last name</string>
+    <string name="signup_hint_date_of_birth">Birthday:</string>
+    <string name="signup_button_signup">Sign up</string>
+    <string name="signup_label_gender">I\'m</string>
+    <string name="signup_validation_required_fields">Please fill out all the fields</string>
 </resources>

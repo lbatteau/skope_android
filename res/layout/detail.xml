@@ -25,11 +25,11 @@
 		android:layout_height="fill_parent" android:id="@+id/linearLayout1"
 		android:orientation="vertical">
 		<FrameLayout android:id="@+id/linearLayout2"
-			android:layout_weight="1" android:background="@drawable/silver"
+			android:layout_weight="1" android:background="@drawable/silver_reverse"
 			android:layout_height="fill_parent" android:layout_width="fill_parent">
 			<include layout="@layout/user_profile"></include>
 			<SlidingDrawer android:id="@+id/mapSlidingDrawer"
-				android:handle="@+id/map_slider" android:topOffset="147dip"
+				android:handle="@+id/map_slider" android:topOffset="162dip"
 				android:layout_height="fill_parent" android:layout_width="fill_parent"
 				android:background="@null" android:content="@+id/mapview"
 				android:layout_gravity="bottom">

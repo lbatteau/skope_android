@@ -2,5 +2,6 @@
 <resources>
     <style name="Skope" parent="android:style/Theme.Light.NoTitleBar">
         <item name="android:buttonStyle">@style/Button</item>
+        <item name="android:radioButtonStyle">@style/RadioButton</item>
     </style>
 </resources>

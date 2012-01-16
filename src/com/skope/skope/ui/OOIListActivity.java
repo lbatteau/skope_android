@@ -36,7 +36,7 @@ import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 /**
  * Class description goes here.
@@ -291,28 +291,6 @@ public class OOIListActivity extends BaseActivity {
 	    }
 	}
 	 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
-	    switch (item.getItemId()) {
-	    case R.id.signout:
-	    	getServiceQueue().stopService();
-	    	getCache().setUser(null);
-	    	String logoutURL = getCache().getProperty("skope_service_url") + "/logout/";
-	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
-	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
-	    	new LogoutTask().execute(this, logoutURL, username, password);
-            return true;
-	    case R.id.refresh:
-	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	    	return true;   	
-	    case R.id.options:
-	    	startActivity(new Intent(this, SkopePreferenceActivity.class));
-	    default:
-	        return super.onOptionsItemSelected(item);
-	    }
-	}
-	
 	@Override
 	public void onResume() {
 		super.onResume();

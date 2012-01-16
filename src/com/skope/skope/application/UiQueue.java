@@ -23,7 +23,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 /***
  * Queue for all messages being sent from the Service to the UI. A queue is

@@ -8,11 +8,11 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputFilter;
-import android.text.Spanned;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
@@ -25,7 +25,7 @@ import com.skope.skope.application.Cache;
 import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 public class MainTabActivity extends TabActivity {
 	private SkopeApplication mApplication;
@@ -141,13 +141,22 @@ public class MainTabActivity extends TabActivity {
 	    spec = tabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
+        intent = new Intent().setClass(this, UserSignupActivity.class);
 	    spec = tabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
 	    spec = tabHost.newTabSpec("favorites").setIndicator(favoritesProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
-	    tabHost.setCurrentTab(0);
+        // If user logging in for the first time...
+        if (user.isFirstTime()) {
+        	// ...direct to profile
+        	tabHost.setCurrentTab(2);
+        } else {
+        	// ...otherwise to list view
+        	tabHost.setCurrentTab(0);
+        }
+	    
 	}	
 	
 	@Override
@@ -155,6 +164,28 @@ public class MainTabActivity extends TabActivity {
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.skope_menu, menu);
 	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    case R.id.signout:
+	    	mApplication.getServiceQueue().stopService();
+	    	mCache.setUser(null);
+	    	String logoutURL = mCache.getProperty("skope_service_url") + "/logout/";
+	    	String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+	    	String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+	    	new LogoutTask().execute(this, logoutURL, username, password);
+            return true;
+	    case R.id.refresh:
+	    	mApplication.getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+	    	return true;   	
+	    case R.id.options:
+	    	startActivity(new Intent(this, SkopePreferenceActivity.class));
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
 	}
 	
 	

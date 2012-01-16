@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
+import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
@@ -31,7 +32,7 @@ import com.skope.skope.application.User;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.maps.OOIOverlayItem;
 import com.skope.skope.maps.SkopeMapView;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 public abstract class OOIMapActivity extends MapActivity {
 
@@ -41,7 +42,8 @@ public abstract class OOIMapActivity extends MapActivity {
 	protected Cache mCache;
 	/** Pointer to the UiQueue. **/
 	private UiQueue mUiQueue;
-
+	
+	protected MyLocationOverlay mMyLocationOverlay;
 	/***
 	 * Used by processMessage() to temporally store a Bundle object so it can be
 	 * used in the onCreateDialog() method.
@@ -88,6 +90,13 @@ public abstract class OOIMapActivity extends MapActivity {
 	    
 	    mMapView = (SkopeMapView) findViewById(R.id.mapview);
 	    
+		mMyLocationOverlay = new MyLocationOverlay(this, mMapView);	
+		mMyLocationOverlay.enableMyLocation();
+		//mMyLocationOverlay.runOnFirstFix(new Runnable() { public void run() {
+		//	mMapView.getController().animateTo(mMyLocationOverlay.getMyLocation());
+		//}});
+		mMapView.getOverlays().add(0, mMyLocationOverlay);
+ 
 	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
 	    
 	    initializeMapView();		
@@ -191,6 +200,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	protected void onResume() {
 		mUiQueue.subscribe(mHandler);
 		super.onResume();
+		mMyLocationOverlay.enableMyLocation();
 		populateItemizedOverlays();
 	}
 
@@ -200,6 +210,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	@Override
 	protected void onPause() {
 		mUiQueue.unsubscribe(mHandler);
+		mMyLocationOverlay.disableMyLocation();
 		super.onPause();
 	}
 	

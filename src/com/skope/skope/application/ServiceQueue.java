@@ -31,7 +31,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.skope.skope.service.LocationService;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 /***
  * Queue for all messages being sent from the UI to the Service. A queue is

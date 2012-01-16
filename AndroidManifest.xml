@@ -33,6 +33,7 @@
 		<activity android:name=".ui.OOIDetailMapActivity"></activity>
 		<activity android:name=".ui.SkopePreferenceActivity"></activity>
 		<activity android:name=".ui.UserProfileActivity"></activity>
+		<activity android:name=".ui.UserSignupActivity" android:windowSoftInputMode="stateHidden"></activity>
 
 	</application>
 

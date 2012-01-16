@@ -4,14 +4,10 @@ import java.util.ArrayList;
 
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
-import com.google.android.maps.MapView;
 import com.skope.skope.R;
 import com.skope.skope.application.MapOverlayClusterer;
 import com.skope.skope.application.ObjectOfInterest;
@@ -19,7 +15,7 @@ import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.maps.OOIOverlay;
 import com.skope.skope.maps.SkopeMapView;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 public class OOIListMapActivity extends OOIMapActivity {
 	ArrayList<ArrayList<ObjectOfInterest>> mClusters;
@@ -36,7 +32,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 			mMapView.invalidate();
 			return;
 		}
- 
+		
         GeoPoint center = new GeoPoint((int) (location.getLatitude() * 1E6),
         							   (int) (location.getLongitude() * 1E6));
  
@@ -96,16 +92,13 @@ public class OOIListMapActivity extends OOIMapActivity {
 	protected void populateItemizedOverlays() {
 		mMapOverlays = mMapView.getOverlays();
 	    
-		// Clear current overlay
-		mMapOverlays.clear();
+		// Clear ooi overlay
+		if (mMapOverlays.size() > 1) {
+			mMapOverlays.remove(1);
+		}
         
-        // Add current user
+		// Add objects of interest
 		LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-		OOIOverlay userOverlay = new OOIOverlay(marker, this);
-		userOverlay.addOverlay(createOverlay(getCache().getUser()));
-        mMapOverlays.add(userOverlay);
-        
-        // Add objects of interest
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();
 		mClusters = MapOverlayClusterer.cluster(ooiList, 100, mMapView.getZoomLevel());
         
@@ -122,7 +115,7 @@ public class OOIListMapActivity extends OOIMapActivity {
 				ooiOverlay.addOverlay(createOverlay(cluster.get(0)));	
 			}
 		}
-		mMapOverlays.add(ooiOverlay);
+		mMapOverlays.add(1, ooiOverlay);
 	}
 	
 	@Override

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.skope.skope.utils;
+package com.skope.skope.util;
 
 import android.app.Notification;
 import android.app.NotificationManager;

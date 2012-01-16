@@ -23,7 +23,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
@@ -34,11 +33,10 @@ import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
-import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
-import com.skope.skope.utils.NotificationUtils;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.NotificationUtils;
+import com.skope.skope.util.Type;
 
 /***
  * Used by the Service to perform long running tasks (e.g. network

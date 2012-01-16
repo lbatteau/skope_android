@@ -30,7 +30,7 @@ import com.skope.skope.application.Cache;
 import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 /***
  * BaseClass to be extended by all Activities that use the framework. This class
@@ -142,17 +142,8 @@ public class BaseActivity extends Activity {
         }
     }
 
-    /***
-     * Overridable method for handling any onCreateDialog() types not caught by
-     * the Activities own onCreateDialog() method. The code pattern allows more
-     * generic dialogs to be handled here (show battery warning dialog, etc).
-     *
-     * @param id
-     *            Dialog Identifier.
-     * @return Newly create Dialog.
-     */
     @Override
-    protected final Dialog onCreateDialog(final int id) {
+    protected Dialog onCreateDialog(final int id) {
         switch (Type.getType(id)) {
         case DIALOG_STATUS:
             String text = "Cached dialog bundle is NULL";

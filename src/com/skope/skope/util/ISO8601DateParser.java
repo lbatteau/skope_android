@@ -1,4 +1,4 @@
-package util;
+package com.skope.skope.util;
 /*
  * Copyright 1999,2004 The Apache Software Foundation.
  * 

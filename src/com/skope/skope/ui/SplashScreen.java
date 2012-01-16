@@ -6,7 +6,7 @@ import android.view.Window;
 import android.widget.ProgressBar;
 
 import com.skope.skope.R;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 public class SplashScreen extends BaseActivity {
 	

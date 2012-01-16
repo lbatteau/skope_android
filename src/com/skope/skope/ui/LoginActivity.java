@@ -38,12 +38,14 @@ public class LoginActivity extends BaseActivity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		
+		final String loginUrl = getCache().getProperty("skope_service_url") + "/login/";
+		
 		// load up the layout
 		setContentView(R.layout.login);
 		
 		// Set the closed beta text
 		TextView text = (TextView) findViewById(R.id.text_closedbeta);
-		text.setText(Html.fromHtml("This is a closed beta release.<br> Please visit <a href=\"http://www.skope.net\">www.skope.net</a> to join!"));
+		text.setText(Html.fromHtml("This is a beta release.<br> Please visit <a href=\"http://www.skope.net\">www.skope.net</a> for more information!"));
 		// Otherwise link has no response
 		// http://stackoverflow.com/questions/2734270/how-do-i-make-links-in-a-textview-clickable
 		text.setMovementMethod(LinkMovementMethod.getInstance());
@@ -54,12 +56,8 @@ public class LoginActivity extends BaseActivity {
 		
 		// Check if user already present
 		if (getCache().getUser() != null) {
-			// Already present, skip login screen
-	        Intent i = new Intent();
-        	i.setClassName("com.skope.skope",
-        				   "com.skope.skope.ui.MainTabActivity");
-        	startActivity(i);
-        	finish();
+			// Already present, login automatically
+			new LoginTask().execute(loginUrl, username, password);
 		}
 		
 		// Check if username and password already present
@@ -71,12 +69,9 @@ public class LoginActivity extends BaseActivity {
 			passwordEditText.setText(password);
 		}		
 
-		// get the button resource in the xml file and assign it to a local
-		// variable of type Button
-		Button launch = (Button) findViewById(R.id.login_button);
-
-		// this is the action listener
-		launch.setOnClickListener(new OnClickListener() {
+		// Login button action
+		Button login = (Button) findViewById(R.id.login_button);
+		login.setOnClickListener(new OnClickListener() {
 			public void onClick(View viewParam) {
 				// this gets the resources in the xml file and assigns it to a
 				// local variable of type EditText
@@ -89,13 +84,21 @@ public class LoginActivity extends BaseActivity {
 				mUsername = usernameEditText.getText().toString();
 				mPassword = passwordEditText.getText().toString();
 
-				String loginUrl = getCache().getProperty("skope_service_url") + "/login/";
-				
 				new LoginTask().execute(loginUrl, mUsername, mPassword);
 			}
-		}
+		});
 
-		); // end of launch.setOnclickListener
+		// Signup button action
+		Button signup = (Button) findViewById(R.id.signup_button);
+		signup.setOnClickListener(new OnClickListener() {
+			public void onClick(View viewParam) {
+				// Redirect to list activity
+		        Intent i = new Intent();
+	        	i.setClassName("com.skope.skope",
+	        				   "com.skope.skope.ui.UserSignupActivity");
+	        	startActivity(i);
+			}
+		});
 	}
 	
 	private class LoginTask extends AsyncTask<String, Void, CustomHttpClient> {
@@ -198,8 +201,15 @@ public class LoginActivity extends BaseActivity {
 			        case HttpStatus.SC_GATEWAY_TIMEOUT:
 			        	// Connection timeout
 			        	Toast.makeText(LoginActivity.this, "Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
-			        case 426: // UPGRADE_REQUIRED
-			        	Toast.makeText(LoginActivity.this, "Please update", Toast.LENGTH_SHORT).show();
+			        	break;
+			        case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			        	Toast.makeText(LoginActivity.this, "Sorry, the server just crashed. We're working on it.", Toast.LENGTH_SHORT).show();
+			        	break;
+			        case 430: // UPGRADE_REQUIRED
+			        	Toast.makeText(LoginActivity.this, "Please update Skope to the latest version", Toast.LENGTH_SHORT).show();
+			        	break;
+			        case 431: // EMAIL NOT VERIFIED
+			        	Toast.makeText(LoginActivity.this, "Please verify you email address", Toast.LENGTH_SHORT).show();
 			        	break;
 			        case HttpStatus.SC_PAYMENT_REQUIRED:
 			        	Toast.makeText(LoginActivity.this, "You have a payment due", Toast.LENGTH_SHORT).show();

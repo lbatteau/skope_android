@@ -22,7 +22,7 @@ import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
 import com.skope.skope.ui.MainTabActivity;
-import com.skope.skope.utils.Type;
+import com.skope.skope.util.Type;
 
 public class LocationService extends Service implements LocationListener  {
 	
