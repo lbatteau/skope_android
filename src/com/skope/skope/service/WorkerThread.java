@@ -19,14 +19,17 @@ package com.skope.skope.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
@@ -35,6 +38,7 @@ import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
+import com.skope.skope.ui.UserProfileActivity;
 import com.skope.skope.util.NotificationUtils;
 import com.skope.skope.util.Type;
 
@@ -47,7 +51,6 @@ import com.skope.skope.util.Type;
  * background part of the Application.
  */
 public class WorkerThread extends Thread {
-
     /**
      * [Optional] Execution state of the currently running long process, used by
      * the service to recover the state after the Service has been abnormally
@@ -145,6 +148,10 @@ public class WorkerThread extends Thread {
             case FIND_OBJECTS_OF_INTEREST:
                 findObjectsOfInterest(bundle);
                 break;
+                
+            case UPLOAD_IMAGE:
+            	uploadImage(bundle);
+            	break;
 
             case DO_LONG_TASK:
                 doLongTask(bundle);
@@ -276,6 +283,77 @@ public class WorkerThread extends Thread {
         }*/
     }
 
+    /***
+     * Uploads an image to the server
+     * 
+     * The target filename is [UUID].png
+     *
+     * @param bundle
+     *            Bundle should contain:
+     *            	"NAME": The form field name, e.g. "thumbnail"
+     *            	"BITMAP": The image to upload
+     */
+    private void uploadImage(final Bundle bundle) {
+        mUiQueue.postToUi(Type.UPLOAD_IMAGE_START, null, true);
+
+		String name = bundle.getString("NAME");
+		
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String url = mCache.getProperty("skope_service_url") + "/user/" + username + "/" + name + "/";
+		
+		// Set up HTTP client
+        CustomHttpClient client = new CustomHttpClient(url);
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        List<Bitmap> imageUploadQueue = mCache.getImageUploadQueue();
+        while (imageUploadQueue.size() > 0) {
+            Bitmap bitmap = imageUploadQueue.remove(0);
+            client.addBitmap(name, bitmap);
+        }
+         
+        // Send HTTP request to web service
+        try {
+            client.execute(RequestMethod.PUT);
+        } catch (Exception e) {
+        	// Most exceptions already handled by client
+            e.printStackTrace();
+        }
+        
+		// Check HTTP response code
+		int httpResponseCode = client.getResponseCode();
+		// Check for server response
+		if (httpResponseCode == 0) {
+			// No server response
+			Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+		} else if (httpResponseCode != HttpStatus.SC_OK) {
+			// Server returned error code
+			switch (client.getResponseCode()) {
+			case HttpStatus.SC_UNAUTHORIZED:
+			case HttpStatus.SC_REQUEST_TIMEOUT:
+			case HttpStatus.SC_BAD_GATEWAY:
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			case HttpStatus.SC_BAD_REQUEST:
+				Log.e(SkopeApplication.LOG_TAG, "Failed to upload " + name + ": " + client.getErrorMessage());
+			default:
+				break;
+			}
+			return;
+		}
+
+        mUiQueue.postToUi(Type.UPLOAD_IMAGE_END, null, true);
+
+        /*if (bundle != null) {
+            Bundle outBundle = new Bundle();
+            outBundle.putString("TEXT",
+                    "Searching objects of interest finished. Called from ["
+                            + bundle.getString("TEXT") + "]");
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+        }*/
+    }
+    
     /***
      * [Optional] Example task which takes time to complete and repeatedly
      * updates the UI.

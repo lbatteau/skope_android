@@ -19,8 +19,11 @@ package com.skope.skope.application;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.Queue;
 
 import com.skope.skope.R;
 
@@ -30,6 +33,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.os.Message;
 import android.util.Log;
 
 
@@ -77,7 +81,10 @@ public class Cache {
     private User user;
     
     /** Image cache using hash map on URL string */
-    protected HashMap<String,Bitmap> mImageCache;
+    private final HashMap<String,Bitmap> mImageCache = new HashMap<String,Bitmap>();
+    
+    /** Queue for uploading of images */
+    private final List<Bitmap> mImageUploadQueue = new ArrayList<Bitmap>();
     
     /** Lookup list corresponding to User.relationship choices */
     public static String[] RELATIONSHIP_CHOICES;
@@ -117,7 +124,6 @@ public class Cache {
         
         m_objectOfInterestList = new ObjectOfInterestList();
         
-        mImageCache = new HashMap<String,Bitmap>();
     }
 
     /***
@@ -292,6 +298,10 @@ public class Cache {
 
 	public HashMap<String, Bitmap> getImageCache() {
 		return mImageCache;
+	}
+	
+	public List<Bitmap> getImageUploadQueue() {
+		return mImageUploadQueue;
 	}
 
 }

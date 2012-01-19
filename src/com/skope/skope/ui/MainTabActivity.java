@@ -141,7 +141,7 @@ public class MainTabActivity extends TabActivity {
 	    spec = tabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
-        intent = new Intent().setClass(this, UserSignupActivity.class);
+	    intent = new Intent().setClass(this, UserProfileActivity.class);
 	    spec = tabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
@@ -159,6 +159,16 @@ public class MainTabActivity extends TabActivity {
 	    
 	}	
 	
+	/***
+	 * Subscribe the Activity to the UiQueue.
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
+		ImageView icon = (ImageView) findViewById(R.id.user_icon);
+		icon.setImageBitmap(mCache.getUser().getThumbnail());
+	}
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();

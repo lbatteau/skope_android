@@ -1,6 +1,7 @@
 package com.skope.skope.http;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -32,12 +35,17 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 public class CustomHttpClient {
@@ -77,7 +85,8 @@ public class CustomHttpClient {
 	
 	private ArrayList<NameValuePair> params;
 	private ArrayList<NameValuePair> headers;
-
+	private HashMap<String, Bitmap> files;
+	
 	private String url;
 
 	private int responseCode;
@@ -105,11 +114,16 @@ public class CustomHttpClient {
 		this.url = url;
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();
+		files = new HashMap<String, Bitmap>();
 		mUseBasicAuthentication = false;
 	}
 
 	public void addParam(String name, String value) {
 		params.add(new BasicNameValuePair(name, value));
+	}
+	
+	public void addBitmap(String name, Bitmap bitmap) {
+		files.put(name, bitmap);
 	}
 
 	public void addHeader(String name, String value) {
@@ -163,10 +177,31 @@ public class CustomHttpClient {
 				request.addHeader(h.getName(), h.getValue());
 			}
 
-			if (!params.isEmpty()) {
-				request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+			if (files.isEmpty()) {
+				if (!params.isEmpty()) {
+					request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+				}
+			} else {
+				// Got files, make multipart form
+				MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+				// Add regular params
+				for(int index=0; index < params.size(); index++) {
+		            entity.addPart(params.get(index).getName(), new StringBody(params.get(index).getValue()));
+		        }
+				// Add files
+				for(String key: files.keySet()) {
+					Bitmap bmp = files.get(key);
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte[] byteArray = stream.toByteArray();
+					String filename = UUID.randomUUID().toString();
+					entity.addPart(key, new ByteArrayBody(byteArray, filename + ".png"));
+		        }
+				request.setEntity(entity);
+
 			}
 
+			
 			executeRequest(request, url);
 			break;
 		}

@@ -1,29 +1,43 @@
 package com.skope.skope.ui;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.http.HttpStatus;
+
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore.Images.Media;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.skope.skope.R;
+import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
+import com.skope.skope.util.Type;
 
 public class UserProfileActivity extends BaseActivity {
 	public static final int ACTION_SELECT_IMAGE = 0;
 	
-	protected ImageView mThumbnail;
+	protected ImageView mThumbnailView;
 
 	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
 		@Override
 		public void onThumbnailLoaded(Bitmap thumbnail) {
-			mThumbnail.setImageBitmap(thumbnail);
-			mThumbnail.invalidate();
+			mThumbnailView.setImageBitmap(thumbnail);
+			mThumbnailView.invalidate();
 		}
 	};
 	
@@ -36,10 +50,10 @@ public class UserProfileActivity extends BaseActivity {
 		setContentView(R.layout.user);
 		
 		// Set profile picture
-		mThumbnail = (ImageView) findViewById(R.id.icon);
+		mThumbnailView = (ImageView) findViewById(R.id.icon);
 		
 		// Thumbnail button action
-		mThumbnail.setOnClickListener(new OnClickListener() {
+		mThumbnailView.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivityForResult(new Intent(Intent.ACTION_PICK, 
@@ -67,7 +81,25 @@ public class UserProfileActivity extends BaseActivity {
 		if (requestCode == ACTION_SELECT_IMAGE)
 			if (resultCode == Activity.RESULT_OK) {
 				Uri selectedImage = data.getData();
-				mThumbnail.setImageURI(selectedImage);
+				Bitmap thumbnail = null;
+				try {
+					Bitmap bitmap = Media.getBitmap(this.getContentResolver(), selectedImage);
+					float height = (100f / bitmap.getWidth()) * bitmap.getHeight();
+					thumbnail = Bitmap.createScaledBitmap(bitmap, 100, (int)height, true);
+				} catch (FileNotFoundException e) {
+					Log.e(SkopeApplication.LOG_TAG, e.toString());
+				} catch (IOException e) {
+					Log.e(SkopeApplication.LOG_TAG, e.toString());
+				}
+
+				if (thumbnail != null) {
+					getCache().getUser().setThumbnail(thumbnail);
+					mThumbnailView.setImageBitmap(thumbnail);
+					Bundle bundle = new Bundle();
+		            bundle.putString("NAME", "thumbnail");
+		            getCache().getImageUploadQueue().add(thumbnail);
+			        getServiceQueue().postToService(Type.UPLOAD_IMAGE, bundle);
+				}
 			}
 	}
 
