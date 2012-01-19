@@ -2,6 +2,7 @@ package com.skope.skope.ui;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.http.HttpStatus;
@@ -32,6 +33,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.skope.skope.R;
+import com.skope.skope.application.Cache;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
@@ -50,15 +52,13 @@ public class UserSignupActivity extends BaseActivity {
 
 	private static class UserSignupForm {
 		public String email, password1, password2, firstName, lastName,
-		dateOfBirth, gender;
+		dateOfBirth;
+		public int gender;
 	}
 
-	private class SignupTask extends
-	AsyncTask<UserSignupForm, Void, CustomHttpClient> {
-		private ProgressDialog dialog = new ProgressDialog(
-				UserSignupActivity.this);
-		private String mURL = getCache().getProperty("skope_service_url")
-		+ "signup/";
+	private class SignupTask extends AsyncTask<UserSignupForm, Void, CustomHttpClient> {
+		private ProgressDialog dialog = new ProgressDialog(UserSignupActivity.this);
+		private String mURL = getCache().getProperty("skope_service_url") + "signup/";
 		private UserSignupForm mForm;
 
 		// can use UI thread here
@@ -79,7 +79,7 @@ public class UserSignupActivity extends BaseActivity {
 			client.addParam("first_name", mForm.firstName);
 			client.addParam("last_name", mForm.lastName);
 			client.addParam("date_of_birth", mForm.dateOfBirth);
-			client.addParam("gender", mForm.gender);
+			client.addParam("gender", String.valueOf(mForm.gender));
 
 			// Send HTTP request to web service
 			try {
@@ -101,20 +101,16 @@ public class UserSignupActivity extends BaseActivity {
 			// Check for server response
 			if (httpResponseCode == 0) {
 				// No server response
-				Toast.makeText(UserSignupActivity.this, "Connection failed",
-						Toast.LENGTH_SHORT).show();
+				Toast.makeText(UserSignupActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
 				return;
 			} else if (httpResponseCode == HttpStatus.SC_CREATED) {
 				// The verification message is returned in the response
 				mVerificationMessage = client.getResponse();
 
 				// Store credentials
-				SharedPreferences.Editor prefsEditor = getCache()
-				.getPreferences().edit();
-				prefsEditor.putString(SkopeApplication.PREFS_USERNAME,
-						mForm.email);
-				prefsEditor.putString(SkopeApplication.PREFS_PASSWORD,
-						mForm.password1);
+				SharedPreferences.Editor prefsEditor = getCache().getPreferences().edit();
+				prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mForm.email);
+				prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mForm.password1);
 				prefsEditor.commit();
 
 				showDialog(DIALOG_VERIFICATION_SENT);
@@ -123,8 +119,7 @@ public class UserSignupActivity extends BaseActivity {
 				switch (client.getResponseCode()) {
 				case HttpStatus.SC_UNAUTHORIZED:
 					// Login not successful, authorization required
-					Toast.makeText(UserSignupActivity.this, "Login failed",
-							Toast.LENGTH_SHORT).show();
+					Toast.makeText(UserSignupActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_REQUEST_TIMEOUT:
 				case HttpStatus.SC_BAD_GATEWAY:
@@ -132,14 +127,12 @@ public class UserSignupActivity extends BaseActivity {
 					// Connection timeout
 					Toast.makeText(
 							UserSignupActivity.this,
-							"Connection failed. Please make sure you are connected to the internet.",
-							Toast.LENGTH_SHORT).show();
+							"Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 					Toast.makeText(
 							UserSignupActivity.this,
-							"Sorry, the server just crashed. We're working on it.",
-							Toast.LENGTH_SHORT).show();
+							"Sorry, the server just crashed. We're working on it.", Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_BAD_REQUEST:
 					// Validation failed, extract form errors from response
@@ -149,27 +142,22 @@ public class UserSignupActivity extends BaseActivity {
 					} catch (JSONException e) {
 						// Log exception
 						Log.e(SkopeApplication.LOG_TAG, e.toString());
-						Toast.makeText(UserSignupActivity.this, "Invalid form",
-								Toast.LENGTH_SHORT).show();
+						Toast.makeText(UserSignupActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
 						return;
 					}
 
 					if (jsonResponse.length() > 0) {
 						JSONArray fields = jsonResponse.names();
 						try {
-							JSONArray errorList = jsonResponse
-							.getJSONArray(fields.getString(0));
+							JSONArray errorList = jsonResponse .getJSONArray(fields.getString(0));
 							String error = errorList.getString(0);
 							if (error.equals(VALIDATION_MESSAGE_REQUIRED)) {
 								Toast.makeText(
-										UserSignupActivity.this,
-										getResources()
-										.getString(
+										UserSignupActivity.this, getResources() .getString(
 												R.string.signup_validation_required_fields),
 												Toast.LENGTH_LONG).show();
 							} else {
-								Toast.makeText(UserSignupActivity.this, error,
-										Toast.LENGTH_LONG).show();
+								Toast.makeText(UserSignupActivity.this, error, Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
 							Log.e(SkopeApplication.LOG_TAG, e.toString());
@@ -178,9 +166,7 @@ public class UserSignupActivity extends BaseActivity {
 					}
 					break;
 				default:
-					Toast.makeText(UserSignupActivity.this,
-							"Error code " + httpResponseCode,
-							Toast.LENGTH_SHORT).show();
+					Toast.makeText(UserSignupActivity.this, "Error code " + httpResponseCode, Toast.LENGTH_SHORT).show();
 					break;
 				}
 				return;
@@ -253,8 +239,9 @@ public class UserSignupActivity extends BaseActivity {
 				RadioGroup genderGroup = (RadioGroup) findViewById(R.id.gender);
 				int checkedGenderId = genderGroup.getCheckedRadioButtonId();
 				if (checkedGenderId >= 0) {
-					mForm.gender = ((RadioButton) findViewById(checkedGenderId))
-					.getText().toString();
+					String gender = ((RadioButton) findViewById(checkedGenderId))
+														.getText().toString();
+					mForm.gender = Arrays.asList(Cache.GENDER_CHOICES).indexOf(gender);
 				}
 
 				new SignupTask().execute(mForm);

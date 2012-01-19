@@ -1,11 +1,7 @@
 package com.skope.skope.ui;
 
-import android.content.Context;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
-import android.util.TypedValue;
-import android.view.Display;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -13,9 +9,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Gallery;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 
@@ -23,10 +16,8 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
-import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.maps.OOIOverlay;
 import com.skope.skope.util.Type;
-import com.skope.skope.util.Views;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	private Gallery mGallery;
@@ -110,7 +101,10 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		ObjectOfInterest selectedOOI = getCache().getObjectOfInterestList()
 				.getSelectedOOI();
 
-		Views.createUserProfile(this, selectedOOI);
+		selectedOOI.createUserProfile(this);
+		
+		TextView status = (TextView) findViewById(R.id.status);
+		status.setText(selectedOOI.createLabelStatus());
 
 		initializeMapView();
 		populateItemizedOverlays();

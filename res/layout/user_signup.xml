@@ -14,14 +14,14 @@
 		android:layout_height="wrap_content" android:layout_width="fill_parent"></FrameLayout>
 	<ScrollView android:layout_width="fill_parent"
 		android:layout_height="fill_parent" android:background="@drawable/watermark">
-		<LinearLayout android:layout_height="fill_parent"
+		<LinearLayout android:layout_height="wrap_content"
 			android:layout_width="fill_parent" android:id="@+id/frameLayout2"
 			android:paddingTop="10dip" android:paddingRight="16dip"
 			android:paddingLeft="16dip" android:paddingBottom="10dip"
 			android:orientation="vertical">
 			<LinearLayout android:layout_height="wrap_content"
 				android:layout_width="match_parent" android:id="@+id/linearLayout3">
-				<EditText android:layout_weight="1" android:inputType="textEmailAddress"
+				<EditText android:inputType="textEmailAddress"
 					android:layout_height="wrap_content" android:maxLines="1"
 					android:hint="@string/signup_hint_email" android:nextFocusDown="@+id/password1"
 					android:id="@+id/signup_email" android:layout_width="match_parent"
@@ -52,33 +52,16 @@
 				<EditText android:id="@+id/first_name"
 					android:layout_weight="1" android:layout_height="wrap_content"
 					android:inputType="textCapWords" android:layout_width="match_parent"
-					android:hint="@string/signup_hint_first_name" android:maxLines="1"
+					android:hint="@string/user_form_first_name" android:maxLines="1"
 					android:imeOptions="actionNext|flagNoExtractUi"
 					android:nextFocusDown="@+id/last_name"></EditText>
 				<EditText android:layout_weight="1" android:layout_height="wrap_content"
 					android:inputType="textCapWords" android:layout_width="match_parent"
-					android:id="@+id/last_name" android:hint="@string/signup_hint_last_name"
+					android:id="@+id/last_name" android:hint="@string/user_form_last_name"
 					android:maxLines="1" android:imeOptions="actionNext|flagNoExtractUi"
 					android:nextFocusDown="@+id/gender"></EditText>
 			</LinearLayout>
-			<LinearLayout android:layout_height="wrap_content"
-				android:layout_width="match_parent" android:id="@+id/linearLayout4">
-				<RadioGroup android:layout_height="wrap_content"
-					android:id="@+id/gender" android:layout_width="wrap_content"
-					android:orientation="horizontal">
-					<TextView android:text="@string/signup_label_gender"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:textColor="@color/skope_grey_dark" android:layout_width="wrap_content"
-						android:layout_height="wrap_content" android:id="@+id/textView1"
-						android:layout_marginLeft="10dip" android:layout_marginRight="10dip"></TextView>
-					<RadioButton android:id="@+id/radio0"
-						android:layout_width="wrap_content" android:layout_height="wrap_content"
-						android:text="Male"></RadioButton>
-					<RadioButton android:id="@+id/radio1"
-						android:layout_width="wrap_content" android:layout_height="wrap_content"
-						android:text="Female"></RadioButton>
-				</RadioGroup>
-			</LinearLayout>
+			<include layout="@layout/user_form_gender"></include>
 			<EditText android:layout_height="wrap_content" android:hint="Birthday"
 				android:layout_width="match_parent" android:inputType="none"
 				android:id="@+id/date_of_birth" android:editable="false">

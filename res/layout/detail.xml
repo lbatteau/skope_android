@@ -27,7 +27,7 @@
 		<FrameLayout android:id="@+id/linearLayout2"
 			android:layout_weight="1" android:background="@drawable/silver_reverse"
 			android:layout_height="fill_parent" android:layout_width="fill_parent">
-			<include layout="@layout/user_profile"></include>
+			<include layout="@layout/ooi_profile"></include>
 			<SlidingDrawer android:id="@+id/mapSlidingDrawer"
 				android:handle="@+id/map_slider" android:topOffset="162dip"
 				android:layout_height="fill_parent" android:layout_width="fill_parent"

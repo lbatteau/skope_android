@@ -1,4 +1,1 @@
-skope_service_url=http://10.0.2.2:8000/api/skope/
-skope_login_url=http://10.0.2.2:8000/api/login/
-skope_logout_url=http://10.0.2.2:8000/api/logout/
-media_url=http://10.0.2.2:8000/media/
+skope_service_url=http://10.0.2.2:8000/api/

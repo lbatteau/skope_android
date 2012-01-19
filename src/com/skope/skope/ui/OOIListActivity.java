@@ -16,9 +16,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
@@ -34,7 +34,6 @@ import android.widget.Toast;
 import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
-import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.util.Type;
 
@@ -218,7 +217,7 @@ public class OOIListActivity extends BaseActivity {
     	
     	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
 			@Override
-			public void onThumbnailLoaded() {
+			public void onThumbnailLoaded(Bitmap thumbnail) {
 				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
 			}
 		};
@@ -271,26 +270,6 @@ public class OOIListActivity extends BaseActivity {
         }
     }
     
-	/**
-	 * Shows the splash screen over the full Activity
-	 */
-	protected void showSplashScreen() {
-	    mSplashDialog = new Dialog(this, R.style.SplashScreen);
-	    mSplashDialog.setContentView(R.layout.splash);
-	    mSplashDialog.setCancelable(false);
-	    mSplashDialog.show();
-	}	
-	
-	/**
-	 * Removes the Dialog that displays the splash screen
-	 */
-	protected void removeSplashScreen() {
-	    if (mSplashDialog != null) {
-	        mSplashDialog.dismiss();
-	        mSplashDialog = null;
-	    }
-	}
-	 
 	@Override
 	public void onResume() {
 		super.onResume();

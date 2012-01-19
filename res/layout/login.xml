@@ -13,7 +13,7 @@
 		android:layout_height="wrap_content" android:layout_width="fill_parent"></FrameLayout>
 	<FrameLayout android:background="@drawable/watermark"
 		android:layout_height="fill_parent" android:layout_width="fill_parent"
-		android:id="@+id/frameLayout2" android:paddingTop="40dip"
+		android:id="@+id/frameLayout2" android:paddingTop="20dip"
 		android:paddingRight="16dip" android:paddingLeft="16dip"
 		android:paddingBottom="16dip">
 		<LinearLayout android:orientation="vertical"
@@ -44,7 +44,7 @@
 			<TextView android:id="@+id/text_closedbeta"
 				android:layout_height="wrap_content" android:layout_width="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceSmall"
-				android:text="Sample text" android:gravity="bottom|left"
+				android:text="" android:gravity="bottom|left"
 				android:layout_gravity="bottom"></TextView>
 		</LinearLayout>
 	</FrameLayout>

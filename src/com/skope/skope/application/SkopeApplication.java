@@ -27,7 +27,7 @@ import android.app.Application;
  */
 public class SkopeApplication extends Application {
     /** [Optional] Tag for all application logs. **/
-    public static final String LOG_TAG = "SkopeApplication";
+    public static final String LOG_TAG = "Skope";
     
     /** Application wide constants **/
 	public static final String PREFS_USERNAME = "USERNAME";

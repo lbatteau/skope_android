@@ -17,16 +17,29 @@ import java.util.HashMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import com.skope.skope.R;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.FlushedInputStream;
 
 public class User {
 	
-	/** The thumbnail URL is relative, so we need properties to create bitmap */
-	private String mMediaURL;
 	private DateFormat mDateFormat = DateFormat.getDateInstance();
 	
 	protected String mUsername;
@@ -34,13 +47,15 @@ public class User {
 	protected String mFirstName;
 	protected String mLastName;
 	protected Date mDateOfBirth;
+	protected boolean mIsDateofBirthPublic;
 	protected String mStatus;
-	protected int mSex;
+	protected int mSex = -1; // Lookup list, initial 0 would be first item
+	protected boolean mIsSexPublic;
 	protected String mThumbnailURL;
 	protected Bitmap mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
-	protected String mRelationship;
+	protected int mRelationship = -1; // Lookup list, initial 0 would be first item
 	protected String mHomeTown;
 	protected String mWork;
 	protected String mEducation;
@@ -48,10 +63,10 @@ public class User {
 	protected boolean mIsFirstTime;
 	
 	protected HashMap<String, Bitmap> mImageCache;
-	protected boolean mHasNoThumbnail; 
+	protected boolean mHasNoThumbnail;
 	
 	public interface OnThumbnailLoadListener {
-		public void onThumbnailLoaded();
+		public void onThumbnailLoaded(Bitmap thumbnail);
 	}
 	
 	protected class ThumbnailLoader extends AsyncTask<String, Void, Bitmap> {
@@ -77,9 +92,11 @@ public class User {
 				connection.setDoInput(true);
 				connection.setUseCaches(true);
 				connection.connect();
-				InputStream input = connection.getInputStream();
+				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
 				Bitmap bitmap = BitmapFactory.decodeStream(input);
-				return Bitmap.createScaledBitmap(bitmap, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, true);
+				if (bitmap != null) {
+					return Bitmap.createScaledBitmap(bitmap, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, true);
+				}
 			} catch (IOException e) {
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
 				mHasNoThumbnail = true;
@@ -97,7 +114,7 @@ public class User {
 					mImageCache.put(mThumbnailURL, bitmap);
 				}
 				// Call back
-				mListener.onThumbnailLoaded();
+				mListener.onThumbnailLoaded(bitmap);
 			}
 	     }
 
@@ -138,8 +155,8 @@ public class User {
 			this.setStatus(jsonObject.getString("status_message"));
 		}
 		
-		if (!jsonObject.isNull("relationship")) {
-			this.setRelationship(jsonObject.getString("relationship"));
+		if (!jsonObject.isNull("relationship_status")) {
+			this.setRelationshipStatus(jsonObject.getInt("relationship_status"));
 		}
 		
 		if (!jsonObject.isNull("home_town")) {
@@ -165,6 +182,18 @@ public class User {
 			} catch(ParseException e) {
 				Log.w(SkopeApplication.LOG_TAG, "Invalid date format: " + e);
 			}
+		}
+		
+		if (!jsonObject.isNull("is_date_of_birth_public")) {
+			this.setDateofBirthPublic(jsonObject.getBoolean("is_date_of_birth_public"));
+		}
+		
+		if (!jsonObject.isNull("gender")) {
+			this.setSex(jsonObject.getInt("gender"));
+		}
+		
+		if (!jsonObject.isNull("is_gender_public")) {
+			this.setSexPublic(jsonObject.getBoolean("is_gender_public"));
 		}
 		
 		// Set mLocation
@@ -217,14 +246,14 @@ public class User {
 		if (!this.mHasNoThumbnail) {
 			// Check if thumbnail already loaded for this user
 			if (this.mThumbnail != null) {
-				listener.onThumbnailLoaded();
+				listener.onThumbnailLoaded(this.mThumbnail);
 			} else {
 				// Not loaded, check cache
 				if (mImageCache != null) {
 					Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
 					if (bitmap != null) {
 				        setThumbnail(bitmap);
-				        listener.onThumbnailLoaded();
+				        listener.onThumbnailLoaded(bitmap);
 				    }
 				}
 
@@ -358,6 +387,162 @@ public class User {
         return a;
 	}
 	
+	/**
+	 * This method fills out the profile for the given User.
+	 * 
+	 * @param activity The activity's content must include a layout as 
+	 * 				   defined in layout/user_profile.xml.
+	 */
+	public void createUserProfile(Activity activity) {
+		TextView userNameText = (TextView) activity.findViewById(R.id.username_text);
+		userNameText.setText(this.createName());
+		final ImageView icon = (ImageView) activity.findViewById(R.id.icon);
+		icon.setImageBitmap(this.getThumbnail());
+		// Lazy loading
+		if (this.getThumbnail() == null) {
+			this.loadThumbnail(new OnThumbnailLoadListener() {
+
+				@Override
+				public void onThumbnailLoaded(Bitmap thumbnail) {
+					icon.invalidate();
+				}
+			});
+		}
+		
+		// Fill user info block with items that are present
+		ViewGroup userInfoBlock = (ViewGroup) activity.findViewById(R.id.user_info_block);
+		// But first clear...
+		userInfoBlock.removeAllViews();
+
+		LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		TextView userInfoItem;
+		
+		if (this.isDateofBirthPublic()) {
+			String dateOfBirth = this.createLabelDateOfBirth();
+			if (dateOfBirth != null && !dateOfBirth.equals("")) {
+				userInfoItem = (TextView) inflater.inflate(
+						R.layout.user_info_item, null);
+				userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
+						R.drawable.details_profile_icon_dateofbirth, 0, 0, 0);
+				userInfoItem.setText(String.valueOf(dateOfBirth));
+				userInfoBlock.addView(userInfoItem);
+			}
+		}
+
+		int relationship = this.getRelationship();
+		if (relationship != -1) {
+			userInfoItem = (TextView) inflater.inflate(
+					R.layout.user_info_item, null);
+			userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
+					R.drawable.details_profile_icon_relationship, 0, 0, 0);
+			userInfoItem.setText(Cache.RELATIONSHIP_CHOICES[this.getRelationship()]);
+			userInfoBlock.addView(userInfoItem);
+		}
+
+		String homeTown = this.getHomeTown(); 
+		if (homeTown != null && !homeTown.equals("")) {
+			userInfoItem = (TextView) inflater.inflate(
+					R.layout.user_info_item, null);
+			userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
+					R.drawable.details_profile_icon_hometown, 0, 0, 0);
+			userInfoItem.setText(homeTown);
+			userInfoBlock.addView(userInfoItem);
+		}
+
+		String work = this.getWork(); 
+		if (work != null && !work.equals("")) {
+			userInfoItem = (TextView) inflater.inflate(
+					R.layout.user_info_item, null);
+			userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
+					R.drawable.details_profile_icon_job, 0, 0, 0);
+			userInfoItem.setText(work);
+			userInfoBlock.addView(userInfoItem);
+		}
+
+		String education = this.getEducation(); 
+		if (education != null && !education.equals("")) {
+			userInfoItem = (TextView) inflater.inflate(
+					R.layout.user_info_item, null);
+			userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
+					R.drawable.details_profile_icon_college, 0, 0, 0);
+			userInfoItem.setText(education);
+			userInfoBlock.addView(userInfoItem);
+		}
+		
+		String interests = this.getInterests();
+		if (interests != null && !interests.equals("")) {
+			TextView aboutMeEdit = (TextView) activity.findViewById(R.id.about_me);
+			aboutMeEdit.setText(interests);
+		}
+	}
+	
+	/**
+	 * This method fills out the user form for the given User.
+	 * 
+	 * @param activity The activity's content must include a layout as 
+	 * 				   defined in layout/user_profile_edit.xml.
+	 */
+	public void fillUserForm(Activity activity) {
+		EditText firstName = (EditText) activity.findViewById(R.id.first_name);
+		firstName.setText(this.getFirstName());
+		
+		EditText lastName = (EditText) activity.findViewById(R.id.last_name);
+		lastName.setText(this.getLastName());
+		
+		if (this.getSex() != -1) {
+			RadioButton button = (RadioButton) activity.findViewById(R.id.gender_male);
+			if (button.getText().equals(Cache.GENDER_CHOICES[this.getSex()])) {
+				button.setChecked(true);
+			} else {
+				button = (RadioButton) activity.findViewById(R.id.gender_female);
+				button.setChecked(true);
+			}
+		}
+		
+		CheckBox genderShowProfile = (CheckBox) activity.findViewById(R.id.gender_show_profile);
+		genderShowProfile.setChecked(this.isSexPublic());
+		
+		Date dateOfBirth = this.getDateOfBirth();
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTime(dateOfBirth);
+		int year = calendar.get(Calendar.YEAR);
+		int month = calendar.get(Calendar.MONTH);
+		int day = calendar.get(Calendar.DAY_OF_MONTH);
+		DatePicker dateOfBirthPicker = (DatePicker) activity.findViewById(R.id.date_picker);
+		dateOfBirthPicker.updateDate(year, month, day);
+
+		CheckBox birthdayShowProfile = (CheckBox) activity.findViewById(R.id.birthday_show_profile);
+		birthdayShowProfile.setChecked(this.isDateofBirthPublic());
+		
+		if (this.getHomeTown() != null) {
+			EditText homeTownEdit = (EditText) activity.findViewById(R.id.home_town);
+			homeTownEdit.setText(this.getHomeTown());
+		}
+		
+		if (this.getRelationship() != -1) {
+			Spinner relationship = (Spinner) activity.findViewById(R.id.relationship);
+			relationship.setSelection(this.getRelationship());
+		}
+		
+		if (this.getWork() != null) {
+			EditText workEdit = (EditText) activity.findViewById(R.id.work);
+			workEdit.setText(this.getWork());
+		}
+		
+		if (this.getEducation() != null) {
+			EditText educationEdit = (EditText) activity.findViewById(R.id.education);
+			educationEdit.setText(this.getEducation());
+		}
+		
+		if (this.getInterests() != null) {
+			EditText aboutMeEdit = (EditText) activity.findViewById(R.id.about_me);
+			aboutMeEdit.setText(this.getInterests());
+		}
+		
+
+		
+	}
+	
 	public String getUserName() {
 		return mUsername;
 	}
@@ -463,11 +648,11 @@ public class User {
 		return this.mHasNoThumbnail;
 	}
 
-	public String getRelationship() {
+	public int getRelationship() {
 		return mRelationship;
 	}
 
-	public void setRelationship(String relationship) {
+	public void setRelationshipStatus(int relationship) {
 		this.mRelationship = relationship;
 	}
 	
@@ -513,6 +698,22 @@ public class User {
 
 	public void setIsFirstTime(boolean isFirstTime) {
 		this.mIsFirstTime = isFirstTime;
+	}
+
+	public boolean isDateofBirthPublic() {
+		return mIsDateofBirthPublic;
+	}
+
+	public void setDateofBirthPublic(boolean isDateofBirthPublic) {
+		this.mIsDateofBirthPublic = isDateofBirthPublic;
+	}
+
+	public boolean isSexPublic() {
+		return mIsSexPublic;
+	}
+
+	public void setSexPublic(boolean isSexPublic) {
+		this.mIsSexPublic = isSexPublic;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.skope.skope.http;
 
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,6 +25,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -40,10 +42,37 @@ import android.util.Log;
 
 public class CustomHttpClient {
 
+	/**
+	 * @see http://android-developers.blogspot.com/2010/07/multithreading-for-performance.html
+	 */
+	public static class FlushedInputStream extends FilterInputStream {
+	    public FlushedInputStream(InputStream inputStream) {
+	        super(inputStream);
+	    }
+
+	    @Override
+	    public long skip(long n) throws IOException {
+	        long totalBytesSkipped = 0L;
+	        while (totalBytesSkipped < n) {
+	            long bytesSkipped = in.skip(n - totalBytesSkipped);
+	            if (bytesSkipped == 0L) {
+	                  int b = read();
+	                  if (b < 0) {
+	                      break;  // we reached EOF
+	                  } else {
+	                      bytesSkipped = 1; // we read one byte
+	                  }
+	           }
+	            totalBytesSkipped += bytesSkipped;
+	        }
+	        return totalBytesSkipped;
+	    }
+	}
+	
 	private static final String TAG = "CustomHttpClient";
 
 	public enum RequestMethod {
-		GET, POST
+		GET, POST, PUT, DELETE
 	}
 	
 	private ArrayList<NameValuePair> params;
@@ -121,6 +150,21 @@ public class CustomHttpClient {
 			// add headers
 			for (NameValuePair h : headers) {
 				request.addHeader(h.getName(), h.getValue());
+			}
+
+			executeRequest(request, url);
+			break;
+		}
+		case PUT: {
+			HttpPut request = new HttpPut(url);
+
+			// add headers
+			for (NameValuePair h : headers) {
+				request.addHeader(h.getName(), h.getValue());
+			}
+
+			if (!params.isEmpty()) {
+				request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 			}
 
 			executeRequest(request, url);

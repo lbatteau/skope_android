@@ -3,7 +3,7 @@ package com.skope.skope.ui;
 import java.util.List;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.Bitmap;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +14,6 @@ import android.widget.ImageView;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
-import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
 
 public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
@@ -23,13 +22,11 @@ public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
 	private static final int THUMBNAIL_WIDTH = 70;
 
 	private Context mContext;
-	private Cache mCache;
 	
 	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
 		@Override
-		public void onThumbnailLoaded() {
-			ImageAdapter.this.notifyDataSetChanged();
-			Log.d(SkopeApplication.LOG_TAG, "GALLERY NOTIFY");
+		public void onThumbnailLoaded(Bitmap thumbnail) {
+			ImageAdapter.this.notifyDataSetChanged();;
 		}
 	};
 
@@ -37,7 +34,6 @@ public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
 			Cache cache, List<ObjectOfInterest> objects) {
 		super(context, textViewResourceId, objects);
 		mContext = context;
-		mCache = cache;
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {

@@ -211,11 +211,6 @@ public class WorkerThread extends Thread {
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
         
-        // We need to add the username to our get parameters, even though we
-        // just now supplied it as our basic authentication credentials.
-        // The credentials are processed by the HTTP server, so our
-        // service would have to extract them from the request. This is easier. 
-        client.addParam("username", username);
         client.addParam("lat", String.valueOf(currentLocation.getLatitude()));
         client.addParam("lng", String.valueOf(currentLocation.getLongitude()));
         client.addParam("status_message", mCache.getUser().getStatus());
@@ -251,14 +246,6 @@ public class WorkerThread extends Thread {
 					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
 					// Set image cache
 					objectOfInterest.setImageCache(mCache.getImageCache());
-					
-					// Create Bitmap from thumbnail
-					//BMPFromURL bmpFromURL = new BMPFromURL(mCache.getProperty("media_url") + jsonObject.getString("thumbnail"));
-					//if (bmpFromURL != null) {
-					//	Bitmap thumbnail = bmpFromURL.getBitmap();
-					//	objectOfInterest.setThumbnail(thumbnail);
-					//}
-					
 					
 					// If current user, skip
 					if (!objectOfInterest.getUserName().equals(username)) {

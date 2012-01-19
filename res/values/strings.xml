@@ -8,16 +8,18 @@
     <string name="ok">OK</string>
     <string name="quit">Quit</string>
     <string name="really_quit">Quit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
     <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
-    <string name="no_location_title">Can\&apos;t locate...</string>
+    <string name="no_location_title">Can\&apos;t locate&#8230;</string>
     <string name="no_result_message">There seems to be a problem with connecting to the server.</string>
-    <string name="no_result_title">No server response...</string>
+    <string name="no_result_title">No server response&#8230;</string>
     <string name="menu_user">User</string>
     <string name="menu_range">Skope range</string>
     <string name="menu_refresh">Refresh</string>
     <string name="menu_phone_number">Phone number</string>
     <string name="location_service_stopped">Skope location service stopped</string>
-    <string name="location_service_started">Skope service running...</string>
+    <string name="location_service_started">Skope service running&#8230;</string>
     <string name="location_service_label">Skope</string>
     <string name="button_label_listview">List</string>
     <string name="button_label_mapview">Map</string>
@@ -28,16 +30,40 @@
     <string name="mystore_password">g3h31m</string>
     <string name="prefs_gps_title">Enable GPS</string>
     <string name="prefs_gps_summary">Click here to change the GPS settings</string>
-    <string name="home_status_empty">Tap to update your status...</string>
+    <string name="home_status_empty">Tap to update your status&#8230;</string>
     <string name="signup_title">Create a Skope account</string>
     <string name="signup_hint_email">Email</string>
     <string name="signup_hint_password">Password</string>
     <string name="signup_hint_confirm">Confirm</string>
     <string name="signup_email_text">Will never be published or shared</string>
-    <string name="signup_hint_first_name">First name</string>
-    <string name="signup_hint_last_name">Last name</string>
-    <string name="signup_hint_date_of_birth">Birthday:</string>
     <string name="signup_button_signup">Sign up</string>
-    <string name="signup_label_gender">I\'m</string>
     <string name="signup_validation_required_fields">Please fill out all the fields</string>
+    <string name="user_form_first_name">First name</string>
+    <string name="user_form_last_name">Last name</string>
+    <string name="user_form_date_of_birth">Birthday:</string>
+    <string name="user_form_home_town">Home town</string>
+    <string name="user_form_work">Job description</string>
+    <string name="user_form_education">Education</string>
+    <string name="user_form_show_profile">Show in profile</string>
+    <string name="user_form_relationship">Relationship status:</string>
+    <string-array name="user_relationship_choices">
+        <item>Single</item>
+        <item>In a relationship</item>
+        <item>Engaged</item>
+        <item>Married</item>
+        <item>Separated</item>
+        <item>Divorced</item>
+        <item>Widowed</item>
+        <item></item>
+    </string-array>
+    <string name="user_gender_male">Male</string>
+    <string name="user_gender_female">Female</string>
+    <string-array name="user_gender_choices">
+        <item>@string/user_gender_male</item>
+        <item>@string/user_gender_female</item>
+    </string-array>
+    <string name="user_form_gender">I\'m</string>
+    <string name="user_about_me">About me</string>
+    <string name="user_thumbnail_add">Set your profile picture&#8230;</string>
+    <string name="edit">Edit</string>
 </resources>

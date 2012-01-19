@@ -13,11 +13,16 @@
         android:orientation="vertical"
         android:padding="10dip" >
 
-        <Button
-            android:id="@+id/button_edit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/edit" />
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="fill_parent"
+            android:layout_height="30dip"
+            android:layout_gravity="center"
+            android:layout_margin="3dip"
+            android:lines="2"
+            android:text="Status here..."
+            android:textSize="12sp" >
+        </TextView>
 
         <LinearLayout
             android:id="@+id/user_main"

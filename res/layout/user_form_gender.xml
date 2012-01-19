@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="wrap_content" android:id="@+id/gender"
+	android:layout_width="wrap_content" android:orientation="horizontal">
+	<TextView android:text="@string/user_form_gender"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:textColor="@color/skope_grey_dark" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:id="@+id/textView1"
+		android:layout_marginLeft="10dip" android:layout_marginRight="10dip"></TextView>
+	<RadioButton android:id="@+id/gender_male" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="@string/user_gender_male"></RadioButton>
+	<RadioButton android:id="@+id/gender_female" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="@string/user_gender_female"></RadioButton>
+</RadioGroup>

@@ -22,6 +22,8 @@ import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Properties;
 
+import com.skope.skope.R;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
@@ -76,7 +78,13 @@ public class Cache {
     
     /** Image cache using hash map on URL string */
     protected HashMap<String,Bitmap> mImageCache;
-
+    
+    /** Lookup list corresponding to User.relationship choices */
+    public static String[] RELATIONSHIP_CHOICES;
+    
+    /** Lookup list corresponding to User.gender choices */
+    public static String[] GENDER_CHOICES;
+    
     /***
      * Constructor stores the application context.
      *
@@ -87,6 +95,10 @@ public class Cache {
 
 		// Get system resources
         m_resources = mContext.getResources();
+        
+        // Fill lookup lists
+        RELATIONSHIP_CHOICES = m_resources.getStringArray(R.array.user_relationship_choices);
+        GENDER_CHOICES = m_resources.getStringArray(R.array.user_gender_choices);
         
         // Get application preferences
 		m_preferences = mContext.getSharedPreferences("skopePreferences", Context.MODE_WORLD_READABLE);

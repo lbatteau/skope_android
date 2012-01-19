@@ -126,7 +126,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	    	user.loadThumbnail(new OnThumbnailLoadListener() {
 				
 				@Override
-				public void onThumbnailLoaded() {
+				public void onThumbnailLoaded(Bitmap thumbnail) {
 					mMapView.invalidateDrawable(marker);
 					
 				}

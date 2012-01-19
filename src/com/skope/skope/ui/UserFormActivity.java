@@ -1,0 +1,286 @@
+package com.skope.skope.ui;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import org.apache.http.HttpStatus;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.app.ActivityGroup;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.skope.skope.R;
+import com.skope.skope.application.Cache;
+import com.skope.skope.application.SkopeApplication;
+import com.skope.skope.application.User;
+import com.skope.skope.http.BMPFromURL;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
+
+public class UserFormActivity extends BaseActivity {
+
+	private static class UserForm {
+		public String firstName, lastName, dateOfBirth, homeTown, work, 
+		education, gender, relationship_status, interests;
+		public boolean isGenderPublic, isDateOfBirthPublic;
+	}
+
+	private class UpdateTask extends AsyncTask<Object, Void, CustomHttpClient> {
+		private ProgressDialog dialog = new ProgressDialog(UserFormActivity.this);
+
+		// can use UI thread here
+		protected void onPreExecute() {
+			this.dialog.setMessage("Contacting server...");
+			this.dialog.show();
+		}
+
+		protected CustomHttpClient doInBackground(Object... args) {
+			String username = (String) args[0];
+			String password = (String) args[1];
+			String serviceUrl = getCache().getProperty("skope_service_url") + "/user/" + username + "/";
+			
+			// Set up HTTP client
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl);
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        
+			// Add POST parameters
+			UserForm form = (UserForm) args[2];
+			client.addParam("first_name", form.firstName);
+			client.addParam("last_name", form.lastName);
+			client.addParam("date_of_birth", form.dateOfBirth);
+			client.addParam("gender", form.gender);
+			client.addParam("relationship_status", form.relationship_status);
+			client.addParam("home_town", form.homeTown);
+			client.addParam("work", form.work);
+			client.addParam("education", form.education);
+			if (form.isGenderPublic) {
+				client.addParam("is_gender_public", "on");
+			}
+			if (form.isDateOfBirthPublic) {
+				client.addParam("is_date_of_birth_public", "on");
+			}			
+			client.addParam("interests", form.interests);
+
+			// Send HTTP request to web service
+			try {
+				client.execute(RequestMethod.PUT);
+			} catch (Exception e) {
+				// Most exceptions already handled by client
+				e.printStackTrace();
+			}
+
+			// Return server response
+			return client;
+		}
+
+		protected void onPostExecute(CustomHttpClient client) {
+			this.dialog.dismiss();
+
+			// Check HTTP response code
+			int httpResponseCode = client.getResponseCode();
+			// Check for server response
+			if (httpResponseCode == 0) {
+				// No server response
+				Toast.makeText(UserFormActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
+				return;
+			} else if (httpResponseCode == HttpStatus.SC_OK) {
+		        User user;
+		        try {
+		        	JSONObject jsonResponse = new JSONObject(client.getResponse());
+		        	user = new User(jsonResponse);
+
+		        	// Retrieve thumbnail
+		        	BMPFromURL bmpFromURL = new BMPFromURL(user.getThumbnailURL());
+					if (bmpFromURL != null) {
+						Bitmap thumbnail = bmpFromURL.getBitmap();
+						user.setThumbnail(thumbnail);
+					}
+					
+					getCache().setUser(user);
+
+		        } catch (JSONException e) {
+					// Log exception
+					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Toast.makeText(UserFormActivity.this, "Invalid content", Toast.LENGTH_SHORT).show();
+					return;
+				}
+		        finish();
+				
+			} else {
+				// Server returned error code
+				switch (client.getResponseCode()) {
+				case HttpStatus.SC_UNAUTHORIZED:
+					// Login not successful, authorization required
+					Toast.makeText(UserFormActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_REQUEST_TIMEOUT:
+				case HttpStatus.SC_BAD_GATEWAY:
+				case HttpStatus.SC_GATEWAY_TIMEOUT:
+					// Connection timeout
+					Toast.makeText(
+							UserFormActivity.this,
+							"Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+					Toast.makeText(
+							UserFormActivity.this,
+							client.getResponse(), Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_BAD_REQUEST:
+					// Validation failed, extract form errors from response
+					JSONObject jsonResponse = null;
+					try {
+						jsonResponse = new JSONObject(client.getResponse());
+					} catch (JSONException e) {
+						// Log exception
+						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Toast.makeText(UserFormActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
+						return;
+					}
+
+					if (jsonResponse.length() > 0) {
+						JSONArray fields = jsonResponse.names();
+						try {
+							JSONArray errorList = jsonResponse .getJSONArray(fields.getString(0));
+							String error = errorList.getString(0);
+							Toast.makeText(UserFormActivity.this, error, Toast.LENGTH_LONG).show();
+						} catch (JSONException e) {
+							Log.e(SkopeApplication.LOG_TAG, e.toString());
+						}
+						break;
+					}
+					break;
+				default:
+					Toast.makeText(UserFormActivity.this, "Error code " + httpResponseCode, Toast.LENGTH_SHORT).show();
+					break;
+				}
+				return;
+			}
+		}
+	}
+
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle icicle) {
+		super.onCreate(icicle);
+		
+		// Load layout
+		setContentView(R.layout.user_form);
+
+		// Fill form with user info
+		User user = getCache().getUser();
+		user.fillUserForm(this);
+		
+	    // Save button action
+		Button saveButton = (Button) findViewById(R.id.button_save);
+		saveButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Collect fields
+				UserForm form = new UserForm();
+				TextView firstName = (TextView) findViewById(R.id.first_name);
+				form.firstName = firstName.getText().toString();
+				TextView lastName = (TextView) findViewById(R.id.last_name);
+				form.lastName = lastName.getText().toString();
+				
+				RadioGroup genderGroup = (RadioGroup) findViewById(R.id.gender);
+				int checkedGenderId = genderGroup.getCheckedRadioButtonId();
+				if (checkedGenderId >= 0) {
+					String gender = ((RadioButton) findViewById(checkedGenderId))
+														.getText().toString();
+					int genderId = Arrays.asList(Cache.GENDER_CHOICES).indexOf(gender);
+					form.gender = String.valueOf(genderId);
+				}
+
+				
+				CheckBox genderShowProfile = (CheckBox) findViewById(R.id.gender_show_profile);
+				form.isGenderPublic = genderShowProfile.isChecked();
+				
+				DatePicker dateOfBirthPicker = (DatePicker) findViewById(R.id.date_picker);
+				Calendar calendar = new GregorianCalendar();
+				calendar.set(dateOfBirthPicker.getYear(), 
+								dateOfBirthPicker.getMonth(), 
+								dateOfBirthPicker.getDayOfMonth());
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				form.dateOfBirth = df.format(calendar.getTime());
+				
+				CheckBox birthdayShowProfile = (CheckBox) findViewById(R.id.birthday_show_profile);
+				form.isDateOfBirthPublic = birthdayShowProfile.isChecked();
+				
+				EditText homeTownEdit = (EditText) findViewById(R.id.home_town);
+				form.homeTown = homeTownEdit.getText().toString();
+				
+				Spinner relationship = (Spinner) findViewById(R.id.relationship);
+				String value = (String) relationship.getSelectedItem();
+				if (value != null && !value.equals("")) {
+					form.relationship_status = String.valueOf(relationship.getSelectedItemPosition());
+				} else {
+					form.relationship_status = "";
+				}
+				
+				EditText workEdit = (EditText) findViewById(R.id.work);
+				form.work = workEdit.getText().toString();
+				
+				EditText educationEdit = (EditText) findViewById(R.id.education);
+				form.education = educationEdit.getText().toString();
+				
+				EditText aboutMeEdit = (EditText) findViewById(R.id.about_me);
+				form.interests = aboutMeEdit.getText().toString();
+								
+				String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+				String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+				Object[] params = {username, password, form};
+				new UpdateTask().execute(params);
+			}
+		});
+
+	    // Cancel button action
+		Button cancelButton = (Button) findViewById(R.id.button_cancel);
+		cancelButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
+	}
+	
+	public void replaceContentView(String id, Intent newIntent) {
+	    View view = ((ActivityGroup) this.getParent())
+	            .getLocalActivityManager()
+	            .startActivity(id,
+	                    newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+	            .getDecorView();
+	    ((Activity) this).setContentView(view);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		User user = getCache().getUser();
+		user.fillUserForm(this);
+	}
+
+}
