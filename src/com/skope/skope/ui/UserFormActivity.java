@@ -142,12 +142,12 @@ public class UserFormActivity extends BaseActivity {
 					// Connection timeout
 					Toast.makeText(
 							UserFormActivity.this,
-							"Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+							getResources().getText(R.string.error_connection_failed), Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 					Toast.makeText(
 							UserFormActivity.this,
-							client.getResponse(), Toast.LENGTH_SHORT).show();
+							getResources().getText(R.string.error_server_error), Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_BAD_REQUEST:
 					// Validation failed, extract form errors from response

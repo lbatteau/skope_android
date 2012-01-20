@@ -10,6 +10,8 @@
     <string name="really_quit">Quit</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
+    <string name="error_connection_failed">Connection failed. Please make sure you are connected to the internet.</string>
     <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
     <string name="no_location_title">Can\&apos;t locate&#8230;</string>
     <string name="no_result_message">There seems to be a problem with connecting to the server.</string>

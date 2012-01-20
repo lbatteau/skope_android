@@ -18,13 +18,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -34,6 +39,7 @@ import android.widget.Toast;
 import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
+import com.skope.skope.application.User;
 import com.skope.skope.application.User.OnThumbnailLoadListener;
 import com.skope.skope.util.Type;
 
@@ -52,7 +58,42 @@ public class OOIListActivity extends BaseActivity {
     protected Dialog mSplashDialog;
     
     private ProgressBar mProgressBar;
+    private User mUser;
     
+	private OnClickListener mStatusClickListener = new OnClickListener() {
+		@Override
+		public void onClick(final View v) {
+			// Create input filter to limit text length
+			InputFilter[] FilterArray = new InputFilter[1];
+			FilterArray[0] = new InputFilter.LengthFilter(60);
+						
+			final EditText statusEditText = new EditText(OOIListActivity.this);
+			statusEditText.setSingleLine(false);
+			statusEditText.setLines(2);
+			statusEditText.setGravity(Gravity.TOP);
+			statusEditText.setMaxLines(2);
+			statusEditText.setText(getCache().getUser().getStatus());
+			statusEditText.setFilters(FilterArray);
+			
+	        new AlertDialog.Builder(OOIListActivity.this)
+	        .setTitle("Update Status")
+	        .setMessage("Including hash tags (#) will allow you to filter the results by tag")
+	        .setView(statusEditText)
+	        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int whichButton) {
+	            	TextView nameTextView = (TextView) v.findViewById(R.id.user_status);
+	            	getCache().getUser().setStatus(statusEditText.getText().toString());
+	                nameTextView.setText(getCache().getUser().getStatus());
+	                getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+	            }
+	        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int whichButton) {
+	                // Do nothing.
+	            }
+	        }).show();
+		}
+	};	
+
 	// Create an anonymous implementation of OnClickListener
 	private OnLongClickListener mLongClickListener = new OnLongClickListener() {
 		@Override
@@ -108,6 +149,9 @@ public class OOIListActivity extends BaseActivity {
     	// Set the main layout
     	setContentView(R.layout.main);
     	
+	    // Get current user
+    	mUser = getCache().getUser();
+    	
     	// Set the custom titlebar
     	//getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE,
         //        R.layout.titlebar);
@@ -122,6 +166,9 @@ public class OOIListActivity extends BaseActivity {
     	
     	((ListView) findViewById(R.id.list)).setOnItemClickListener(mOOISelectListener);
     	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
+    	
+        // When user clicks on bar, user can update status
+        ((TextView) findViewById(R.id.user_status)).setOnClickListener(mStatusClickListener);
     	
     	// Set up the list adapter
         mObjectOfInterestList = new ObjectOfInterestList();
@@ -180,13 +227,16 @@ public class OOIListActivity extends BaseActivity {
     public final void post(final Type type, final Bundle bundle) {
     	switch (type) {
             case FIND_OBJECTS_OF_INTEREST_START:
-            	//mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            	// If list empty show load bar
+            	if (mObjectOfInterestList.size() == 0) { 
+            		mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            	}
                 break;
 
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
             	updateListFromCache();
             	//removeSplashScreen();
-            	//mProgressBar.setVisibility(ProgressBar.GONE);
+            	mProgressBar.setVisibility(ProgressBar.GONE);
             	break;
             	
             case UNDETERMINED_LOCATION:
@@ -270,9 +320,36 @@ public class OOIListActivity extends BaseActivity {
         }
     }
     
+    protected void updateStatusBar() {
+        TextView nameText = (TextView) findViewById(R.id.user_name);
+        TextView statusText = (TextView) findViewById(R.id.user_status);
+        ImageView icon = (ImageView) findViewById(R.id.user_icon);
+        
+        if (nameText != null) {
+        	nameText.setText(mUser.createName());                         
+        }
+        
+        if (statusText != null) {
+        	if (mUser.getStatus() != null && !mUser.getStatus().equals("")) {
+            	statusText.setText(mUser.getStatus());
+        	} else {
+        		statusText.setText(getResources().getText(R.string.home_status_empty));
+        	}
+        }
+        
+        if (icon != null) {
+        	icon.setImageBitmap(mUser.getThumbnail());
+        }
+        
+    	
+    }
+    
 	@Override
 	public void onResume() {
 		super.onResume();
-		updateListFromCache();    	
+		getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+		updateListFromCache();
+		updateStatusBar();
+
 	}
 }

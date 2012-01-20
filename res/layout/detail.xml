@@ -1,45 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical" android:layout_width="fill_parent"
-	android:layout_height="fill_parent" android:id="@+id/detail_view">
-	<LinearLayout android:id="@+id/linearLayout4"
-		android:layout_height="50dip" android:weightSum="4"
-		android:layout_width="fill_parent" android:orientation="horizontal">
-		<include layout="@layout/detail_button_back"
-			android:layout_width="0dp" android:layout_height="fill_parent"
-			android:layout_weight="1"></include>
-		<include layout="@layout/detail_button_report"
-			android:layout_width="0dp" android:layout_height="fill_parent"
-			android:layout_weight="1"></include>
-		<include layout="@layout/detail_button_favorite"
-			android:layout_width="0dp" android:layout_height="fill_parent"
-			android:layout_weight="1"></include>
-		<include layout="@layout/detail_button_chat"
-			android:layout_width="0dp" android:layout_height="fill_parent"
-			android:layout_weight="1"></include>
-	</LinearLayout>
-	<FrameLayout android:background="@color/skope_grey_extra_dark"
-		android:layout_height="1dip" android:layout_width="fill_parent"
-		android:id="@+id/frameLayout2"></FrameLayout>
-	<LinearLayout android:layout_width="fill_parent"
-		android:layout_height="fill_parent" android:id="@+id/linearLayout1"
-		android:orientation="vertical">
-		<FrameLayout android:id="@+id/linearLayout2"
-			android:layout_weight="1" android:background="@drawable/silver_reverse"
-			android:layout_height="fill_parent" android:layout_width="fill_parent">
-			<include layout="@layout/ooi_profile"></include>
-			<SlidingDrawer android:id="@+id/mapSlidingDrawer"
-				android:handle="@+id/map_slider" android:topOffset="162dip"
-				android:layout_height="fill_parent" android:layout_width="fill_parent"
-				android:background="@null" android:content="@+id/mapview"
-				android:layout_gravity="bottom">
-				<include layout="@layout/detail_map_slider" android:id="@+id/map_slider"></include>
-				<include android:layout_height="fill_parent" layout="@layout/map"
-					android:layout_width="fill_parent"></include>
-			</SlidingDrawer>
-		</FrameLayout>
-		<Gallery android:id="@+id/gallery" android:background="@android:color/black"
-			android:layout_height="90dip" android:layout_weight="0"
-			android:layout_width="fill_parent"></Gallery>
-	</LinearLayout>
+    android:id="@+id/detail_view"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:orientation="horizontal"
+        android:weightSum="4" >
+
+        <include
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            layout="@layout/detail_button_back" >
+        </include>
+
+        <include
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            layout="@layout/detail_button_report" >
+        </include>
+
+        <include
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            layout="@layout/detail_button_favorite" >
+        </include>
+
+        <include
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            layout="@layout/detail_button_chat" >
+        </include>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/frameLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:background="@color/skope_grey_extra_dark" >
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@drawable/silver_reverse" >
+
+        <include layout="@layout/ooi_profile" >
+        </include>
+
+        <SlidingDrawer
+            android:id="@+id/mapSlidingDrawer"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="bottom"
+            android:background="@null"
+            android:content="@+id/mapview"
+            android:handle="@+id/map_slider"
+            android:topOffset="162dip" >
+
+            <include
+                android:id="@+id/map_slider"
+                layout="@layout/detail_map_slider" >
+            </include>
+
+            <include
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                layout="@layout/map" >
+            </include>
+        </SlidingDrawer>
+    </FrameLayout>
+
 </LinearLayout>

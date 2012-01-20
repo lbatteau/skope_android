@@ -73,7 +73,7 @@ public class UserSignupActivity extends BaseActivity {
 
 			// Add POST parameters
 			mForm = args[0];
-			client.addParam("email", mForm.email);
+			client.addParam("email", mForm.email.toLowerCase());
 			client.addParam("password1", mForm.password1);
 			client.addParam("password2", mForm.password2);
 			client.addParam("first_name", mForm.firstName);
@@ -127,12 +127,12 @@ public class UserSignupActivity extends BaseActivity {
 					// Connection timeout
 					Toast.makeText(
 							UserSignupActivity.this,
-							"Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+							getResources().getText(R.string.error_connection_failed), Toast.LENGTH_SHORT).show();
 					break;
 				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 					Toast.makeText(
 							UserSignupActivity.this,
-							"Sorry, the server just crashed. We're working on it.", Toast.LENGTH_SHORT).show();
+							getResources().getText(R.string.error_server_error), Toast.LENGTH_LONG).show();
 					break;
 				case HttpStatus.SC_BAD_REQUEST:
 					// Validation failed, extract form errors from response

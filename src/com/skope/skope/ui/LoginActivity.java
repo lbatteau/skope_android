@@ -56,8 +56,12 @@ public class LoginActivity extends BaseActivity {
 		
 		// Check if user already present
 		if (getCache().getUser() != null) {
-			// Already present, login automatically
-			new LoginTask().execute(loginUrl, username, password);
+			// Present, redirect to list activity
+	        Intent i = new Intent();
+        	i.setClassName("com.skope.skope",
+        				   "com.skope.skope.ui.MainTabActivity");
+        	startActivity(i);
+        	finish();	
 		}
 		
 		// Check if username and password already present
@@ -81,7 +85,7 @@ public class LoginActivity extends BaseActivity {
 				// the getText() gets the current value of the text box
 				// the toString() converts the value to String data type
 				// then assigns it to a variable of type String
-				mUsername = usernameEditText.getText().toString();
+				mUsername = usernameEditText.getText().toString().toLowerCase();
 				mPassword = passwordEditText.getText().toString();
 
 				new LoginTask().execute(loginUrl, mUsername, mPassword);
@@ -200,10 +204,10 @@ public class LoginActivity extends BaseActivity {
 			        case HttpStatus.SC_BAD_GATEWAY:
 			        case HttpStatus.SC_GATEWAY_TIMEOUT:
 			        	// Connection timeout
-			        	Toast.makeText(LoginActivity.this, "Connection failed. Please make sure you are connected to the internet.", Toast.LENGTH_SHORT).show();
+			        	Toast.makeText(LoginActivity.this, getResources().getText(R.string.error_connection_failed), Toast.LENGTH_SHORT).show();
 			        	break;
 			        case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-			        	Toast.makeText(LoginActivity.this, "Sorry, the server just crashed. We're working on it.", Toast.LENGTH_SHORT).show();
+			        	Toast.makeText(LoginActivity.this, getResources().getText(R.string.error_server_error), Toast.LENGTH_SHORT).show();
 			        	break;
 			        case 430: // UPGRADE_REQUIRED
 			        	Toast.makeText(LoginActivity.this, "Please update Skope to the latest version", Toast.LENGTH_SHORT).show();

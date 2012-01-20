@@ -4,7 +4,13 @@ import java.util.ArrayList;
 
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
+import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Gallery;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
@@ -18,7 +24,9 @@ import com.skope.skope.maps.SkopeMapView;
 import com.skope.skope.util.Type;
 
 public class OOIListMapActivity extends OOIMapActivity {
-	ArrayList<ArrayList<ObjectOfInterest>> mClusters;
+	private ArrayList<ArrayList<ObjectOfInterest>> mClusters;
+	private Gallery mGallery;
+	private ImageAdapter mImageAdapter;
 	
 	@Override
 	protected void initializeMapView() {
@@ -63,6 +71,33 @@ public class OOIListMapActivity extends OOIMapActivity {
 		});
         
         mMapView.invalidate();
+
+	    // Set up the gallery
+		mGallery = (Gallery) findViewById(R.id.gallery);
+		mGallery.setUnselectedAlpha(0.5f);
+		mGallery.setSpacing(5);
+		mImageAdapter = new ImageAdapter(this, R.id.gallery, getCache(), getCache().getObjectOfInterestList());
+	    mGallery.setAdapter(mImageAdapter);
+	    
+	    
+	    // When the user selects a thumbnail in the gallery, update the view
+	    mGallery.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView parent, View view,
+					int position, long id) {
+				getCache().getObjectOfInterestList().setSelectedPosition(position);
+				ObjectOfInterest ooi = getCache().getObjectOfInterestList().getSelectedOOI();
+				mMapView.getController().animateTo(
+						new GeoPoint((int) (ooi.getLocation().getLatitude() * 1E6),
+	            					 (int) (ooi.getLocation().getLongitude() * 1E6)));
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+								
+			}
+		});
 	}
 	
 	public void zoomToCluster(int clusterIndex) {
@@ -88,6 +123,18 @@ public class OOIListMapActivity extends OOIMapActivity {
 
 	}
 	
+	@Override
+	public void post(final Type type, final Bundle bundle) {
+		super.post(type, bundle);
+
+		switch (type) {
+		case FIND_OBJECTS_OF_INTEREST_FINISHED:
+			super.post(type, bundle);
+			mImageAdapter.notifyDataSetChanged();
+			break;
+		}
+	}
+
 	@Override
 	protected void populateItemizedOverlays() {
 		mMapOverlays = mMapView.getOverlays();

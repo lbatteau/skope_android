@@ -93,7 +93,7 @@ public abstract class OOIMapActivity extends MapActivity {
 		mMyLocationOverlay = new MyLocationOverlay(this, mMapView);	
 		mMyLocationOverlay.enableMyLocation();
 		//mMyLocationOverlay.runOnFirstFix(new Runnable() { public void run() {
-		//	mMapView.getController().animateTo(mMyLocationOverlay.getMyLocation());
+			//mMapView.getController().animateTo(mMyLocationOverlay.getMyLocation());
 		//}});
 		mMapView.getOverlays().add(0, mMyLocationOverlay);
  
@@ -103,7 +103,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	}
 	
 	protected void setContentView() {
-		setContentView(R.layout.map);
+		setContentView(R.layout.map_gallery);
 	}
 
 	/**
