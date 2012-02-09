@@ -29,7 +29,7 @@ import com.skope.skope.application.ServiceQueue;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
 import com.skope.skope.application.User;
-import com.skope.skope.application.User.OnThumbnailLoadListener;
+import com.skope.skope.application.User.OnImageLoadListener;
 import com.skope.skope.maps.OOIOverlayItem;
 import com.skope.skope.maps.SkopeMapView;
 import com.skope.skope.util.Type;
@@ -88,7 +88,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	    
 	    setContentView();
 	    
-	    mMapView = (SkopeMapView) findViewById(R.id.mapview);
+	   mMapView = (SkopeMapView) findViewById(R.id.mapview);
 	    
 		mMyLocationOverlay = new MyLocationOverlay(this, mMapView);	
 		mMyLocationOverlay.enableMyLocation();
@@ -112,21 +112,21 @@ public abstract class OOIMapActivity extends MapActivity {
 	 * @return
 	 */
 	protected OOIOverlayItem createOverlay(User user) {
-		// Create the drawable containing a thumbnail 
+		// Create the drawable containing a profile picture 
         final LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
         int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicWidth(), getResources().getDisplayMetrics());
 	    int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicHeight(), getResources().getDisplayMetrics());
-	    Bitmap thumbnail = user.getThumbnail();
-	    if (thumbnail != null) {
-	    	Drawable thumbnailDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(thumbnail, width, height, true));
-	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, thumbnailDrawable);
+	    Bitmap profilePicture = user.getProfilePicture();
+	    if (profilePicture != null) {
+	    	Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, true));
+	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);
 	    } else {
 	    	// Lazy loading
 	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, new BitmapDrawable());
-	    	user.loadThumbnail(new OnThumbnailLoadListener() {
+	    	user.loadProfilePicture(new OnImageLoadListener() {
 				
 				@Override
-				public void onThumbnailLoaded(Bitmap thumbnail) {
+				public void onImageLoaded(Bitmap profilePicture) {
 					mMapView.invalidateDrawable(marker);
 					
 				}
@@ -201,7 +201,6 @@ public abstract class OOIMapActivity extends MapActivity {
 		mUiQueue.subscribe(mHandler);
 		super.onResume();
 		mMyLocationOverlay.enableMyLocation();
-		populateItemizedOverlays();
 	}
 
 	/***

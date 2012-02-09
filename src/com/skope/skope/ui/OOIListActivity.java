@@ -40,7 +40,7 @@ import com.skope.skope.R;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.User;
-import com.skope.skope.application.User.OnThumbnailLoadListener;
+import com.skope.skope.application.User.OnImageLoadListener;
 import com.skope.skope.util.Type;
 
 /**
@@ -58,7 +58,6 @@ public class OOIListActivity extends BaseActivity {
     protected Dialog mSplashDialog;
     
     private ProgressBar mProgressBar;
-    private User mUser;
     
 	private OnClickListener mStatusClickListener = new OnClickListener() {
 		@Override
@@ -143,29 +142,14 @@ public class OOIListActivity extends BaseActivity {
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	
-    	// Enable custom titlebar
-    	//requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-    	
     	// Set the main layout
     	setContentView(R.layout.main);
     	
-	    // Get current user
-    	mUser = getCache().getUser();
-    	
-    	// Set the custom titlebar
-    	//getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE,
-        //        R.layout.titlebar);
-    	
-    	// Fill the custom titlebar title
-    	//TextView title = (TextView) findViewById(R.id.title);
-    	//title.setText("Skope");
-    	
     	// Hide the progress bar
     	mProgressBar = (ProgressBar) findViewById(R.id.titleProgressBar);
-    	mProgressBar.setVisibility(ProgressBar.GONE);
+    	mProgressBar.setVisibility(ProgressBar.INVISIBLE);
     	
-    	((ListView) findViewById(R.id.list)).setOnItemClickListener(mOOISelectListener);
-    	((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
+    	//((View) findViewById(R.id.listview)).setOnLongClickListener(mLongClickListener);
     	
         // When user clicks on bar, user can update status
         ((TextView) findViewById(R.id.user_status)).setOnClickListener(mStatusClickListener);
@@ -175,12 +159,8 @@ public class OOIListActivity extends BaseActivity {
         mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mObjectOfInterestListAdapter); 
+        listView.setOnItemClickListener(mOOISelectListener);
 
-        if (!getServiceQueue().hasServiceStarted()) {
-            //showSplashScreen();
-            getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-        }
-        
     }
 
 	private void updateListFromCache() {
@@ -235,8 +215,7 @@ public class OOIListActivity extends BaseActivity {
 
             case FIND_OBJECTS_OF_INTEREST_FINISHED:
             	updateListFromCache();
-            	//removeSplashScreen();
-            	mProgressBar.setVisibility(ProgressBar.GONE);
+            	mProgressBar.setVisibility(ProgressBar.INVISIBLE);
             	break;
             	
             case UNDETERMINED_LOCATION:
@@ -265,9 +244,9 @@ public class OOIListActivity extends BaseActivity {
     private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
-    	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
+    	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
 			@Override
-			public void onThumbnailLoaded(Bitmap thumbnail) {
+			public void onImageLoaded(Bitmap thumbnail) {
 				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
 			}
 		};
@@ -285,7 +264,6 @@ public class OOIListActivity extends BaseActivity {
                 holder = new ViewHolder();
                 holder.nameText = (TextView) convertView.findViewById(R.id.name_text);
                 holder.distanceText = (TextView) convertView.findViewById(R.id.distance_text);
-                holder.lastUpdateText = (TextView) convertView.findViewById(R.id.last_update_text);
                 holder.icon = (ImageView) convertView.findViewById(R.id.icon);
                 convertView.setTag(holder);
             } else {
@@ -300,18 +278,15 @@ public class OOIListActivity extends BaseActivity {
                 }
                 
                 if (holder.distanceText != null) {
-                	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance()));
-                }
-                
-                if (holder.lastUpdateText != null) {
-                	holder.lastUpdateText.setText("Last update: " + ooi.createLabelTimePassedSinceLastUpdate());
+                	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance())
+                			+ " - " + ooi.createLabelTimePassedSinceLastUpdate());
                 }
                 
                 if (holder.icon != null) {
-                	holder.icon.setImageBitmap(ooi.getThumbnail()); // even when null, otherwise previous values remain
+                	holder.icon.setImageBitmap(ooi.getProfilePicture()); // even when null, otherwise previous values remain
             		// Lazy loading
-                	if (ooi.getThumbnail() == null) {
-                		ooi.loadThumbnail(mThumbnailListener);
+                	if (ooi.getProfilePicture() == null) {
+                		ooi.loadProfilePicture(mProfilePictureListener);
                 	}
                 }
             }
@@ -324,21 +299,22 @@ public class OOIListActivity extends BaseActivity {
         TextView nameText = (TextView) findViewById(R.id.user_name);
         TextView statusText = (TextView) findViewById(R.id.user_status);
         ImageView icon = (ImageView) findViewById(R.id.user_icon);
+        User user = getCache().getUser();
         
         if (nameText != null) {
-        	nameText.setText(mUser.createName());                         
+        	nameText.setText(user.createName());                         
         }
         
         if (statusText != null) {
-        	if (mUser.getStatus() != null && !mUser.getStatus().equals("")) {
-            	statusText.setText(mUser.getStatus());
+        	if (user.getStatus() != null && !user.getStatus().equals("")) {
+            	statusText.setText(user.getStatus());
         	} else {
         		statusText.setText(getResources().getText(R.string.home_status_empty));
         	}
         }
         
         if (icon != null) {
-        	icon.setImageBitmap(mUser.getThumbnail());
+        	icon.setImageBitmap(user.getProfilePicture());
         }
         
     	

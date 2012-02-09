@@ -3,7 +3,6 @@ package com.skope.skope.ui;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.apache.http.HttpStatus;
@@ -15,7 +14,6 @@ import android.app.Activity;
 import android.app.ActivityGroup;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,15 +33,15 @@ import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
-import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
 public class UserFormActivity extends BaseActivity {
 
 	private static class UserForm {
-		public String firstName, lastName, dateOfBirth, homeTown, work, 
-		education, gender, relationship_status, interests;
+		public String firstName, lastName, dateOfBirth, homeTown, work_job_title,
+		work_company, education_study, education_college, gender, 
+		relationship_status;
 		public boolean isGenderPublic, isDateOfBirthPublic;
 	}
 
@@ -74,15 +72,17 @@ public class UserFormActivity extends BaseActivity {
 			client.addParam("gender", form.gender);
 			client.addParam("relationship_status", form.relationship_status);
 			client.addParam("home_town", form.homeTown);
-			client.addParam("work", form.work);
-			client.addParam("education", form.education);
+			client.addParam("work_job_title", form.work_job_title);
+			client.addParam("work_company", form.work_company);
+			client.addParam("education_study", form.education_study);
+			client.addParam("education_college", form.education_college);
 			if (form.isGenderPublic) {
 				client.addParam("is_gender_public", "on");
 			}
 			if (form.isDateOfBirthPublic) {
 				client.addParam("is_date_of_birth_public", "on");
 			}			
-			client.addParam("interests", form.interests);
+			//client.addParam("interests", form.interests);
 
 			// Send HTTP request to web service
 			try {
@@ -110,17 +110,8 @@ public class UserFormActivity extends BaseActivity {
 		        User user;
 		        try {
 		        	JSONObject jsonResponse = new JSONObject(client.getResponse());
-		        	user = new User(jsonResponse);
-
-		        	// Retrieve thumbnail
-		        	BMPFromURL bmpFromURL = new BMPFromURL(user.getThumbnailURL());
-					if (bmpFromURL != null) {
-						Bitmap thumbnail = bmpFromURL.getBitmap();
-						user.setThumbnail(thumbnail);
-					}
-					
+		        	user = new User(jsonResponse, getCache());
 					getCache().setUser(user);
-
 		        } catch (JSONException e) {
 					// Log exception
 					Log.e(SkopeApplication.LOG_TAG, e.toString());
@@ -174,7 +165,7 @@ public class UserFormActivity extends BaseActivity {
 					}
 					break;
 				default:
-					Toast.makeText(UserFormActivity.this, "Error code " + httpResponseCode, Toast.LENGTH_SHORT).show();
+					Toast.makeText(UserFormActivity.this, String.valueOf(httpResponseCode), Toast.LENGTH_SHORT).show();
 					break;
 				}
 				return;
@@ -241,14 +232,17 @@ public class UserFormActivity extends BaseActivity {
 					form.relationship_status = "";
 				}
 				
-				EditText workEdit = (EditText) findViewById(R.id.work);
-				form.work = workEdit.getText().toString();
+				EditText edit = (EditText) findViewById(R.id.work_job_title);
+				form.work_job_title = edit.getText().toString();
 				
-				EditText educationEdit = (EditText) findViewById(R.id.education);
-				form.education = educationEdit.getText().toString();
+				edit = (EditText) findViewById(R.id.work_company);
+				form.work_company = edit.getText().toString();
 				
-				EditText aboutMeEdit = (EditText) findViewById(R.id.about_me);
-				form.interests = aboutMeEdit.getText().toString();
+				edit = (EditText) findViewById(R.id.education_study);
+				form.education_study = edit.getText().toString();
+				
+				edit = (EditText) findViewById(R.id.education_college);
+				form.education_college = edit.getText().toString();
 								
 				String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 				String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");

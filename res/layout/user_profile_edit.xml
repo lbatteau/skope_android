@@ -88,6 +88,8 @@
                     android:layout_marginLeft="10dip"
                     android:layout_marginRight="10dip"
                     android:text="@string/user_form_date_of_birth"
+                    android:drawableLeft="@drawable/details_profile_icon_dateofbirth"
+                    android:drawablePadding="5dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColor="@color/skope_grey_dark" >
                 </TextView>
@@ -112,6 +114,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/user_form_home_town"
+                android:drawableLeft="@drawable/details_profile_icon_hometown"
+                android:drawablePadding="5dip"
                 android:inputType="textCapWords"
                 android:maxLength="20" />
 
@@ -122,6 +126,8 @@
                 android:layout_marginLeft="10dip"
                 android:layout_marginRight="10dip"
                 android:text="@string/user_form_relationship"
+                android:drawableLeft="@drawable/details_profile_icon_relationship"
+                android:drawablePadding="5dip"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/skope_grey_dark" />
 
@@ -132,42 +138,125 @@
                 android:entries="@array/user_relationship_choices"
                 android:prompt="@string/user_form_relationship" />
 
-            <EditText
-                android:id="@+id/work"
+            <LinearLayout
+                android:id="@+id/linearLayout5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/user_form_work"
-                android:inputType="textCapWords"
-                android:maxLength="40" />
+                android:layout_marginBottom="5dip"
+                android:background="@drawable/box"
+                android:orientation="vertical" >
 
-            <EditText
-                android:id="@+id/education"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dip"
+                    android:layout_marginRight="10dip"
+                    android:text="@string/user_form_work"
+                    android:drawableLeft="@drawable/details_profile_icon_job"
+                    android:drawablePadding="5dip"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/skope_grey_dark" >
+                </TextView>
+
+                <LinearLayout
+                    android:id="@+id/linearLayout2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+
+                    <EditText
+                        android:id="@+id/work_job_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/user_form_work_job_title"
+                        android:inputType="textCapWords"
+                        android:maxLength="40" >
+                    </EditText>
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="@string/at"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/skope_grey_dark" />
+
+                    <EditText
+                        android:id="@+id/work_company"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/user_form_work_company"
+                        android:inputType="textCapWords"
+                        android:maxLength="40" />
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayout3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/user_form_education"
-                android:inputType="textCapWords"
-                android:maxLength="40" >
+                android:orientation="vertical" 
+                android:background="@drawable/box">
 
-                <requestFocus />
-            </EditText>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dip"
+                    android:layout_marginRight="10dip"
+                    android:text="@string/user_form_education"
+                    android:drawableLeft="@drawable/details_profile_icon_college"
+                    android:drawablePadding="5dip"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/skope_grey_dark" />
 
-            <EditText
-                android:id="@+id/about_me"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:gravity="top"
-                android:hint="@string/user_about_me"
-                android:inputType="textMultiLine"
-                android:lines="4"
-                android:maxLength="160" />
+                <LinearLayout
+                    android:id="@+id/LinearLayout01"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+
+                    <EditText
+                        android:id="@+id/education_study"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/user_form_education_study"
+                        android:inputType="textCapWords"
+                        android:maxLength="40" >
+                    </EditText>
+
+                    <TextView
+                        android:id="@+id/TextView02"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0"
+                        android:gravity="center_vertical"
+                        android:text="@string/at"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/skope_grey_dark" />
+
+                    <EditText
+                        android:id="@+id/education_college"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/user_form_education_college"
+                        android:inputType="textCapWords"
+                        android:maxLength="40" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/linearLayout1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dip"
                 android:layout_marginBottom="10dip"
+                android:layout_marginTop="10dip"
                 android:layout_weight="0" >
 
                 <Button

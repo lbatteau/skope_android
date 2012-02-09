@@ -56,7 +56,10 @@ public class LoginActivity extends BaseActivity {
 		
 		// Check if user already present
 		if (getCache().getUser() != null) {
-			// Present, redirect to list activity
+			// Present, unmark first time login
+			getCache().getUser().setIsFirstTime(false);
+			
+			// Redirect to list activity
 	        Intent i = new Intent();
         	i.setClassName("com.skope.skope",
         				   "com.skope.skope.ui.MainTabActivity");
@@ -160,19 +163,24 @@ public class LoginActivity extends BaseActivity {
 			// The user object is returned in the response
 	        User user;
 	        try {
-	        	user = new User(jsonResponse);
+	        	user = new User(jsonResponse, getCache());
 	        	
-	        	// Retrieve thumbnail
-	        	BMPFromURL bmpFromURL = new BMPFromURL(user.getThumbnailURL());
-				if (bmpFromURL != null) {
-					Bitmap thumbnail = bmpFromURL.getBitmap();
-					user.setThumbnail(thumbnail);
-				}
+	        	// Retrieve profile picture
+	        	if (user.getProfilePictureURL() != null) {
+		        	BMPFromURL bmpFromURL = new BMPFromURL(user.getProfilePictureURL());
+					if (bmpFromURL != null) {
+						Bitmap profilePicture = bmpFromURL.getBitmap();
+						user.setProfilePicture(profilePicture);
+					}
+	        	}
 	        } catch (JSONException e) {
 				// Log exception
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
 				return client;
 	        }
+	        
+	        // Mark login as first time
+	        user.setIsFirstTime(true);
 	        
 	        // Store the user in the cache
 	        getCache().setUser(user);

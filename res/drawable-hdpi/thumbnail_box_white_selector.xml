@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="2dip"
+                android:color="@color/skope_yellow"/>
+            <solid android:color="@color/skope_grey"/>
+            <padding android:left="2dip"
+                android:top="2dip"
+                android:right="2dip"
+                android:bottom="2dip" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/thumbnail_box_white"/>
+</selector>

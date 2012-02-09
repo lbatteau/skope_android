@@ -1,71 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/user_profile"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent"
+    android:background="@drawable/silver"  >
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_gravity="center_horizontal"
-        android:layout_margin="5dip"
-        android:background="#FFF"
-        android:orientation="vertical"
-        android:padding="10dip" >
+    <ExpandableListView
+            android:id="@+id/expandable_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="#00000000"
+            android:groupIndicator="@null"
+            android:listSelector="#00000000"
+            android:cacheColorHint="@null"
+            android:background="@null"
+            android:layout_marginBottom="20dip" >
+    </ExpandableListView>
 
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="fill_parent"
-            android:layout_height="30dip"
-            android:layout_gravity="center"
-            android:layout_margin="3dip"
-            android:lines="2"
-            android:text="Status here..."
-            android:textSize="12sp" >
-        </TextView>
+    <FrameLayout
+        android:id="@+id/nav_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|right"
+        android:layout_margin="10dip"
+        android:background="#20000000"
+        android:padding="20dip" >
 
-        <LinearLayout
-            android:id="@+id/user_main"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_marginBottom="5dip"
-            android:layout_marginTop="5dip" >
-
-            <LinearLayout
-                android:id="@+id/linearLayout3"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical" >
-
-                <TextView
-                    android:id="@+id/username_text"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dip"
-                    android:text="Name"
-                    android:textAppearance="?android:attr/textAppearanceLarge" >
-                </TextView>
-
-                <include layout="@layout/user_info_block" />
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/icon"
-                android:layout_width="100dip"
-                android:layout_height="100dip"
-                android:layout_marginLeft="5dip"
-                android:scaleType="fitXY"
-                android:background="@drawable/thumbnail_box" >
-            </ImageView>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/about_me"
+        <ImageView
+            android:id="@+id/nav_arrow_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="" >
-        </TextView>
-    </LinearLayout>
+            android:src="@drawable/nav_arrow_right" />
+    </FrameLayout>
 
-</ScrollView>
+    <FrameLayout
+        android:id="@+id/nav_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|left"
+        android:layout_margin="10dip"
+        android:background="#20000000"
+        android:padding="20dip" >
+
+        <ImageView
+            android:id="@+id/nav_arrow_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nav_arrow_left" />
+    </FrameLayout>
+
+    <Gallery
+        android:id="@+id/gallery"
+        android:layout_width="fill_parent"
+        android:layout_height="90dip"
+        android:background="@null"
+        android:layout_gravity="bottom" />
+
+</FrameLayout>

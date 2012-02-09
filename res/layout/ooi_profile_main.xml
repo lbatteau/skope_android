@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/user_profile"
+    android:id="@+id/user_profile_main"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:orientation="vertical">
+    android:orientation="vertical" >
 
     <FrameLayout
-        android:id="@+id/user_main"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="wrap_content" >
 
         <LinearLayout
             android:id="@+id/LinearLayout1"
@@ -60,44 +59,11 @@
                 android:id="@+id/icon"
                 android:layout_width="100dip"
                 android:layout_height="100dip"
-                android:background="@drawable/thumbnail_box_white_selector"
+                android:background="@drawable/thumbnail_box_white"
                 android:scaleType="fitXY" />
         </FrameLayout>
     </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-
-        <include
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            layout="@layout/user_info_block" />
-
-        <Button
-            android:id="@+id/button_edit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dip"
-            android:layout_weight="0"
-            android:text="@string/edit" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/about_me"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="" >
-    </TextView>
-
-    <include layout="@layout/user_photo_grid"/>
-
-    <FrameLayout
-        android:id="@+id/frameLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
-    </FrameLayout>
+    <include layout="@layout/user_info_block" />
 
 </LinearLayout>

@@ -19,7 +19,6 @@ package com.skope.skope.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,16 +28,17 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
+import com.skope.skope.application.UserPhoto;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
-import com.skope.skope.ui.UserProfileActivity;
+import com.skope.skope.http.ImageUploader;
 import com.skope.skope.util.NotificationUtils;
 import com.skope.skope.util.Type;
 
@@ -75,7 +75,7 @@ public class WorkerThread extends Thread {
     /** Pointer to the Application UiQueue. **/
     private final UiQueue mUiQueue;
     /** Pointer to the parent Service.. **/
-    private LocationService m_locationService;
+    private LocationService mLocationService;
     /***
      * TRUE when the WorkerThread can no longer handle incoming messages,
      * because it is shutting down or dead.
@@ -94,10 +94,10 @@ public class WorkerThread extends Thread {
      */
     protected WorkerThread(final Cache cache, final UiQueue uiQueue,
             final LocationService locationService) {
-        mCache = cache;
+    	mCache = cache;
         mUiQueue = uiQueue;
-        m_locationService = locationService;
-        mObjectOfInterestList = new ObjectOfInterestList();		
+        mLocationService = locationService;
+        mObjectOfInterestList = new ObjectOfInterestList();
     }
 
     /***
@@ -153,6 +153,10 @@ public class WorkerThread extends Thread {
             	uploadImage(bundle);
             	break;
 
+            case READ_USER_PHOTOS:
+            	readUserPhotos(bundle);
+            	break;
+
             case DO_LONG_TASK:
                 doLongTask(bundle);
                 break;
@@ -167,7 +171,7 @@ public class WorkerThread extends Thread {
         mCache.setStateFindObjectsOfInterest("");
 
         stopping = true;
-        m_locationService.stopSelf();
+        mLocationService.stopSelf();
     }
 
     /***
@@ -250,9 +254,7 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
-					// Set image cache
-					objectOfInterest.setImageCache(mCache.getImageCache());
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject, mCache);
 					
 					// If current user, skip
 					if (!objectOfInterest.getUserName().equals(username)) {
@@ -290,70 +292,97 @@ public class WorkerThread extends Thread {
      *
      * @param bundle
      *            Bundle should contain:
-     *            	"NAME": The form field name, e.g. "thumbnail"
-     *            	"BITMAP": The image to upload
+     *            	"LOCATION": The relative API mLocation
+     *            	"FIELDNAME": The form field name, e.g. "profile_picture"
+     *            	"URI": The image URI to upload
      */
     private void uploadImage(final Bundle bundle) {
         mUiQueue.postToUi(Type.UPLOAD_IMAGE_START, null, true);
 
-		String name = bundle.getString("NAME");
+        ImageUploader imageUploader = new ImageUploader(mCache);
+
+        String location = bundle.getString(LocationService.IMAGE_UPLOAD_LOCATION);
+		String name = bundle.getString(LocationService.IMAGE_UPLOAD_NAME);
+		Bitmap image = (Bitmap) bundle.getParcelable(LocationService.IMAGE_UPLOAD_BITMAP);
 		
+		try {
+			imageUploader.upload(location, name, image);
+		} catch (Exception e) {
+			Bundle outBundle = new Bundle();
+			outBundle.putString("TEXT", 
+					mLocationService.getResources().getString(R.string.error_image_upload_not_found)
+							+ ": " + e.toString());
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+		}
+		
+        mUiQueue.postToUi(Type.UPLOAD_IMAGE_END, null, true);
+
+    }
+    
+    private void readUserPhotos(final Bundle bundle) {
+    	String userPhotosUsername;
+    	JSONArray jsonResponse = new JSONArray();
+    	
+    	mUiQueue.postToUi(Type.READ_USER_PHOTOS_START, null, true);
+
+    	// Check if bundle is present
+    	if (bundle == null) {
+    		return;
+    	}
+		
+		// Bundle present, extract username
+		userPhotosUsername = bundle.getString("USERNAME");
+
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
-		String url = mCache.getProperty("skope_service_url") + "/user/" + username + "/" + name + "/";
+		String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + userPhotosUsername + "/photos/";
 		
 		// Set up HTTP client
-        CustomHttpClient client = new CustomHttpClient(url);
+        CustomHttpClient client = new CustomHttpClient(serviceUrl);
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
         
-        List<Bitmap> imageUploadQueue = mCache.getImageUploadQueue();
-        while (imageUploadQueue.size() > 0) {
-            Bitmap bitmap = imageUploadQueue.remove(0);
-            client.addBitmap(name, bitmap);
-        }
-         
         // Send HTTP request to web service
         try {
-            client.execute(RequestMethod.PUT);
+            client.execute(RequestMethod.GET);
         } catch (Exception e) {
         	// Most exceptions already handled by client
             e.printStackTrace();
         }
         
-		// Check HTTP response code
-		int httpResponseCode = client.getResponseCode();
-		// Check for server response
-		if (httpResponseCode == 0) {
-			// No server response
-			Log.e(SkopeApplication.LOG_TAG, "Connection failed");
-		} else if (httpResponseCode != HttpStatus.SC_OK) {
-			// Server returned error code
-			switch (client.getResponseCode()) {
-			case HttpStatus.SC_UNAUTHORIZED:
-			case HttpStatus.SC_REQUEST_TIMEOUT:
-			case HttpStatus.SC_BAD_GATEWAY:
-			case HttpStatus.SC_GATEWAY_TIMEOUT:
-			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to upload " + name + ": " + client.getErrorMessage());
-			default:
-				break;
+        String response = client.getResponse();
+        
+        if (response == null) {
+        	return;
+        } else {
+        	// Extract JSON data from response
+	        try {
+	        	jsonResponse = new JSONArray(response);
+			} catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
 			}
-			return;
-		}
-
-        mUiQueue.postToUi(Type.UPLOAD_IMAGE_END, null, true);
-
-        /*if (bundle != null) {
-            Bundle outBundle = new Bundle();
-            outBundle.putString("TEXT",
-                    "Searching objects of interest finished. Called from ["
-                            + bundle.getString("TEXT") + "]");
-            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
-        }*/
+			
+			// Copy the JSON list of objects to our OOI list
+			Cache.USER_PHOTOS.clear();
+			for (int i=0; i < jsonResponse.length(); i++) {
+				try {
+					JSONObject jsonObject = jsonResponse.getJSONObject(i);
+					
+					// Create new object of interest
+					UserPhoto userPhoto = new UserPhoto(jsonObject, mCache);
+					// Add to list
+					Cache.USER_PHOTOS.add(userPhoto);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}				
+        }
+        
+        mUiQueue.postToUi(Type.READ_USER_PHOTOS_END, null, true);
     }
-    
+
     /***
      * [Optional] Example task which takes time to complete and repeatedly
      * updates the UI.
@@ -375,7 +404,7 @@ public class WorkerThread extends Thread {
         for (; i <= LONG_TASK_COMPLETE; i += LONG_TASK_INCREMENT) {
             mCache.setStateLongTask("Long task " + i + "% complete");
             mUiQueue.postToUi(Type.UPDATE_LONG_TASK, null, true);
-            NotificationUtils.notifyUserOfProgress(m_locationService
+            NotificationUtils.notifyUserOfProgress(mLocationService
                     .getApplicationContext(), i);
             wasteTime(WASTE_TIME);
             mCache.setLongProcessState(i);
@@ -385,7 +414,7 @@ public class WorkerThread extends Thread {
 
         mCache.setStateLongTask("Long task done");
         mUiQueue.postToUi(Type.UPDATE_LONG_TASK, null, true);
-        NotificationUtils.notifyUserOfProgress(m_locationService
+        NotificationUtils.notifyUserOfProgress(mLocationService
                 .getApplicationContext(), -1);
     }
 

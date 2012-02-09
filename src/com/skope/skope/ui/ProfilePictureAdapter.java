@@ -14,24 +14,29 @@ import android.widget.ImageView;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
-import com.skope.skope.application.User.OnThumbnailLoadListener;
+import com.skope.skope.application.User.OnImageLoadListener;
 
-public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
+/**
+ * This image adapter is used by the Gallery widget in the map overview.
+ * 
+ * @author Studio
+ */
+public class ProfilePictureAdapter extends ArrayAdapter<ObjectOfInterest> {
 
 	private static final int THUMBNAIL_HEIGHT = 70;
 	private static final int THUMBNAIL_WIDTH = 70;
 
 	private Context mContext;
 	
-	OnThumbnailLoadListener mThumbnailListener = new OnThumbnailLoadListener() {
+	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
 		@Override
-		public void onThumbnailLoaded(Bitmap thumbnail) {
-			ImageAdapter.this.notifyDataSetChanged();;
+		public void onImageLoaded(Bitmap profilePicture) {
+			ProfilePictureAdapter.this.notifyDataSetChanged();;
 		}
 	};
 
-	public ImageAdapter(Context context, int textViewResourceId,
-			Cache cache, List<ObjectOfInterest> objects) {
+	public ProfilePictureAdapter(Context context, int textViewResourceId,
+								 List<ObjectOfInterest> objects) {
 		super(context, textViewResourceId, objects);
 		mContext = context;
 	}
@@ -40,9 +45,9 @@ public class ImageAdapter extends ArrayAdapter<ObjectOfInterest> {
 		ImageView imageView = new ImageView(mContext);
 		ObjectOfInterest ooi = getItem(position);
 
-		imageView.setImageBitmap(ooi.getThumbnail());
-		if (ooi.getThumbnail() == null) {
-			ooi.loadThumbnail(mThumbnailListener);
+		imageView.setImageBitmap(ooi.getProfilePicture());
+		if (ooi.getProfilePicture() == null) {
+			ooi.loadProfilePicture(mProfilePictureListener);
 		}
 
 		int width = (int) TypedValue.applyDimension(

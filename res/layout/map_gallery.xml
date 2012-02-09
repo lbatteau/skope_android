@@ -9,15 +9,13 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1"
-        layout="@layout/map" >
-    </include>
+        layout="@layout/map" />
 
     <Gallery
         android:id="@+id/gallery"
         android:layout_width="fill_parent"
         android:layout_height="90dip"
         android:layout_weight="0"
-        android:background="@drawable/header_gradient" >
-    </Gallery>
+        android:background="@drawable/header_gradient" />
 
 </LinearLayout>

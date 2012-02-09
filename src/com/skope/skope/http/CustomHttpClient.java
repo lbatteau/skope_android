@@ -177,6 +177,21 @@ public class CustomHttpClient {
 				request.addHeader(h.getName(), h.getValue());
 			}
 
+			if (!params.isEmpty()) {
+				request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+			}
+			
+			executeRequest(request, url);
+			break;
+		}
+		case POST: {
+			HttpPost request = new HttpPost(url);
+
+			// add headers
+			for (NameValuePair h : headers) {
+				request.addHeader(h.getName(), h.getValue());
+			}
+
 			if (files.isEmpty()) {
 				if (!params.isEmpty()) {
 					request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
@@ -198,23 +213,6 @@ public class CustomHttpClient {
 					entity.addPart(key, new ByteArrayBody(byteArray, filename + ".png"));
 		        }
 				request.setEntity(entity);
-
-			}
-
-			
-			executeRequest(request, url);
-			break;
-		}
-		case POST: {
-			HttpPost request = new HttpPost(url);
-
-			// add headers
-			for (NameValuePair h : headers) {
-				request.addHeader(h.getName(), h.getValue());
-			}
-
-			if (!params.isEmpty()) {
-				request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 			}
 
 			executeRequest(request, url);
@@ -294,5 +292,13 @@ public class CustomHttpClient {
 			}
 		}
 		return sb.toString();
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

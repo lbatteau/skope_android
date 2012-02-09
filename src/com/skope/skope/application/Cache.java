@@ -21,20 +21,22 @@ import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.skope.skope.R;
-
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.location.Location;
-import android.os.Message;
+import android.os.Handler;
 import android.util.Log;
+
+import com.skope.skope.R;
 
 
 /***
@@ -56,6 +58,10 @@ public class Cache {
 
     /** [Optional] Execution state. **/
     private static final String STATE_PROCESS = "STATE_PROCESS";
+
+    /** Image cache settings */
+    private static final int HARD_CACHE_CAPACITY = 40;
+    private static final int DELAY_BEFORE_PURGE = 30 * 1000; // in milliseconds
 
     /** Cached application context. **/
     private final Context mContext;
@@ -80,17 +86,44 @@ public class Cache {
     /** The current user */
     private User user;
     
-    /** Image cache using hash map on URL string */
-    private final HashMap<String,Bitmap> mImageCache = new HashMap<String,Bitmap>();
+    // Hard cache, with a fixed maximum capacity and a life duration
+    private final HashMap<String, Bitmap> sHardBitmapCache =
+        new LinkedHashMap<String, Bitmap>(HARD_CACHE_CAPACITY / 2, 0.75f, true) {
+        private static final long serialVersionUID = -7190622541619388252L;
+        @Override
+        protected boolean removeEldestEntry(LinkedHashMap.Entry<String, Bitmap> eldest) {
+            if (size() > HARD_CACHE_CAPACITY) {
+                // Entries push-out of hard reference cache are transferred to soft reference cache
+                sSoftBitmapCache.put(eldest.getKey(), new SoftReference<Bitmap>(eldest.getValue()));
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+
+    // Soft cache for bitmap kicked out of hard cache
+    private final static ConcurrentHashMap<String, SoftReference<Bitmap>> sSoftBitmapCache =
+        new ConcurrentHashMap<String, SoftReference<Bitmap>>(HARD_CACHE_CAPACITY / 2);
+
+    private final Handler purgeHandler = new Handler();
+
+    private final Runnable purger = new Runnable() {
+        public void run() {
+            clearCache();
+        }
+    };
     
     /** Queue for uploading of images */
-    private final List<Bitmap> mImageUploadQueue = new ArrayList<Bitmap>();
+    private static final List<Bitmap> mImageUploadQueue = new ArrayList<Bitmap>();
     
     /** Lookup list corresponding to User.relationship choices */
     public static String[] RELATIONSHIP_CHOICES;
     
     /** Lookup list corresponding to User.gender choices */
     public static String[] GENDER_CHOICES;
+    
+    public static final ArrayList<UserPhoto> USER_PHOTOS = new ArrayList<UserPhoto>();
     
     /***
      * Constructor stores the application context.
@@ -250,6 +283,68 @@ public class Cache {
         }
     }
 
+    /**
+     * @param url The URL of the image that will be retrieved from the cache.
+     * @return The cached bitmap or null if it was not found.
+     */
+    public Bitmap getBitmapFromCache(String url) {
+        // First try the hard reference cache
+        synchronized (sHardBitmapCache) {
+            final Bitmap bitmap = sHardBitmapCache.get(url);
+            if (bitmap != null) {
+                // Bitmap found in hard cache
+                // Move element to first position, so that it is removed last
+                sHardBitmapCache.remove(url);
+                sHardBitmapCache.put(url, bitmap);
+                return bitmap;
+            }
+        }
+
+        // Then try the soft reference cache
+        SoftReference<Bitmap> bitmapReference = sSoftBitmapCache.get(url);
+        if (bitmapReference != null) {
+            final Bitmap bitmap = bitmapReference.get();
+            if (bitmap != null) {
+                // Bitmap found in soft cache
+                return bitmap;
+            } else {
+                // Soft reference has been Garbage Collected
+                sSoftBitmapCache.remove(url);
+            }
+        }
+
+        return null;
+    }
+    
+    /**
+     * @param url The URL of the image that will be retrieved from the cache.
+     * @param bitmap The bitmap to add to the cache
+     */
+    public void addBitmapToCache(String url, Bitmap bitmap) {
+    	// Add bitmap to cache
+        if (bitmap != null) {
+            synchronized (sHardBitmapCache) {
+                sHardBitmapCache.put(url, bitmap);
+            }
+        }
+
+    }
+    
+
+    /**
+     * Clears the image cache used internally to improve performance. Note that for memory
+     * efficiency reasons, the cache will automatically be cleared after a certain inactivity delay.
+     */
+    public void clearCache() {
+        sHardBitmapCache.clear();
+        sSoftBitmapCache.clear();
+    }
+
+    private void resetPurgeTimer() {
+        purgeHandler.removeCallbacks(purger);
+        purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
+    }
+
     /***
      * Get a value from the preferences file.
      *
@@ -296,12 +391,12 @@ public class Cache {
 		this.user = user;
 	}
 
-	public HashMap<String, Bitmap> getImageCache() {
-		return mImageCache;
-	}
-	
 	public List<Bitmap> getImageUploadQueue() {
 		return mImageUploadQueue;
+	}
+	
+	public ContentResolver getContentResolver() {
+		return mContext.getContentResolver();
 	}
 
 }

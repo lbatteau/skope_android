@@ -18,11 +18,18 @@
 		android:paddingBottom="16dip">
 		<LinearLayout android:orientation="vertical"
 			android:layout_width="fill_parent" android:layout_height="fill_parent">
-			<EditText android:maxLength="20"
-				android:layout_marginBottom="8dip" android:layout_height="wrap_content"
-				android:layout_width="fill_parent" android:id="@+id/txt_username"
-				android:maxLines="1" android:hint="@string/login_hint_user"
-				android:inputType="textNoSuggestions" android:imeOptions="actionNext|flagNoExtractUi">
+
+			<EditText
+			    android:id="@+id/txt_username"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:layout_marginBottom="8dip"
+			    android:hint="@string/login_hint_user"
+			    android:imeOptions="actionNext|flagNoExtractUi"
+			    android:inputType="textEmailAddress|textNoSuggestions"
+			    android:maxLength="20"
+			    android:maxLines="1" >
+
 				<requestFocus></requestFocus>
 			</EditText>
 			<EditText android:maxLength="20"

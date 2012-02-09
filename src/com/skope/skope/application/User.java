@@ -1,7 +1,7 @@
 package com.skope.skope.application;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,19 +12,18 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
@@ -35,12 +34,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.skope.skope.R;
-import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.FlushedInputStream;
 
 public class User {
 	
+	public static final int PROFILE_PICTURE_WIDTH = 200;
+	public static final int PROFILE_PICTURE_HEIGHT = 200;
+
 	private DateFormat mDateFormat = DateFormat.getDateInstance();
+	
+	private Cache mCache;
 	
 	protected String mUsername;
 	protected String mUserEmail;
@@ -51,29 +54,28 @@ public class User {
 	protected String mStatus;
 	protected int mSex = -1; // Lookup list, initial 0 would be first item
 	protected boolean mIsSexPublic;
-	protected String mThumbnailURL;
-	protected Bitmap mThumbnail;
+	protected String mProfilePictureURL;
+	protected Bitmap mProfilePicture;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
 	protected int mRelationship = -1; // Lookup list, initial 0 would be first item
 	protected String mHomeTown;
-	protected String mWork;
-	protected String mEducation;
+	protected String mWorkJobTitle;
+	protected String mWorkCompany;
+	protected String mEducationStudy;
+	protected String mEducationCollege;
 	protected String mInterests;
 	protected boolean mIsFirstTime;
 	
-	protected HashMap<String, Bitmap> mImageCache;
-	protected boolean mHasNoThumbnail;
+	protected boolean mHasNoProfilePicture;
 	
-	public interface OnThumbnailLoadListener {
-		public void onThumbnailLoaded(Bitmap thumbnail);
+	public interface OnImageLoadListener {
+		public void onImageLoaded(Bitmap image);
 	}
 	
-	protected class ThumbnailLoader extends AsyncTask<String, Void, Bitmap> {
-		private static final int THUMBNAIL_WIDTH = 100;
-		private static final int THUMBNAIL_HEIGHT = 100;
+	protected class ProfilePictureLoader extends AsyncTask<String, Void, Bitmap> {
 		
-		OnThumbnailLoadListener mListener;
+		OnImageLoadListener mListener;
 
 		@Override
 		protected Bitmap doInBackground(String... params) {
@@ -83,7 +85,7 @@ public class User {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
 				Log.e(SkopeApplication.LOG_TAG, error.toString());
-				mHasNoThumbnail = true;
+				mHasNoProfilePicture = true;
 				return null;
 			}
 
@@ -93,13 +95,10 @@ public class User {
 				connection.setUseCaches(true);
 				connection.connect();
 				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
-				Bitmap bitmap = BitmapFactory.decodeStream(input);
-				if (bitmap != null) {
-					return Bitmap.createScaledBitmap(bitmap, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, true);
-				}
+				return BitmapFactory.decodeStream(input);
 			} catch (IOException e) {
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
-				mHasNoThumbnail = true;
+				mHasNoProfilePicture = true;
 			}
 			
 			return null;
@@ -107,23 +106,23 @@ public class User {
 		
 		protected void onPostExecute(Bitmap bitmap) {
 			if (bitmap != null) {
-				// Set the user's thumbnail
-				setThumbnail(bitmap);
+				// Set the user's profile picture
+				setProfilePicture(bitmap);
 				// Cache bitmap
-				if (mImageCache != null) {
-					mImageCache.put(mThumbnailURL, bitmap);
-				}
+				mCache.addBitmapToCache(mProfilePictureURL, bitmap);
 				// Call back
-				mListener.onThumbnailLoaded(bitmap);
+				mListener.onImageLoaded(bitmap);
 			}
 	     }
 
-		public void setOnThumbnailLoadListener(OnThumbnailLoadListener listener) {
+		public void setOnProfilePictureLoadListener(OnImageLoadListener listener) {
 			mListener = listener;
 		}
 	}
 	
-	public User(JSONObject jsonObject) throws JSONException {
+	public User(JSONObject jsonObject, Cache cache) throws JSONException {
+		mCache = cache;
+		
 		JSONObject user = jsonObject.getJSONObject("user");
 		if (!user.isNull("username")) {
 			this.setUserName(user.getString("username"));
@@ -140,14 +139,14 @@ public class User {
 			this.setLastName(user.getString("last_name"));
 		}
 		
-		if (!jsonObject.isNull("thumbnail_url")) {
-			this.setThumbnailURL(jsonObject.getString("thumbnail_url"));
+		if (!jsonObject.isNull("profile_picture_url")) {
+			this.setProfilePictureURL(jsonObject.getString("profile_picture_url"));
 		}
 		
-		// Check if user has uploaded a thumbnail at all
-		if (this.getThumbnailURL() == null || this.getThumbnailURL().equals("")) {
+		// Check if user has uploaded a profile picture at all
+		if (this.getProfilePictureURL() == null || this.getProfilePictureURL().equals("")) {
 			// Nope
-			this.setHasNoThumbnail(true);
+			this.setHasNoProfilePicture(true);
 		}
 		
 
@@ -163,12 +162,20 @@ public class User {
 			this.setHomeTown(jsonObject.getString("home_town"));
 		}
 		
-		if (!jsonObject.isNull("work")) {
-			this.setWork(jsonObject.getString("work"));
+		if (!jsonObject.isNull("work_job_title")) {
+			this.setWorkJobTitle(jsonObject.getString("work_job_title"));
 		}
 		
-		if (!jsonObject.isNull("education")) {
-			this.setEducation(jsonObject.getString("education"));
+		if (!jsonObject.isNull("work_company")) {
+			this.setWorkCompany(jsonObject.getString("work_company"));
+		}
+		
+		if (!jsonObject.isNull("education_study")) {
+			this.setEducationStudy(jsonObject.getString("education_study"));
+		}
+		
+		if (!jsonObject.isNull("education_college")) {
+			this.setEducationCollege(jsonObject.getString("education_college"));
 		}
 		
 		if (!jsonObject.isNull("interests")) {
@@ -200,7 +207,7 @@ public class User {
 		// Parse mLocation in WKT (well known text) format, e.g. "POINT (52.2000000000000028 4.7999999999999998)"
 		if (!jsonObject.isNull("location")) {
 			String[] tokens = jsonObject.getString("location").split("[ ()]");
-			Location location = new Location("SKOPE_SERVICE");
+			Location location = new Location("API");
 			location.setLatitude(Double.parseDouble(tokens[3]));
 			location.setLongitude(Double.parseDouble(tokens[2]));
 			this.setLocation(location);
@@ -223,44 +230,31 @@ public class User {
 	}
 
 	/**
-	 * Loads the actual thumbnail bitmap for this user.  
+	 * Loads the actual profile picture bitmap for this user.  
 	 * 
 	 * When a user is retrieved the first time, it only contains an URL 
-	 * pointing to it's thumbnail. When a view needs to display the thumbnail 
-	 * it can call this method to load the bitmap. By passing it a handler, 
-	 * the view can update itself once the thumbnail is loaded.
+	 * pointing to it's profile picture. When a view needs to display the 
+	 * picture, it can call this method to load the bitmap. 
+	 * By passing it a handler, the view can update itself once the 
+	 * profile picture is loaded.
 	 * 
-	 *    - If the thumbnail is already present, the method calls the callback 
+	 *    - If the picture is already present, the method calls the callback 
 	 * 		method directly.
 	 *    - If not, it checks the image cache.
-	 *    - If not in cache, it uses an AsyncTask that downloads the thumbnail 
+	 *    - If not in cache, it uses an AsyncTask that downloads the picture 
 	 *      and calls the callback when finished.
 	 *      
 	 * Note that the system cache is used to store downloaded images.
 	 *  
-	 * @param listener The callback method that is called when the thumbnail
-	 * 				   is successfully loaded. If no thumbnail is present, this
+	 * @param listener The callback method that is called when the picture
+	 * 				   is successfully loaded. If no picture is present, this
 	 * 				   method is never called.
 	 */
-	public void loadThumbnail(OnThumbnailLoadListener listener) {
-		if (!this.mHasNoThumbnail) {
-			// Check if thumbnail already loaded for this user
-			if (this.mThumbnail != null) {
-				listener.onThumbnailLoaded(this.mThumbnail);
-			} else {
-				// Not loaded, check cache
-				if (mImageCache != null) {
-					Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
-					if (bitmap != null) {
-				        setThumbnail(bitmap);
-				        listener.onThumbnailLoaded(bitmap);
-				    }
-				}
-
-				ThumbnailLoader loader = new ThumbnailLoader();
-				loader.setOnThumbnailLoadListener(listener);
-				loader.execute(this.getThumbnailURL());
-			}
+	public void loadProfilePicture(OnImageLoadListener listener) {
+		if (!this.mHasNoProfilePicture) {
+			ProfilePictureLoader loader = new ProfilePictureLoader();
+			loader.setOnProfilePictureLoadListener(listener);
+			loader.execute(this.getProfilePictureURL());
 		}
 	}
 	
@@ -292,6 +286,36 @@ public class User {
 		} else {
 			return mDateFormat.format(mDateOfBirth);
 		}
+	}
+	
+	public String createLabelWork() {
+		String label = "";
+		if (mWorkJobTitle != null && !mWorkJobTitle.equals("")) {
+			label += mWorkJobTitle;
+		}
+		
+		if (mWorkCompany != null  && !mWorkCompany.equals("")) {
+			if (mWorkJobTitle != null && !mWorkJobTitle.equals("")) {
+				label += " at ";
+			}
+			label += mWorkCompany;
+		}
+		return label;
+	}
+
+	public String createLabelEducation() {
+		String label = "";
+		if (mEducationStudy != null  && !mEducationStudy.equals("")) {
+			label += mEducationStudy;
+		}
+		
+		if (mEducationCollege != null  && !mEducationCollege.equals("")) {
+			if (mEducationStudy != null  && !mEducationStudy.equals("")) {
+				label += " at ";
+			}
+			label += mEducationCollege;
+		}
+		return label;
 	}
 
 	/**
@@ -393,28 +417,30 @@ public class User {
 	 * @param activity The activity's content must include a layout as 
 	 * 				   defined in layout/user_profile.xml.
 	 */
-	public void createUserProfile(Activity activity) {
-		TextView userNameText = (TextView) activity.findViewById(R.id.username_text);
+	public void createUserProfile(View view, LayoutInflater inflater) {
+		TextView statusText = (TextView) view.findViewById(R.id.status);
+		statusText.setText(this.createLabelStatus());
+		
+		TextView userNameText = (TextView) view.findViewById(R.id.username_text);
 		userNameText.setText(this.createName());
-		final ImageView icon = (ImageView) activity.findViewById(R.id.icon);
-		icon.setImageBitmap(this.getThumbnail());
+		final ImageView icon = (ImageView) view.findViewById(R.id.icon);
+		icon.setImageBitmap(this.getProfilePicture());
 		// Lazy loading
-		if (this.getThumbnail() == null) {
-			this.loadThumbnail(new OnThumbnailLoadListener() {
+		if (this.getProfilePicture() == null) {
+			this.loadProfilePicture(new OnImageLoadListener() {
 
 				@Override
-				public void onThumbnailLoaded(Bitmap thumbnail) {
+				public void onImageLoaded(Bitmap thumbnail) {
 					icon.invalidate();
 				}
 			});
 		}
 		
 		// Fill user info block with items that are present
-		ViewGroup userInfoBlock = (ViewGroup) activity.findViewById(R.id.user_info_block);
+		ViewGroup userInfoBlock = (ViewGroup) view.findViewById(R.id.user_info_block);
 		// But first clear...
 		userInfoBlock.removeAllViews();
 
-		LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		TextView userInfoItem;
 		
 		if (this.isDateofBirthPublic()) {
@@ -449,7 +475,7 @@ public class User {
 			userInfoBlock.addView(userInfoItem);
 		}
 
-		String work = this.getWork(); 
+		String work = this.createLabelWork(); 
 		if (work != null && !work.equals("")) {
 			userInfoItem = (TextView) inflater.inflate(
 					R.layout.user_info_item, null);
@@ -459,7 +485,7 @@ public class User {
 			userInfoBlock.addView(userInfoItem);
 		}
 
-		String education = this.getEducation(); 
+		String education = this.createLabelEducation(); 
 		if (education != null && !education.equals("")) {
 			userInfoItem = (TextView) inflater.inflate(
 					R.layout.user_info_item, null);
@@ -469,11 +495,6 @@ public class User {
 			userInfoBlock.addView(userInfoItem);
 		}
 		
-		String interests = this.getInterests();
-		if (interests != null && !interests.equals("")) {
-			TextView aboutMeEdit = (TextView) activity.findViewById(R.id.about_me);
-			aboutMeEdit.setText(interests);
-		}
 	}
 	
 	/**
@@ -503,13 +524,15 @@ public class User {
 		genderShowProfile.setChecked(this.isSexPublic());
 		
 		Date dateOfBirth = this.getDateOfBirth();
-		Calendar calendar = new GregorianCalendar();
-		calendar.setTime(dateOfBirth);
-		int year = calendar.get(Calendar.YEAR);
-		int month = calendar.get(Calendar.MONTH);
-		int day = calendar.get(Calendar.DAY_OF_MONTH);
-		DatePicker dateOfBirthPicker = (DatePicker) activity.findViewById(R.id.date_picker);
-		dateOfBirthPicker.updateDate(year, month, day);
+		if (dateOfBirth != null) {
+			Calendar calendar = new GregorianCalendar();
+			calendar.setTime(dateOfBirth);
+			int year = calendar.get(Calendar.YEAR);
+			int month = calendar.get(Calendar.MONTH);
+			int day = calendar.get(Calendar.DAY_OF_MONTH);
+			DatePicker dateOfBirthPicker = (DatePicker) activity.findViewById(R.id.date_picker);
+			dateOfBirthPicker.updateDate(year, month, day);
+		}
 
 		CheckBox birthdayShowProfile = (CheckBox) activity.findViewById(R.id.birthday_show_profile);
 		birthdayShowProfile.setChecked(this.isDateofBirthPublic());
@@ -524,23 +547,25 @@ public class User {
 			relationship.setSelection(this.getRelationship());
 		}
 		
-		if (this.getWork() != null) {
-			EditText workEdit = (EditText) activity.findViewById(R.id.work);
-			workEdit.setText(this.getWork());
+		if (this.getWorkJobTitle() != null) {
+			EditText workEdit = (EditText) activity.findViewById(R.id.work_job_title);
+			workEdit.setText(this.getWorkJobTitle());
 		}
 		
-		if (this.getEducation() != null) {
-			EditText educationEdit = (EditText) activity.findViewById(R.id.education);
-			educationEdit.setText(this.getEducation());
+		if (this.getWorkCompany() != null) {
+			EditText workEdit = (EditText) activity.findViewById(R.id.work_company);
+			workEdit.setText(this.getWorkCompany());
 		}
 		
-		if (this.getInterests() != null) {
-			EditText aboutMeEdit = (EditText) activity.findViewById(R.id.about_me);
-			aboutMeEdit.setText(this.getInterests());
+		if (this.getEducationStudy() != null) {
+			EditText educationStudyEdit = (EditText) activity.findViewById(R.id.education_study);
+			educationStudyEdit.setText(this.getEducationStudy());
 		}
 		
-
-		
+		if (this.getEducationCollege() != null) {
+			EditText educationCollegeEdit = (EditText) activity.findViewById(R.id.education_college);
+			educationCollegeEdit.setText(this.getEducationCollege());
+		}		
 	}
 	
 	public String getUserName() {
@@ -559,21 +584,19 @@ public class User {
 		this.mUserEmail = userEmail;
 	}
 
-	public Bitmap getThumbnail() {
-		if (mThumbnail == null && mHasNoThumbnail == false) {
+	public Bitmap getProfilePicture() {
+		if (mProfilePicture == null && mHasNoProfilePicture == false) {
 			// Not loaded, check cache
-			if (mImageCache != null) {
-				Bitmap bitmap = mImageCache.get(this.mThumbnailURL);
-				if (bitmap != null) {
-			        setThumbnail(bitmap);
-			    }
+			Bitmap bitmap = mCache.getBitmapFromCache(mProfilePictureURL);
+			if (bitmap != null) {
+				setProfilePicture(bitmap);
 			}
 		}
-		return mThumbnail;
+		return mProfilePicture;
 	}
 
-	public void setThumbnail(Bitmap thumbnail) {
-		this.mThumbnail = thumbnail;
+	public void setProfilePicture(Bitmap thumbnail) {
+		this.mProfilePicture = thumbnail;
 	}
 
 	public Date getDateOfBirth() {
@@ -632,20 +655,20 @@ public class User {
 		this.mLastName = lastName;
 	}
 
-	public String getThumbnailURL() {
-		return mThumbnailURL;
+	public String getProfilePictureURL() {
+		return mProfilePictureURL;
 	}
 
-	public void setThumbnailURL(String thumbnailURL) {
-		this.mThumbnailURL = thumbnailURL;
+	public void setProfilePictureURL(String thumbnailURL) {
+		this.mProfilePictureURL = thumbnailURL;
 	}
 
-	public void setHasNoThumbnail(boolean hasNoThumbnail) {
-		this.mHasNoThumbnail = hasNoThumbnail;
+	public void setHasNoProfilePicture(boolean hasNoProfilePicture) {
+		this.mHasNoProfilePicture = hasNoProfilePicture;
 	}
 
-	public boolean hasNoThumbnail() {
-		return this.mHasNoThumbnail;
+	public boolean hasNoProfilePicture() {
+		return this.mHasNoProfilePicture;
 	}
 
 	public int getRelationship() {
@@ -664,26 +687,22 @@ public class User {
 		this.mHomeTown = homeTown;
 	}
 	
-	public String getWork() {
-		return mWork;
+	public String getWorkJobTitle() {
+		return mWorkJobTitle;
 	}
 
-	public void setWork(String work) {
-		this.mWork = work;
+	public void setWorkJobTitle(String workJobTitle) {
+		this.mWorkJobTitle = workJobTitle;
 	}
 	
-	public String getEducation() {
-		return mEducation;
+	public String getEducationStudy() {
+		return mEducationStudy;
 	}
 
-	public void setEducation(String education) {
-		this.mEducation = education;
+	public void setEducationStudy(String educationStudy) {
+		this.mEducationStudy = educationStudy;
 	}
 	
-	public void setImageCache(HashMap<String, Bitmap> imageCache) {
-		this.mImageCache = imageCache;
-	}
-
 	public String getInterests() {
 		return mInterests;
 	}
@@ -714,6 +733,22 @@ public class User {
 
 	public void setSexPublic(boolean isSexPublic) {
 		this.mIsSexPublic = isSexPublic;
+	}
+
+	public String getEducationCollege() {
+		return mEducationCollege;
+	}
+
+	public void setEducationCollege(String educationCollege) {
+		this.mEducationCollege = educationCollege;
+	}
+
+	public String getWorkCompany() {
+		return mWorkCompany;
+	}
+
+	public void setWorkCompany(String workCompany) {
+		this.mWorkCompany = workCompany;
 	}
 
 }

@@ -2,6 +2,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent" android:id="@+id/user"
-	android:background="@drawable/silver_reverse">
-    <include layout="@layout/user_profile"></include>
+	android:background="@drawable/silver">
 </LinearLayout>

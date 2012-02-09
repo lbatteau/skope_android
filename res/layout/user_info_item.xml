@@ -1,5 +1,5 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
 	android:text="" android:id="@+id/user_info_description"
 	android:layout_width="wrap_content" android:layout_height="wrap_content"
-	android:textSize="10sp"	android:drawablePadding="3dip"
-	android:singleLine="true"></TextView>	
+	android:textSize="12sp"	android:drawablePadding="6dip"
+	android:paddingTop="3dip"></TextView>

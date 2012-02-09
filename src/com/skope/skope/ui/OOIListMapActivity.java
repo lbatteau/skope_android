@@ -26,8 +26,40 @@ import com.skope.skope.util.Type;
 public class OOIListMapActivity extends OOIMapActivity {
 	private ArrayList<ArrayList<ObjectOfInterest>> mClusters;
 	private Gallery mGallery;
-	private ImageAdapter mImageAdapter;
+	private ProfilePictureAdapter mImageAdapter;
 	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+	    // Set up the gallery
+		mGallery = (Gallery) findViewById(R.id.gallery);
+		mGallery.setUnselectedAlpha(0.5f);
+		mGallery.setSpacing(5);
+		mImageAdapter = new ProfilePictureAdapter(this, R.id.gallery, getCache().getObjectOfInterestList());
+	    mGallery.setAdapter(mImageAdapter);
+	    
+	    
+	    // When the user selects a mThumbnail in the gallery, update the view
+	    mGallery.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView parent, View view,
+					int position, long id) {
+				getCache().getObjectOfInterestList().setSelectedPosition(position);
+				ObjectOfInterest ooi = getCache().getObjectOfInterestList().getSelectedOOI();
+				mMapView.getController().animateTo(
+						new GeoPoint((int) (ooi.getLocation().getLatitude() * 1E6),
+	            					 (int) (ooi.getLocation().getLongitude() * 1E6)));
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+								
+			}
+		});		
+	
+	}
 	@Override
 	protected void initializeMapView() {
 		super.initializeMapView();
@@ -71,33 +103,6 @@ public class OOIListMapActivity extends OOIMapActivity {
 		});
         
         mMapView.invalidate();
-
-	    // Set up the gallery
-		mGallery = (Gallery) findViewById(R.id.gallery);
-		mGallery.setUnselectedAlpha(0.5f);
-		mGallery.setSpacing(5);
-		mImageAdapter = new ImageAdapter(this, R.id.gallery, getCache(), getCache().getObjectOfInterestList());
-	    mGallery.setAdapter(mImageAdapter);
-	    
-	    
-	    // When the user selects a thumbnail in the gallery, update the view
-	    mGallery.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-			@Override
-			public void onItemSelected(AdapterView parent, View view,
-					int position, long id) {
-				getCache().getObjectOfInterestList().setSelectedPosition(position);
-				ObjectOfInterest ooi = getCache().getObjectOfInterestList().getSelectedOOI();
-				mMapView.getController().animateTo(
-						new GeoPoint((int) (ooi.getLocation().getLatitude() * 1E6),
-	            					 (int) (ooi.getLocation().getLongitude() * 1E6)));
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {
-								
-			}
-		});
 	}
 	
 	public void zoomToCluster(int clusterIndex) {

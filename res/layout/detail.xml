@@ -52,32 +52,37 @@
         android:id="@+id/linearLayout2"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/silver_reverse" >
+        android:background="@drawable/silver" >
 
-        <include layout="@layout/ooi_profile" >
-        </include>
+        <include layout="@layout/ooi_profile" />
 
         <SlidingDrawer
             android:id="@+id/mapSlidingDrawer"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_gravity="bottom"
             android:background="@null"
             android:content="@+id/mapview"
             android:handle="@+id/map_slider"
-            android:topOffset="162dip" >
+            android:topOffset="240dip" >
 
             <include
                 android:id="@+id/map_slider"
-                layout="@layout/detail_map_slider" >
-            </include>
+                layout="@layout/detail_map_slider" />
 
             <include
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                layout="@layout/map" >
-            </include>
+                android:layout_height="match_parent"
+                layout="@layout/map" />
         </SlidingDrawer>
+
+        <!-- Listens to touch events for navigation buttons -->
+        <FrameLayout
+            android:id="@+id/overlay"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@null">
+        </FrameLayout>
+
     </FrameLayout>
 
 </LinearLayout>

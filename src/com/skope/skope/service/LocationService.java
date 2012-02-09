@@ -28,17 +28,22 @@ public class LocationService extends Service implements LocationListener  {
 	
 	private static final String TAG = LocationService.class.getName();
 	
-	// Constants time and distance
+	/** Constants for time and distance */
 	private static final int ONE_MINUTE = 60000;
 	private static final int TWO_MINUTES = ONE_MINUTE * 2;
     private static final int ONE_METER = 1;
 	private static final int TEN_METERS = ONE_METER * 10;
 
-	// Constants for bundle keys
+	/** Constants for mLocation messages */
 	public static final String LATITUDE = "LAT";
 	public static final String LONGITUDE = "LONG";
 	public static final String PROVIDER = "PROVIDER";
 
+	/** Constants for image upload messages */
+	public static final String IMAGE_UPLOAD_LOCATION = "LOCATION";
+	public static final String IMAGE_UPLOAD_NAME = "FIELDNAME";
+	public static final String IMAGE_UPLOAD_BITMAP = "BITMAP";
+	
 	// Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
     private int NOTIFICATION = R.string.location_service_started;

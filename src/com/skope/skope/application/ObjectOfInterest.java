@@ -11,8 +11,8 @@ public class ObjectOfInterest extends User {
 	
 	private float distance;
 	
-	public ObjectOfInterest(JSONObject jsonObject) throws JSONException {
-		super(jsonObject);
+	public ObjectOfInterest(JSONObject jsonObject, Cache cache) throws JSONException {
+		super(jsonObject, cache);
 	}
 	
 	/**

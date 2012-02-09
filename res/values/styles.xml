@@ -14,13 +14,16 @@
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
     </style>
-   	<style name="Thumbnail">
-   		<item name="android:background">@drawable/thumbnail_box</item>
-   		<item name="android:layout_width">68dip</item>
-   		<item name="android:layout_height">68dip</item>
-   		<item name="android:padding">2dip</item>		        
-   	</style>
-   	<style name="MapMarker">
+    <style name="Thumbnail">
+        <item name="android:background">@drawable/thumbnail_box</item>
+        <item name="android:layout_width">54dip</item>
+        <item name="android:layout_height">54dip</item>
+        <item name="android:padding">2dip</item>                
+    </style>
+    <style name="ThumbnailSelectable" parent="@style/Thumbnail">
+        <item name="android:background">@drawable/thumbnail_box_selectable</item>
+    </style>
+    	<style name="MapMarker">
    		<item name="android:background">@drawable/marker</item>
    		<item name="android:layout_width">34dip</item>
    		<item name="android:layout_height">34dip</item>
