@@ -49,11 +49,4 @@
             android:src="@drawable/nav_arrow_left" />
     </FrameLayout>
 
-    <Gallery
-        android:id="@+id/gallery"
-        android:layout_width="fill_parent"
-        android:layout_height="90dip"
-        android:background="@null"
-        android:layout_gravity="bottom" />
-
 </FrameLayout>

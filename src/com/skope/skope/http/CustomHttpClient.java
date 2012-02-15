@@ -2,10 +2,12 @@ package com.skope.skope.http;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -13,7 +15,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 
 import javax.net.ssl.HostnameVerifier;
@@ -45,7 +46,10 @@ import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 
 public class CustomHttpClient {
@@ -85,7 +89,7 @@ public class CustomHttpClient {
 	
 	private ArrayList<NameValuePair> params;
 	private ArrayList<NameValuePair> headers;
-	private HashMap<String, Bitmap> files;
+	private ArrayList<NameValuePair> files;
 	
 	private String url;
 
@@ -97,6 +101,8 @@ public class CustomHttpClient {
 	private boolean mUseBasicAuthentication;
 	private String mUsername;
 	private String mPassword;
+	
+	private Context mContext;
 
 	public String getResponse() {
 		return response;
@@ -110,11 +116,12 @@ public class CustomHttpClient {
 		return responseCode;
 	}
 
-	public CustomHttpClient(String url) {
+	public CustomHttpClient(String url, Context context) {
 		this.url = url;
+		mContext = context;
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();
-		files = new HashMap<String, Bitmap>();
+		files = new ArrayList<NameValuePair>();
 		mUseBasicAuthentication = false;
 	}
 
@@ -122,8 +129,8 @@ public class CustomHttpClient {
 		params.add(new BasicNameValuePair(name, value));
 	}
 	
-	public void addBitmap(String name, Bitmap bitmap) {
-		files.put(name, bitmap);
+	public void addBitmapUri(String name, Uri bitmap) {
+		files.add(new BasicNameValuePair(name, bitmap.toString()));
 	}
 
 	public void addHeader(String name, String value) {
@@ -204,13 +211,29 @@ public class CustomHttpClient {
 		            entity.addPart(params.get(index).getName(), new StringBody(params.get(index).getValue()));
 		        }
 				// Add files
-				for(String key: files.keySet()) {
-					Bitmap bmp = files.get(key);
+				for(NameValuePair file : files) {
+					// Read name, uri
+					String name = file.getName();
+					Uri uri = Uri.parse(file.getValue());
+					
+					// Load bitmap
+					WeakReference<Bitmap> bmp = new WeakReference<Bitmap>(
+							MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), uri));
+					
+					// Convert bitmap to byte array
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					bmp.get().compress(Bitmap.CompressFormat.JPEG, 80, stream);
 					byte[] byteArray = stream.toByteArray();
+					
+					// Generate random uuid filename
 					String filename = UUID.randomUUID().toString();
-					entity.addPart(key, new ByteArrayBody(byteArray, filename + ".png"));
+					
+					// Add bitmap to entity
+					entity.addPart(name, new ByteArrayBody(byteArray, filename + ".jpg"));
+					
+					// Remove temporary file at uri
+					File tmpFile = new File(uri.getPath());
+					tmpFile.delete();
 		        }
 				request.setEntity(entity);
 			}

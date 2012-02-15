@@ -42,7 +42,7 @@ public class LocationService extends Service implements LocationListener  {
 	/** Constants for image upload messages */
 	public static final String IMAGE_UPLOAD_LOCATION = "LOCATION";
 	public static final String IMAGE_UPLOAD_NAME = "FIELDNAME";
-	public static final String IMAGE_UPLOAD_BITMAP = "BITMAP";
+	public static final String IMAGE_UPLOAD_URI = "BITMAP";
 	
 	// Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.

@@ -17,7 +17,7 @@
             <stroke
                 android:width="2dip"
                 android:color="@color/skope_grey_dark"/>
-            <solid android:color="@color/skope_grey_extra_dark"/>
+            <solid android:color="@color/skope_grey"/>
             <padding android:left="2dip"
                 android:top="2dip"
                 android:right="2dip"

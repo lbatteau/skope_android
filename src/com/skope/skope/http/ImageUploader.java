@@ -5,7 +5,8 @@ import java.io.IOException;
 
 import org.apache.http.HttpStatus;
 
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -15,6 +16,7 @@ import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
 public class ImageUploader {
 	Cache mCache;
+	Context mContext;
 	String mUsername, mPassword;
 	OnUploadListener mOnUploadListener;
 	
@@ -24,7 +26,7 @@ public class ImageUploader {
 		public void onUploadComplete(boolean success, String errorMessage);
 	}
 	
-	private class UploadRunner extends AsyncTask<Bitmap, Void, CustomHttpClient> {
+	private class UploadRunner extends AsyncTask<Uri, Void, CustomHttpClient> {
 		String mUrl, mUsername, mPassword, mField;
 		
 		public UploadRunner(String url, 
@@ -45,14 +47,14 @@ public class ImageUploader {
 		}
 		
 		@Override
-		protected CustomHttpClient doInBackground(Bitmap... arg0) {
+		protected CustomHttpClient doInBackground(Uri... arg0) {
 			// Create HTTP client
-	        CustomHttpClient client = new CustomHttpClient(mUrl);
+	        CustomHttpClient client = new CustomHttpClient(mUrl, mContext);
 	        client.setUseBasicAuthentication(true);
 	        client.setUsernamePassword(mUsername, mPassword);
 	        
 	        // Add image
-	        client.addBitmap(mField, arg0[0]);
+	        client.addBitmapUri(mField, arg0[0]);
 	         
 	        // Send HTTP request to web service
 	        try {
@@ -93,7 +95,8 @@ public class ImageUploader {
 		}
 	}
 	
-	public ImageUploader(Cache cache) {
+	public ImageUploader(Context context, Cache cache) {
+		mContext = context;
 		mCache = cache;
 		mUsername = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		mPassword = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
@@ -105,20 +108,20 @@ public class ImageUploader {
 	 * activity in main thread. Use asyncUpload if on main UI thread.
 	 * @param mLocation 	The relative user API mLocation, e.g. profile_picture
 	 * @param fieldName The form field name expected by the API
-	 * @param image 	The image Bitmap to upload
+	 * @param uri 	The image uri to upload
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public void upload(String location, String fieldName, Bitmap image) {
+	public String upload(String location, String fieldName, Uri uri) {
 		String absoluteUrl = mCache.getProperty("skope_service_url") + "/user/" + mUsername + "/" + location + "/";
 
 		// Create HTTP client
-        CustomHttpClient client = new CustomHttpClient(absoluteUrl);
+        CustomHttpClient client = new CustomHttpClient(absoluteUrl, mContext);
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(mUsername, mPassword);
         
         // Add image
-        client.addBitmap(fieldName, image);
+        client.addBitmapUri(fieldName, uri);
          
         // Send HTTP request to web service
         try {
@@ -131,7 +134,7 @@ public class ImageUploader {
         // Check for server response
 		switch (client.getResponseCode()) {
 		case HttpStatus.SC_OK:
-			break;
+			return client.getResponse();
 		case 0:
 			// No server response
 			Log.e(SkopeApplication.LOG_TAG, "Connection failed");
@@ -143,9 +146,9 @@ public class ImageUploader {
 		case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 		case HttpStatus.SC_BAD_REQUEST:
 			Log.e(SkopeApplication.LOG_TAG, "Failed to upload image: " + client.getErrorMessage());
-		default:
-			break;
 		}
+		
+		return "";
 	}
 
 	/**
@@ -153,14 +156,14 @@ public class ImageUploader {
 	 * Create an ImageUploader.OnUploadListener to register for callbacks.  
 	 * @param mLocation 	The relative user API mLocation, e.g. profile_picture
 	 * @param fieldName The form field name expected by the API
-	 * @param image 	The image Bitmap to upload
+	 * @param uri 	The image Bitmap to upload
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public void asyncUpload(String location, String fieldName, Bitmap image) {
+	public void asyncUpload(String location, String fieldName, Uri uri) {
 		String absoluteUrl = mCache.getProperty("skope_service_url") + "/user/" + mUsername + "/" + location + "/";
 		UploadRunner runner = new UploadRunner(absoluteUrl, mUsername, mPassword, fieldName);
-		runner.execute(image);
+		runner.execute(uri);
 	}
 	
 	public OnUploadListener getOnUploadListener() {

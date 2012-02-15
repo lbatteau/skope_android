@@ -3,7 +3,6 @@ package com.skope.skope.ui;
 import org.apache.http.HttpStatus;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -23,7 +22,7 @@ public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
 		String password =(String) args[3];
 
 		// Set up HTTP client with url as argument
-        CustomHttpClient client = new CustomHttpClient(logoutUrl);
+        CustomHttpClient client = new CustomHttpClient(logoutUrl, mActivity.getApplicationContext());
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
 

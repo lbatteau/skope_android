@@ -4,24 +4,24 @@
 		<shape android:shape="rectangle">
 			<stroke android:width="1dip" android:color="@color/skope_grey_extra_dark" />
 			<solid android:color="@color/skope_grey"/>
-			<padding android:left="30dip" android:top="8dip"
-				android:right="30dip" android:bottom="8dip" />
+			<padding android:left="18dip" android:top="8dip"
+				android:right="18dip" android:bottom="8dip" />
 		</shape>
 	</item>
 	<item android:state_focused="true" >
 		<shape android:shape="rectangle">
 			<stroke android:width="1dip" android:color="@color/skope_grey_extra_dark" />
 			<solid android:color="@color/skope_yellow" />
-			<padding android:left="30dip" android:top="8dip"
-				android:right="30dip" android:bottom="8dip" />
+			<padding android:left="18dip" android:top="8dip"
+				android:right="18dip" android:bottom="8dip" />
 		</shape>
 	</item>
 	<item>
 		<shape android:shape="rectangle">
 			<stroke android:width="1dip" android:color="@color/skope_grey_extra_dark" />
 			<solid android:color="@color/skope_yellow" />
-			<padding android:left="30dip" android:top="8dip"
-				android:right="30dip" android:bottom="8dip" />
+			<padding android:left="18dip" android:top="8dip"
+				android:right="18dip" android:bottom="8dip" />
 		</shape>
 	</item>
 </selector>

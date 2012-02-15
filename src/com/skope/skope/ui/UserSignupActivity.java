@@ -69,7 +69,7 @@ public class UserSignupActivity extends BaseActivity {
 
 		protected CustomHttpClient doInBackground(UserSignupForm... args) {
 			// Set up HTTP client with url as argument
-			CustomHttpClient client = new CustomHttpClient(mURL);
+			CustomHttpClient client = new CustomHttpClient(mURL, getApplicationContext());
 
 			// Add POST parameters
 			mForm = args[0];

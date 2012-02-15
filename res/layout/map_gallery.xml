@@ -14,8 +14,9 @@
     <Gallery
         android:id="@+id/gallery"
         android:layout_width="fill_parent"
-        android:layout_height="90dip"
+        android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:background="@drawable/header_gradient" />
+        android:background="@drawable/header_gradient"
+        android:padding="5dip" />
 
 </LinearLayout>

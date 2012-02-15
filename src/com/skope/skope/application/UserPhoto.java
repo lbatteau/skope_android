@@ -20,6 +20,8 @@ import com.skope.skope.http.CustomHttpClient.FlushedInputStream;
 
 public class UserPhoto {
 	private final static String LOG_TAG = "UserPhoto";
+	public static final int USER_PHOTO_MAX_PIXELS = 640000;
+
 	
 	private Cache mCache;
 	
@@ -30,6 +32,10 @@ public class UserPhoto {
 	protected Bitmap mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
+	
+	public UserPhoto() {
+		// Empty shell is used in user profile as 'add photo' button
+	}
 	
 	public UserPhoto(JSONObject jsonObject, Cache cache) throws JSONException {
 		mCache = cache;
@@ -62,6 +68,7 @@ public class UserPhoto {
 	}
 
 	public void loadThumbnail(OnImageLoadListener listener) {
+		mCache.resetPurgeTimer();
 		UserThumbnailLoader loader = new UserThumbnailLoader();
 		loader.setOnImageLoadListener(listener);
 		loader.execute(getThumbnailURL());
@@ -117,6 +124,7 @@ public class UserPhoto {
 			// Not loaded, check cache
 			Bitmap bitmap = mCache.getBitmapFromCache(mThumbnailURL);
 			if (bitmap != null) {
+				mCache.resetPurgeTimer();
 				mThumbnail = bitmap;
 			}
 		}
@@ -160,6 +168,11 @@ public class UserPhoto {
 	protected class UserThumbnailLoader extends AsyncTask<String, Void, Bitmap> {
 		
 		OnImageLoadListener mListener;
+		
+		@Override
+		protected void onPreExecute() {
+			mListener.onImageLoadStart();			
+		}
 
 		@Override
 		protected Bitmap doInBackground(String... params) {
@@ -172,8 +185,6 @@ public class UserPhoto {
 				return null;
 			}
 			
-			mListener.onImageLoadStart();
-
 			try {
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 				connection.setDoInput(true);
@@ -279,7 +290,7 @@ public class UserPhoto {
 				// Set the user's profile picture
 				setPhoto(bitmap);
 				// Cache bitmap
-				mCache.addBitmapToCache(mPhotoURL, bitmap);
+				//mCache.addBitmapToCache(mPhotoURL, bitmap);
 			}
 			// Call back
 			mListener.onImageLoaded(bitmap);

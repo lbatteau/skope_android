@@ -60,7 +60,7 @@ public class UserFormActivity extends BaseActivity {
 			String serviceUrl = getCache().getProperty("skope_service_url") + "/user/" + username + "/";
 			
 			// Set up HTTP client
-	        CustomHttpClient client = new CustomHttpClient(serviceUrl);
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl, getApplicationContext());
 	        client.setUseBasicAuthentication(true);
 	        client.setUsernamePassword(username, password);
 	        

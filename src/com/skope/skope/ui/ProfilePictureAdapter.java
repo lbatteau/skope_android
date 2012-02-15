@@ -23,8 +23,8 @@ import com.skope.skope.application.User.OnImageLoadListener;
  */
 public class ProfilePictureAdapter extends ArrayAdapter<ObjectOfInterest> {
 
-	private static final int THUMBNAIL_HEIGHT = 70;
-	private static final int THUMBNAIL_WIDTH = 70;
+	private static final int THUMBNAIL_HEIGHT = 60;
+	private static final int THUMBNAIL_WIDTH = 60;
 
 	private Context mContext;
 	
@@ -47,6 +47,7 @@ public class ProfilePictureAdapter extends ArrayAdapter<ObjectOfInterest> {
 
 		imageView.setImageBitmap(ooi.getProfilePicture());
 		if (ooi.getProfilePicture() == null) {
+			imageView.setImageResource(R.drawable.empty_profile_large_icon);
 			ooi.loadProfilePicture(mProfilePictureListener);
 		}
 

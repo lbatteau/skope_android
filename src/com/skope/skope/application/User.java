@@ -238,20 +238,16 @@ public class User {
 	 * By passing it a handler, the view can update itself once the 
 	 * profile picture is loaded.
 	 * 
-	 *    - If the picture is already present, the method calls the callback 
-	 * 		method directly.
-	 *    - If not, it checks the image cache.
-	 *    - If not in cache, it uses an AsyncTask that downloads the picture 
-	 *      and calls the callback when finished.
+	 * It uses an AsyncTask that downloads the picture and calls the callback 
+	 * when finished.
 	 *      
-	 * Note that the system cache is used to store downloaded images.
-	 *  
 	 * @param listener The callback method that is called when the picture
 	 * 				   is successfully loaded. If no picture is present, this
 	 * 				   method is never called.
 	 */
 	public void loadProfilePicture(OnImageLoadListener listener) {
 		if (!this.mHasNoProfilePicture) {
+			mCache.resetPurgeTimer();
 			ProfilePictureLoader loader = new ProfilePictureLoader();
 			loader.setOnProfilePictureLoadListener(listener);
 			loader.execute(this.getProfilePictureURL());
@@ -354,7 +350,7 @@ public class User {
 	    	}
 	        
 	    	// More than sixty seconds?
-	    	if (delta > 60) {
+	    	if (delta >= 60) {
 	    		// Change unit to minutes
 	    		delta = delta/60;
 	    		unit = "minute";
@@ -427,11 +423,12 @@ public class User {
 		icon.setImageBitmap(this.getProfilePicture());
 		// Lazy loading
 		if (this.getProfilePicture() == null) {
+			icon.setImageResource(R.drawable.empty_profile_large_icon);
 			this.loadProfilePicture(new OnImageLoadListener() {
 
 				@Override
 				public void onImageLoaded(Bitmap thumbnail) {
-					icon.invalidate();
+					icon.setImageBitmap(thumbnail);
 				}
 			});
 		}
@@ -659,8 +656,8 @@ public class User {
 		return mProfilePictureURL;
 	}
 
-	public void setProfilePictureURL(String thumbnailURL) {
-		this.mProfilePictureURL = thumbnailURL;
+	public void setProfilePictureURL(String profilePictureURL) {
+		this.mProfilePictureURL = profilePictureURL;
 	}
 
 	public void setHasNoProfilePicture(boolean hasNoProfilePicture) {

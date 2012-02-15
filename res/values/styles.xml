@@ -8,7 +8,7 @@
     <style name="Button" parent="@android:style/Widget.Button">
         <item name="android:gravity">center_vertical|center_horizontal</item>
         <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:textSize">18dip</item>
+        <item name="android:textSize">14dip</item>
         <item name="android:textStyle">normal</item>
         <item name="android:background">@drawable/button_custom</item>
         <item name="android:focusable">true</item>

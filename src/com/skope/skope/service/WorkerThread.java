@@ -25,6 +25,7 @@ import org.json.JSONObject;
 
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -35,10 +36,13 @@ import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
+import com.skope.skope.application.User;
 import com.skope.skope.application.UserPhoto;
+import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 import com.skope.skope.http.ImageUploader;
+import com.skope.skope.ui.UserProfileActivity;
 import com.skope.skope.util.NotificationUtils;
 import com.skope.skope.util.Type;
 
@@ -51,7 +55,10 @@ import com.skope.skope.util.Type;
  * background part of the Application.
  */
 public class WorkerThread extends Thread {
-    /**
+    
+	private static final String TAG = WorkerThread.class.getName();
+	
+	/**
      * [Optional] Execution state of the currently running long process, used by
      * the service to recover the state after the Service has been abnormally
      * terminated.
@@ -149,6 +156,10 @@ public class WorkerThread extends Thread {
                 findObjectsOfInterest(bundle);
                 break;
                 
+            case UPLOAD_PROFILE_PICTURE:
+            	uploadProfilePicture(bundle);
+            	break;
+                
             case UPLOAD_IMAGE:
             	uploadImage(bundle);
             	break;
@@ -218,7 +229,7 @@ public class WorkerThread extends Thread {
 		String serviceUrl = mCache.getProperty("skope_service_url") + "/skope/";
 		
 		// Set up HTTP client
-        CustomHttpClient client = new CustomHttpClient(serviceUrl);
+        CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
         
@@ -299,14 +310,14 @@ public class WorkerThread extends Thread {
     private void uploadImage(final Bundle bundle) {
         mUiQueue.postToUi(Type.UPLOAD_IMAGE_START, null, true);
 
-        ImageUploader imageUploader = new ImageUploader(mCache);
+        ImageUploader imageUploader = new ImageUploader(mLocationService.getApplicationContext(), mCache);
 
         String location = bundle.getString(LocationService.IMAGE_UPLOAD_LOCATION);
 		String name = bundle.getString(LocationService.IMAGE_UPLOAD_NAME);
-		Bitmap image = (Bitmap) bundle.getParcelable(LocationService.IMAGE_UPLOAD_BITMAP);
+		String uri = bundle.getString(LocationService.IMAGE_UPLOAD_URI);
 		
 		try {
-			imageUploader.upload(location, name, image);
+			imageUploader.upload(location, name, Uri.parse(uri));
 		} catch (Exception e) {
 			Bundle outBundle = new Bundle();
 			outBundle.putString("TEXT", 
@@ -317,6 +328,60 @@ public class WorkerThread extends Thread {
 		
         mUiQueue.postToUi(Type.UPLOAD_IMAGE_END, null, true);
 
+    }
+    
+    /***
+     * Uploads an image to the server
+     * 
+     * The target filename is [UUID].png
+     *
+     * @param bundle
+     *            Bundle should contain:
+     *            	"LOCATION": The relative API mLocation
+     *            	"FIELDNAME": The form field name, e.g. "profile_picture"
+     *            	"URI": The image URI to upload
+     */
+    private void uploadProfilePicture(final Bundle bundle) {
+        mUiQueue.postToUi(Type.UPLOAD_PROFILE_PICTURE_START, null, true);
+
+        ImageUploader imageUploader = new ImageUploader(mLocationService.getApplicationContext(), mCache);
+
+        String location = bundle.getString(LocationService.IMAGE_UPLOAD_LOCATION);
+		String name = bundle.getString(LocationService.IMAGE_UPLOAD_NAME);
+		String uri = bundle.getString(LocationService.IMAGE_UPLOAD_URI);
+		
+		String response;
+		try {
+			response = imageUploader.upload(location, name, Uri.parse(uri));
+		} catch (Exception e) {
+			Bundle outBundle = new Bundle();
+			outBundle.putString("TEXT", 
+					mLocationService.getResources().getString(R.string.error_image_upload_not_found)
+							+ ": " + e.toString());
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+            return;
+		}
+		
+    	// Server returns new profile picture URL
+        JSONObject jsonResponse = null;
+        String profilePictureURL = "";
+        
+        try {
+        	jsonResponse = new JSONObject(response);
+        	profilePictureURL = jsonResponse.getString("profile_picture_url");
+		} catch (JSONException e) {
+			Bundle outBundle = new Bundle();
+			outBundle.putString("TEXT", 
+					mLocationService.getResources().getString(R.string.error_profile_picture_result)
+							+ ": " + e.toString());
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+			return;
+		}
+		
+		// Post back new photo and thumbnail url
+		Bundle outBundle = new Bundle();
+		outBundle.putString("profile_picture_url", profilePictureURL);
+        mUiQueue.postToUi(Type.UPLOAD_PROFILE_PICTURE_END, outBundle, true);
     }
     
     private void readUserPhotos(final Bundle bundle) {
@@ -338,7 +403,7 @@ public class WorkerThread extends Thread {
 		String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + userPhotosUsername + "/photos/";
 		
 		// Set up HTTP client
-        CustomHttpClient client = new CustomHttpClient(serviceUrl);
+        CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
         client.setUseBasicAuthentication(true);
         client.setUsernamePassword(username, password);
         

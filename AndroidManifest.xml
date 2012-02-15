@@ -63,6 +63,8 @@
         </activity>
         <activity android:name=".ui.UserProfileActivity" >
         </activity>
+        <activity android:name=".ui.UserPhotoActivity" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+        </activity>
         <activity
             android:name=".ui.UserSignupActivity"
             android:windowSoftInputMode="stateHidden" >

@@ -14,6 +14,7 @@
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
     <string name="error_connection_failed">Connection failed. Please make sure you are connected to the internet.</string>
     <string name="error_image_upload_not_found">Sorry, image upload failed.</string>
+    <string name="error_profile_picture_result">There was a problem saving your new profile picture.</string>
     <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
     <string name="no_location_title">Can\&apos;t locate&#8230;</string>
     <string name="no_result_message">There seems to be a problem with connecting to the server.</string>
@@ -78,4 +79,7 @@
     <string name="user_about_me">About me</string>
     <string name="user_thumbnail_add">Set your profile picture&#8230;</string>
     <string name="edit">Edit profile</string>
+    <string name="user_profile_uploading_image">Uploading image&#8230;</string>
+    <string name="user_photos_retrieving">Retrieving user photos&#8230;</string>
+    <string name="user_photos_add">Add photo</string>
 </resources>

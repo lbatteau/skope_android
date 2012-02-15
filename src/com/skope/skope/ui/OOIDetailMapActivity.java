@@ -2,10 +2,12 @@ package com.skope.skope.ui;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -26,7 +28,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
-import android.widget.GridView;
+import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SlidingDrawer;
@@ -58,9 +60,9 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	private Animation mFadeInAnimation, mFadeOutAnimation;
 	private SlidingDrawer mMapDrawer;
 	private ExpandableListAdapter mListAdapter;
-	private View mUserProfileMain, mUserProfile;
+	private View mUserProfileMain, mUserProfile, mUserPhotoLayout;
     private LayoutInflater mInflater;
-    private GridView mUserPhotoGrid;
+    private Gallery mUserPhotoGallery;    
 	private UserPhotoAdapter mUserPhotoAdapter;
 	private ArrayList<UserPhoto> mUserPhotoList;
 	    
@@ -179,7 +181,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				// passing it to the gesture listener
 				mUserProfile.dispatchTouchEvent(event);
 				
-				// Pass event to gesture listener
 				return mGestureDetector.onTouchEvent(event);
 			}
 		};
@@ -196,50 +197,19 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    // User photos adapter
 	    mUserPhotoAdapter = new UserPhotoAdapter(this, R.id.user_photo_grid, mUserPhotoList);
 	    // User photos gallery 
-	    mUserPhotoGrid = (GridView) mInflater.inflate(R.layout.user_photo_grid, null);
-	    mUserPhotoGrid.setAdapter(mUserPhotoAdapter);
+	    mUserPhotoLayout = mInflater.inflate(R.layout.user_photo_gallery, null);
+	    mUserPhotoGallery = (Gallery) mUserPhotoLayout.findViewById(R.id.user_photo_gallery);
+	    mUserPhotoGallery.setAdapter(mUserPhotoAdapter);
 	    
-	    mUserPhotoGrid.setOnItemClickListener(new OnItemClickListener() {
+	    mUserPhotoGallery.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
 					long id) {
-				UserPhoto userPhoto = mUserPhotoAdapter.getItem(position);
-				View userPhotoLayout = mInflater.inflate(R.layout.user_photo, null);
-				final ImageView userPhotoView = (ImageView) userPhotoLayout.findViewById(R.id.user_photo_view);
-				userPhotoView.setImageBitmap(new SoftReference<Bitmap>(userPhoto.getPhoto()).get());
-				final ProgressBar progressBar = (ProgressBar) userPhotoLayout.findViewById(R.id.progress);
-				
-				if (userPhoto.getPhoto() == null) {
-					userPhoto.loadPhoto(new OnImageLoadListener() {
-						
-						@Override
-						public void onImageLoaded(Bitmap image) {
-							progressBar.setVisibility(View.INVISIBLE);
-							userPhotoView.setImageBitmap(image);
-						}
-
-						@Override
-						public void onImageLoadStart() {
-							progressBar.setVisibility(View.VISIBLE);
-						}
-					},
-					getWindowManager().getDefaultDisplay().getWidth(),
-					getWindowManager().getDefaultDisplay().getHeight());
-				}
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(OOIDetailMapActivity.this);
-				builder.setView(userPhotoLayout)
-					   .setPositiveButton("OK",
-								new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								dialog.dismiss();
-							}
-						})
-						.create()
-						.show();
+				// Redirect to photo activity
+		        Intent i = new Intent(OOIDetailMapActivity.this, UserPhotoActivity.class);
+		        i.putExtra("position", position);
+	        	startActivity(i);
 			}
 		});
 	    
@@ -358,9 +328,15 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		case READ_USER_PHOTOS_END:
 			// Copy user photo list from cache
 			mUserPhotoAdapter.clear();
-			for (UserPhoto userPhoto: Cache.USER_PHOTOS) {
-				mUserPhotoAdapter.add(userPhoto);
+			
+			// Reverse
+			ListIterator<UserPhoto> userPhotosIterator = 
+					Cache.USER_PHOTOS.listIterator(Cache.USER_PHOTOS.size());
+
+			while(userPhotosIterator.hasPrevious()) {
+				mUserPhotoAdapter.add(userPhotosIterator.previous());
 			}
+			
 			break;
         default:
 			super.post(type, bundle);
@@ -437,7 +413,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
                 View convertView, ViewGroup parent) {
         	switch(groupPosition) {
             case 1:
-            	return mUserPhotoGrid;
+            	return mUserPhotoLayout;
             case 2:
             default:
             	TextView textView = new TextView(OOIDetailMapActivity.this);

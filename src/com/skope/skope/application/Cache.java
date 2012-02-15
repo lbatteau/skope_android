@@ -60,8 +60,8 @@ public class Cache {
     private static final String STATE_PROCESS = "STATE_PROCESS";
 
     /** Image cache settings */
-    private static final int HARD_CACHE_CAPACITY = 40;
-    private static final int DELAY_BEFORE_PURGE = 30 * 1000; // in milliseconds
+    private static final int HARD_CACHE_CAPACITY = 10;
+    private static final int DELAY_BEFORE_PURGE = 10 * 1000; // in milliseconds
 
     /** Cached application context. **/
     private final Context mContext;
@@ -340,7 +340,7 @@ public class Cache {
         sSoftBitmapCache.clear();
     }
 
-    private void resetPurgeTimer() {
+    public void resetPurgeTimer() {
         purgeHandler.removeCallbacks(purger);
         purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
     }

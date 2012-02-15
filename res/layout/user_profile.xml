@@ -1,80 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/user_profile"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll_view"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:layout_gravity="center_horizontal"
-    android:orientation="vertical">
-
-    <FrameLayout
-        android:id="@+id/user_main"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
-
-        <LinearLayout
-            android:id="@+id/LinearLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/status"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:gravity="right|bottom"
-                android:minHeight="60dip"
-                android:paddingBottom="5dip"
-                android:paddingLeft="120dip"
-                android:paddingRight="10dip"
-                android:paddingTop="5dip"
-                android:text="Status"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/username_text"
-                android:layout_width="fill_parent"
-                android:layout_height="0dip"
-                android:layout_weight="1"
-                android:background="@drawable/header_gradient"
-                android:minHeight="60dip"
-                android:paddingBottom="5dip"
-                android:paddingLeft="120dip"
-                android:paddingRight="10dip"
-                android:paddingTop="5dip"
-                android:text="Firstname Lastname"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="@android:color/white" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:id="@+id/frameLayout2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|bottom"
-            android:paddingBottom="10dip"
-            android:paddingLeft="10dip" >
-
-            <ImageView
-                android:id="@+id/icon"
-                android:layout_width="100dip"
-                android:layout_height="100dip"
-                android:background="@drawable/thumbnail_box_white_selector"
-                android:scaleType="fitXY" />
-        </FrameLayout>
-    </FrameLayout>
+    android:layout_gravity="center_horizontal" >
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/user_profile"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
 
-        <include
+        <FrameLayout
+            android:id="@+id/user_main"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            layout="@layout/user_info_block" />
+            android:layout_height="wrap_content" >
+
+            <LinearLayout
+                android:id="@+id/LinearLayout1"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/status"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:gravity="right|bottom"
+                    android:minHeight="60dip"
+                    android:paddingBottom="5dip"
+                    android:paddingLeft="120dip"
+                    android:paddingRight="10dip"
+                    android:paddingTop="5dip"
+                    android:text="Status"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/username_text"
+                    android:layout_width="fill_parent"
+                    android:layout_height="0dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/header_gradient"
+                    android:minHeight="60dip"
+                    android:paddingBottom="5dip"
+                    android:paddingLeft="120dip"
+                    android:paddingRight="10dip"
+                    android:paddingTop="5dip"
+                    android:text="Firstname Lastname"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/frameLayout2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left|bottom"
+                android:paddingBottom="10dip"
+                android:paddingLeft="10dip" >
+
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="100dip"
+                    android:layout_height="100dip"
+                    android:background="@drawable/thumbnail_box_white_selector"
+                    android:scaleType="fitXY" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <include
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                layout="@layout/user_info_block" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/button_edit"
@@ -83,21 +89,65 @@
             android:layout_margin="10dip"
             android:layout_weight="0"
             android:text="@string/edit" />
+
+        <FrameLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="80dip"
+            android:padding="5dip" >
+
+            <FrameLayout
+                android:id="@+id/frameLayout1"
+                android:layout_width="match_parent"
+                android:layout_height="1dip"
+                android:layout_gravity="top"
+                android:background="#BBB" >
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/frameLayout3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="5dip" >
+
+                <Gallery
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/user_photo_gallery"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:spacing="5dip" />
+
+                <ProgressBar
+                    android:id="@+id/photos_progress_bar"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="invisible" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/frameLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="1dip"
+                android:layout_gravity="bottom"
+                android:background="#BBB" >
+            </FrameLayout>
+        </FrameLayout>
+
+        <Button
+            android:id="@+id/button_add_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dip"
+            android:layout_weight="0"
+            android:text="@string/user_photos_add" />
+
+        <FrameLayout
+            android:id="@+id/frameLayout1"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+        </FrameLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/about_me"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="" >
-    </TextView>
-
-    <include layout="@layout/user_photo_grid"/>
-
-    <FrameLayout
-        android:id="@+id/frameLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
-    </FrameLayout>
-
-</LinearLayout>
+</ScrollView>
