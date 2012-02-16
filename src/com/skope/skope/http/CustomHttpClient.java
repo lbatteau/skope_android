@@ -217,13 +217,19 @@ public class CustomHttpClient {
 					Uri uri = Uri.parse(file.getValue());
 					
 					// Load bitmap
-					WeakReference<Bitmap> bmp = new WeakReference<Bitmap>(
-							MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), uri));
+					Bitmap bmp = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), uri);
 					
 					// Convert bitmap to byte array
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					bmp.get().compress(Bitmap.CompressFormat.JPEG, 80, stream);
+					bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+					
+					// Speed up garbage collection
+					bmp.recycle();
+					bmp = null;
+					
 					byte[] byteArray = stream.toByteArray();
+					stream.flush();
+					stream.close();
 					
 					// Generate random uuid filename
 					String filename = UUID.randomUUID().toString();

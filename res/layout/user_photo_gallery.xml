@@ -3,17 +3,24 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/frameLayout3"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="5dip" >
+    android:layout_height="match_parent">
 
     <Gallery
         android:id="@+id/user_photo_gallery"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="70dip"
         android:spacing="5dip" />
 
+    <TextView
+        android:id="@+id/user_photo_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:visibility="invisible" />
+
     <ProgressBar
-        android:id="@+id/photos_progress_bar"
+        android:id="@+id/user_photo_progress_bar"
         style="?android:attr/progressBarStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

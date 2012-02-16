@@ -1,6 +1,7 @@
 package com.skope.skope.application;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,8 +29,8 @@ public class UserPhoto {
 	protected int id;
 	protected String mPhotoURL;
 	protected String mThumbnailURL;
-	protected Bitmap mPhoto;
-	protected Bitmap mThumbnail;
+	protected WeakReference<Bitmap> mPhoto;
+	protected WeakReference<Bitmap> mThumbnail;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
 	
@@ -108,14 +109,18 @@ public class UserPhoto {
 			// Not loaded, check cache
 			Bitmap bitmap = mCache.getBitmapFromCache(mPhotoURL);
 			if (bitmap != null) {
-				mPhoto = bitmap;
+				mPhoto = new WeakReference<Bitmap>(bitmap);
 			}
 		}
 
-		return mPhoto;
+		if (mPhoto != null) {
+			return mPhoto.get();
+		} else {
+			return null;
+		}		
 	}
 
-	public void setPhoto(Bitmap photo) {
+	public void setPhoto(WeakReference<Bitmap> photo) {
 		this.mPhoto = photo;
 	}
 
@@ -125,14 +130,18 @@ public class UserPhoto {
 			Bitmap bitmap = mCache.getBitmapFromCache(mThumbnailURL);
 			if (bitmap != null) {
 				mCache.resetPurgeTimer();
-				mThumbnail = bitmap;
+				mThumbnail = new WeakReference<Bitmap>(bitmap);
 			}
 		}
 
-		return mThumbnail;
+		if (mThumbnail != null) {
+			return mThumbnail.get();
+		} else {
+			return null;
+		}
 	}
 
-	public void setThumbnail(Bitmap thumbnail) {
+	public void setThumbnail(WeakReference<Bitmap> thumbnail) {
 		this.mThumbnail = thumbnail;
 	}
 
@@ -202,7 +211,7 @@ public class UserPhoto {
 		protected void onPostExecute(Bitmap bitmap) {
 			if (bitmap != null) {
 				// Set the user's profile picture
-				setThumbnail(bitmap);
+				setThumbnail(new WeakReference<Bitmap>(bitmap));
 				// Cache bitmap
 				mCache.addBitmapToCache(mThumbnailURL, bitmap);
 				// Call back
@@ -288,7 +297,7 @@ public class UserPhoto {
 		protected void onPostExecute(Bitmap bitmap) {
 			if (bitmap != null) {
 				// Set the user's profile picture
-				setPhoto(bitmap);
+				setPhoto(new WeakReference<Bitmap>(bitmap));
 				// Cache bitmap
 				//mCache.addBitmapToCache(mPhotoURL, bitmap);
 			}

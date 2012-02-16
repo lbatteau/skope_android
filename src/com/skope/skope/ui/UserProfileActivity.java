@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.TableLayout.LayoutParams;
 
 import com.skope.skope.R;
@@ -60,6 +61,7 @@ public class UserProfileActivity extends BaseActivity {
 	private Gallery mUserPhotoGallery;
 	private ProgressDialog mDialog;
 	private ProgressBar mPhotosProgressBar;
+	private TextView mPhotosLabel;
 	
 
 	 OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
@@ -190,12 +192,15 @@ public class UserProfileActivity extends BaseActivity {
 	    
 		// Photos progress bar
 		mPhotosProgressBar = (ProgressBar) mMainProfile.findViewById(R.id.photos_progress_bar);
+		// Photos label
+		mPhotosLabel = (TextView) mMainProfile.findViewById(R.id.user_photo_label);
+
  	}
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		WeakReference<Bitmap> image = null;
+		Bitmap image = null;
 		
 		if (resultCode == Activity.RESULT_OK) {
 			switch(requestCode) {
@@ -208,24 +213,32 @@ public class UserProfileActivity extends BaseActivity {
 				crop(mImageUri);
 				break;
 			case ACTION_THUMBNAIL_CROP:
-				image = new WeakReference<Bitmap>((Bitmap) data.getExtras().getParcelable("data"));
-				storeProfilePicture(image.get());
+				image = (Bitmap) data.getExtras().getParcelable("data");
+				storeProfilePicture(image);
+				// Speed up garbage collection
+				image.recycle();
+				image = null;
 				break;
 			case ACTION_ADD_PHOTO_CAMERA:
 			case ACTION_ADD_PHOTO_FILE:
 				try {
-					image = new WeakReference<Bitmap>(Media.getBitmap(this.getContentResolver(), data.getData()));
+					image = Media.getBitmap(this.getContentResolver(), data.getData());
 					// Scale down
 					int halfFactor = 1;
-					int resolution = image.get().getWidth() * image.get().getHeight();
+					int resolution = image.getWidth() * image.getHeight();
 					while (resolution / Math.pow(2, halfFactor) > UserPhoto.USER_PHOTO_MAX_PIXELS) {
 						halfFactor++;
 					}
-					int newHeight = image.get().getHeight() / halfFactor;
-					int newWidth = image.get().getWidth() / halfFactor;
-					WeakReference<Bitmap> scaledBitmap = new WeakReference<Bitmap>(Bitmap.createScaledBitmap(image.get(), newWidth, newHeight, true));
+					int newHeight = image.getHeight() / halfFactor;
+					int newWidth = image.getWidth() / halfFactor;
+					Bitmap scaledBitmap = Bitmap.createScaledBitmap(image, newWidth, newHeight, true);
+					// Speed up garbage collection
+					image.recycle();
 					image = null;
-					storePhoto(scaledBitmap.get());
+					storePhoto(scaledBitmap);
+					// Speed up garbage collection
+					scaledBitmap.recycle();
+					scaledBitmap = null;
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -239,10 +252,13 @@ public class UserProfileActivity extends BaseActivity {
 			// ProfilePicture cropping failed
 			try {
 				// Do our own scaling
-				WeakReference<Bitmap> bitmap = new WeakReference<Bitmap>(Media.getBitmap(this.getContentResolver(), mImageUri));
-				float height = ((float)User.PROFILE_PICTURE_WIDTH / bitmap.get().getWidth()) * bitmap.get().getHeight();
-				image = new WeakReference<Bitmap>(Bitmap.createScaledBitmap(bitmap.get(), User.PROFILE_PICTURE_HEIGHT, (int)height, true));
-				storeProfilePicture(image.get());
+				Bitmap bitmap = Media.getBitmap(this.getContentResolver(), mImageUri);
+				float height = ((float)User.PROFILE_PICTURE_WIDTH / bitmap.getWidth()) * bitmap.getHeight();
+				image = Bitmap.createScaledBitmap(bitmap, User.PROFILE_PICTURE_HEIGHT, (int)height, true);
+				// Speed up garbage collection
+				bitmap.recycle();
+				bitmap = null;				
+				storeProfilePicture(image);
 			} catch (FileNotFoundException fnfe) {
 				Log.e(SkopeApplication.LOG_TAG, fnfe.toString());
 			} catch (IOException ioe) {
@@ -311,6 +327,9 @@ public class UserProfileActivity extends BaseActivity {
 	public void post(final Type type, final Bundle bundle) {
 		switch (type) {
 		case READ_USER_PHOTOS_START:
+			// Hide label
+			mPhotosLabel.setVisibility(View.INVISIBLE);
+			
 			// Display progress bar when gallery is empty
 			if (mUserPhotoAdapter.isEmpty()) {
 				mPhotosProgressBar.setVisibility(View.VISIBLE);
@@ -319,17 +338,20 @@ public class UserProfileActivity extends BaseActivity {
 		case READ_USER_PHOTOS_END:
 			// Hide progress bar
 			mPhotosProgressBar.setVisibility(View.INVISIBLE);
+			
 			// Copy user photo list from cache
 			mUserPhotoAdapter.clear();
-			// Reverse
-			ListIterator<UserPhoto> userPhotosIterator = 
-					Cache.USER_PHOTOS.listIterator(Cache.USER_PHOTOS.size());
-
-			while(userPhotosIterator.hasPrevious()) {
-				mUserPhotoAdapter.add(userPhotosIterator.previous());
+			for(UserPhoto userphoto: Cache.USER_PHOTOS) {
+				mUserPhotoAdapter.add(userphoto);
 			}
 			
-			mUserPhotoAdapter.notifyDataSetChanged();
+			// Show label if no photos present
+			if (mUserPhotoAdapter.getCount() == 0) {
+				mPhotosLabel.setVisibility(View.VISIBLE);
+				mPhotosLabel.setText(getResources().getString(R.string.user_photos_none));
+			} else {
+				mPhotosLabel.setVisibility(View.INVISIBLE);
+			}
 			break;
 		case UPLOAD_PROFILE_PICTURE_START:
 			mDialog.setMessage(getResources().getString(R.string.user_profile_uploading_image));

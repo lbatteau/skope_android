@@ -1,14 +1,9 @@
 package com.skope.skope.ui;
 
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.ListIterator;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -41,17 +36,13 @@ import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.UserPhoto;
-import com.skope.skope.application.UserPhoto.OnImageLoadListener;
 import com.skope.skope.maps.OOIOverlay;
 import com.skope.skope.util.Type;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
-	private static final int SWIPE_MIN_DISTANCE = 80;
+	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_MAX_OFF_PATH = 250;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 150;
-
-	/** IDs for dialogs */
-	private final static int DIALOG_USER_PHOTO = 0;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 
     private GestureDetector mGestureDetector;
     private View.OnTouchListener mGestureListener;
@@ -65,7 +56,8 @@ public class OOIDetailMapActivity extends OOIMapActivity {
     private Gallery mUserPhotoGallery;    
 	private UserPhotoAdapter mUserPhotoAdapter;
 	private ArrayList<UserPhoto> mUserPhotoList;
-	    
+	private ProgressBar mPhotosProgressBar;	 
+	private TextView mPhotosLabel;
 	
     @Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -213,6 +205,11 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			}
 		});
 	    
+	    // Photos progress bar
+		mPhotosProgressBar = (ProgressBar) mUserPhotoLayout.findViewById(R.id.user_photo_progress_bar);
+		// Photos label
+		mPhotosLabel = (TextView) mUserPhotoLayout.findViewById(R.id.user_photo_label);
+	    
 	}
     
     @Override
@@ -325,16 +322,30 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	@Override
 	public void post(final Type type, final Bundle bundle) {
 		switch (type) {
+		case READ_USER_PHOTOS_START:
+			// Hide label
+			mPhotosLabel.setVisibility(View.INVISIBLE);
+			
+			// Display progress bar when gallery is empty
+			if (mUserPhotoAdapter.isEmpty()) {
+				mPhotosProgressBar.setVisibility(View.VISIBLE);
+			}
+			break;
 		case READ_USER_PHOTOS_END:
+			// Hide progress bar
+			mPhotosProgressBar.setVisibility(View.INVISIBLE);
 			// Copy user photo list from cache
 			mUserPhotoAdapter.clear();
+			for(UserPhoto userphoto: Cache.USER_PHOTOS) {
+				mUserPhotoAdapter.add(userphoto);
+			}
 			
-			// Reverse
-			ListIterator<UserPhoto> userPhotosIterator = 
-					Cache.USER_PHOTOS.listIterator(Cache.USER_PHOTOS.size());
-
-			while(userPhotosIterator.hasPrevious()) {
-				mUserPhotoAdapter.add(userPhotosIterator.previous());
+			// Show label if no photos present
+			if (mUserPhotoAdapter.getCount() == 0) {
+				mPhotosLabel.setVisibility(View.VISIBLE);
+				mPhotosLabel.setText(getResources().getString(R.string.user_photos_none));
+			} else {
+				mPhotosLabel.setVisibility(View.INVISIBLE);
 			}
 			
 			break;

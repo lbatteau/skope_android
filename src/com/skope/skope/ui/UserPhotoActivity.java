@@ -2,11 +2,12 @@ package com.skope.skope.ui;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.ListIterator;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Gallery;
@@ -32,6 +33,7 @@ public class UserPhotoActivity extends BaseActivity {
 		// load the layout
 		setContentView(R.layout.user_photo);
 		
+		
 	    // Initial empty list of user photos
 	    mUserPhotoList = new ArrayList<UserPhoto>();
 	    // User photos adapter
@@ -44,10 +46,11 @@ public class UserPhotoActivity extends BaseActivity {
 	    mUserPhotoGallery.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 			@Override
-			public void onItemSelected(AdapterView<?> arg0, View arg1,
-					int arg2, long arg3) {
-				mCurrentPosition = arg2;
-				loadPhoto(arg2);
+			public void onItemSelected(AdapterView<?> arg0, View view,
+					int position, long arg3) {
+				mCurrentPosition = position;
+				loadPhoto(position);
+				
 				
 			}
 
@@ -58,14 +61,9 @@ public class UserPhotoActivity extends BaseActivity {
 		});	
 	    
 		// Load photos
-	    
-	    // Reverse
-		ListIterator<UserPhoto> userPhotosIterator = 
-				Cache.USER_PHOTOS.listIterator(Cache.USER_PHOTOS.size());
-
-		while(userPhotosIterator.hasPrevious()) {
-			mUserPhotoAdapter.add(userPhotosIterator.previous());
-			
+	    mUserPhotoAdapter.clear();
+		for(UserPhoto userphoto: Cache.USER_PHOTOS) {
+			mUserPhotoAdapter.add(userphoto);
 		}
 
 		// Extract the current selected photo from the bundle
