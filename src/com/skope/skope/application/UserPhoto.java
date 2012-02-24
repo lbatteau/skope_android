@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 
+import org.apache.http.HttpStatus;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,7 +18,9 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.FlushedInputStream;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
 
 public class UserPhoto {
 	private final static String LOG_TAG = "UserPhoto";
@@ -26,6 +29,7 @@ public class UserPhoto {
 	
 	private Cache mCache;
 	
+	protected String mUsername;
 	protected int id;
 	protected String mPhotoURL;
 	protected String mThumbnailURL;
@@ -41,6 +45,11 @@ public class UserPhoto {
 	public UserPhoto(JSONObject jsonObject, Cache cache) throws JSONException {
 		mCache = cache;
 		
+		JSONObject user = jsonObject.getJSONObject("user");
+		if (!user.isNull("username")) {
+			this.setUsername(user.getString("username"));
+		}
+				
 		this.setId(jsonObject.getInt("id"));
 		
 		if (!jsonObject.isNull("photo_url")) {
@@ -86,6 +95,12 @@ public class UserPhoto {
 		loader.enableRescaling(targetWidth, targetHeight);
 		loader.setOnImageLoadListener(listener);
 		loader.execute(this.getPhotoURL());
+	}
+	
+	public void delete(OnImageDeleteListener listener) {
+		UserPhotoDeleter deleter = new UserPhotoDeleter();
+		deleter.setOnImageDeleteListener(listener);
+		deleter.execute();
 	}
 	
 	public String getPhotoURL() {
@@ -172,6 +187,11 @@ public class UserPhoto {
 	public interface OnImageLoadListener {
 		public void onImageLoadStart();
 		public void onImageLoaded(Bitmap image);
+	}
+	
+	public interface OnImageDeleteListener {
+		public void onImageDeleteStart();
+		public void onImageDeleted(boolean isSuccess, String message);
 	}
 	
 	protected class UserThumbnailLoader extends AsyncTask<String, Void, Bitmap> {
@@ -304,5 +324,86 @@ public class UserPhoto {
 			// Call back
 			mListener.onImageLoaded(bitmap);
 	   }
-	}	
+	}
+	
+	protected class UserPhotoDeleter extends AsyncTask<Void, Void, CustomHttpClient> {
+		
+		OnImageDeleteListener mListener;
+		
+		@Override
+		protected void onPreExecute() {
+			mListener.onImageDeleteStart();			
+		}
+
+		@Override
+		protected CustomHttpClient doInBackground(Void... params) {
+			String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+			String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+			String absoluteUrl = mCache.getProperty("skope_service_url") + "/user/" + String.valueOf(UserPhoto.this.mUsername) + "/photos/" + String.valueOf(UserPhoto.this.id) + "/";
+			
+			// Create HTTP client
+	        CustomHttpClient client = new CustomHttpClient(absoluteUrl);
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        
+	        // Send HTTP request to web service
+	        try {
+	            client.execute(RequestMethod.DELETE);
+	        } catch (Exception e) {
+	        	// Most exceptions already handled by client
+	            e.printStackTrace();
+	        }
+
+	        return client;
+		}
+		
+		protected void onPostExecute(CustomHttpClient client) {
+			// Check HTTP response code
+	    	int httpResponseCode = client.getResponseCode();
+	    	// Check for server response
+	    	if (httpResponseCode == 0) {
+	    		// No server response
+	    		mListener.onImageDeleted(false, "Connection failed");
+	    		return;
+	    	} else {
+	    		// Check for error
+	    		if (httpResponseCode != HttpStatus.SC_NO_CONTENT) {
+	    			// Server returned error code
+			        switch(client.getResponseCode()) {
+			        case HttpStatus.SC_UNAUTHORIZED:
+			        	// Login not successful, authorization required 
+			        	mListener.onImageDeleted(false, "Unauthorized");
+			        	break;
+			        case HttpStatus.SC_REQUEST_TIMEOUT:
+			        case HttpStatus.SC_BAD_GATEWAY:
+			        case HttpStatus.SC_GATEWAY_TIMEOUT:
+			        	// Connection timeout
+			        	mListener.onImageDeleted(false, "Gateway timeout");
+			        	break;
+			        case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			        	mListener.onImageDeleted(false, "Server error");
+			        	break;
+			        }
+			        return;
+	    		}
+	    	}
+	    	
+	    	mListener.onImageDeleted(true, "");
+			
+	     }
+
+		public void setOnImageDeleteListener(OnImageDeleteListener listener) {
+			mListener = listener;
+		}
+	}
+
+	public String getUsername() {
+		return mUsername;
+	}
+
+	public void setUsername(String username) {
+		this.mUsername = username;
+	}
+	
+	
 }

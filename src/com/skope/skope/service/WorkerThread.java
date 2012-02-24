@@ -395,7 +395,7 @@ public class WorkerThread extends Thread {
     		return;
     	}
 		
-		// Bundle present, extract username
+		// Bundle present, extract mUsername
 		userPhotosUsername = bundle.getString("USERNAME");
 
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");

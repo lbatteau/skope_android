@@ -59,7 +59,7 @@ public class ProfilePictureAdapter extends ArrayAdapter<ObjectOfInterest> {
 						.getResources().getDisplayMetrics());
 		imageView.setLayoutParams(new Gallery.LayoutParams(width, height));
 		imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-		imageView.setBackgroundResource(R.drawable.gallery_box);
+		imageView.setBackgroundResource(R.drawable.gallery_box_selectable);
 
 		return imageView;
 	}

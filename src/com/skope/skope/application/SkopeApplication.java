@@ -16,9 +16,12 @@
 
 package com.skope.skope.application;
 
-import java.text.DateFormat;
+import org.acra.ACRA;
+import org.acra.annotation.ReportsCrashes;
 
 import android.app.Application;
+
+@ReportsCrashes(formKey = "dHd6ZTBRRnpjV2pTMzh4QnN1RUJMRmc6MQ")
 
 /***
  * Application class persists for the duration of the JRE, and is used to store
@@ -104,6 +107,13 @@ public class SkopeApplication extends Application {
         mCache = null;
         //mDb = null;
         super.onTerminate();
+    }
+    
+    @Override
+    public void onCreate() {
+        // The following line triggers the initialization of ACRA
+        ACRA.init(this);
+        super.onCreate();
     }
     
 }

@@ -127,6 +127,7 @@ public class User {
 		if (!user.isNull("username")) {
 			this.setUserName(user.getString("username"));
 		}
+		
 		if (!user.isNull("email")) {
 			this.setUserEmail(user.getString("email"));
 		}
@@ -257,7 +258,7 @@ public class User {
 	/**
 	 * Creates a label based on the user's name:
 	 * <ul><li>If the user's first and/or last name is filled "mFirstName mLastName"</li>
-	 *     <li>Else "username"</li>
+	 *     <li>Else "mUsername"</li>
 	 */
 	public String createName() {
 		if ((mFirstName != null && !"".equals(mFirstName))

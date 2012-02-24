@@ -7,7 +7,6 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -27,6 +26,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -115,14 +115,18 @@ public class CustomHttpClient {
 	public int getResponseCode() {
 		return responseCode;
 	}
-
-	public CustomHttpClient(String url, Context context) {
+	
+	public CustomHttpClient(String url) {
 		this.url = url;
-		mContext = context;
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();
 		files = new ArrayList<NameValuePair>();
 		mUseBasicAuthentication = false;
+	}
+	
+	public CustomHttpClient(String url, Context context) {
+		this(url);
+		mContext = context;
 	}
 
 	public void addParam(String name, String value) {
@@ -148,6 +152,11 @@ public class CustomHttpClient {
 
 	public void execute(RequestMethod method) throws Exception {
 		switch (method) {
+		case DELETE: {
+			HttpDelete request = new HttpDelete(url);
+			executeRequest(request, url);
+			break;
+		}
 		case GET: {
 			// add parameters
 			String combinedParams = "";

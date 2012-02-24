@@ -25,6 +25,7 @@ import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.Gallery;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
@@ -201,6 +202,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				// Redirect to photo activity
 		        Intent i = new Intent(OOIDetailMapActivity.this, UserPhotoActivity.class);
 		        i.putExtra("position", position);
+		        i.putExtra("is_current_user", false);
 	        	startActivity(i);
 			}
 		});
@@ -426,6 +428,22 @@ public class OOIDetailMapActivity extends OOIMapActivity {
             case 1:
             	return mUserPhotoLayout;
             case 2:
+            	LinearLayout favoritesLayout = new LinearLayout(OOIDetailMapActivity.this);
+            	favoritesLayout.setOrientation(LinearLayout.VERTICAL);
+            	// Test favorites
+            	View favorite = mInflater.inflate(R.layout.skope_item, null);
+            	favoritesLayout.addView(favorite);
+            	TextView label = (TextView) favorite.findViewById(R.id.name_text);
+            	label.setText("Favorite 1");
+            	View favorite2 = mInflater.inflate(R.layout.skope_item, null);
+            	favoritesLayout.addView(favorite2);
+            	TextView label2 = (TextView) favorite2.findViewById(R.id.name_text);
+            	label2.setText("Favorite 2");
+            	View favorite3 = mInflater.inflate(R.layout.skope_item, null);
+            	favoritesLayout.addView(favorite3);
+            	TextView label3 = (TextView) favorite3.findViewById(R.id.name_text);
+            	label3.setText("Favorite 3");
+            	return favoritesLayout;
             default:
             	TextView textView = new TextView(OOIDetailMapActivity.this);
                 textView.setText(getChild(groupPosition, childPosition).toString());
