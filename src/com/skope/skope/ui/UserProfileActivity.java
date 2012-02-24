@@ -186,6 +186,7 @@ public class UserProfileActivity extends BaseActivity {
 				// Redirect to photo activity
 		        Intent i = new Intent(UserProfileActivity.this, UserPhotoActivity.class);
 		        i.putExtra("position", position);
+		        i.putExtra("is_current_user", true);
 	        	startActivity(i);
 			}
 		});
@@ -215,9 +216,6 @@ public class UserProfileActivity extends BaseActivity {
 			case ACTION_THUMBNAIL_CROP:
 				image = (Bitmap) data.getExtras().getParcelable("data");
 				storeProfilePicture(image);
-				// Speed up garbage collection
-				image.recycle();
-				image = null;
 				break;
 			case ACTION_ADD_PHOTO_CAMERA:
 			case ACTION_ADD_PHOTO_FILE:
@@ -232,9 +230,6 @@ public class UserProfileActivity extends BaseActivity {
 					int newHeight = image.getHeight() / halfFactor;
 					int newWidth = image.getWidth() / halfFactor;
 					Bitmap scaledBitmap = Bitmap.createScaledBitmap(image, newWidth, newHeight, true);
-					// Speed up garbage collection
-					image.recycle();
-					image = null;
 					storePhoto(scaledBitmap);
 					// Speed up garbage collection
 					scaledBitmap.recycle();
@@ -255,9 +250,6 @@ public class UserProfileActivity extends BaseActivity {
 				Bitmap bitmap = Media.getBitmap(this.getContentResolver(), mImageUri);
 				float height = ((float)User.PROFILE_PICTURE_WIDTH / bitmap.getWidth()) * bitmap.getHeight();
 				image = Bitmap.createScaledBitmap(bitmap, User.PROFILE_PICTURE_HEIGHT, (int)height, true);
-				// Speed up garbage collection
-				bitmap.recycle();
-				bitmap = null;				
 				storeProfilePicture(image);
 			} catch (FileNotFoundException fnfe) {
 				Log.e(SkopeApplication.LOG_TAG, fnfe.toString());
