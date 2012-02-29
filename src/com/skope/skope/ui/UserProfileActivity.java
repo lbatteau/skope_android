@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.ListIterator;
+import java.util.Date;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images.Media;
 import android.util.Log;
@@ -31,8 +33,8 @@ import android.widget.Button;
 import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.TableLayout.LayoutParams;
+import android.widget.TextView;
 
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
@@ -46,8 +48,8 @@ import com.skope.skope.util.Type;
 public class UserProfileActivity extends BaseActivity {
 	private static final String TAG = UserProfileActivity.class.getName();
 	
-	public static final int ACTION_PICK_THUMBNAIL_CAMERA = 0;
-	public static final int ACTION_PICK_THUMBNAIL_FILE = 1;
+	public static final int ACTION_PICK_PROFILE_PICTURE_CAMERA = 0;
+	public static final int ACTION_PICK_PROFILE_PICTURE_FILE = 1;
 	public static final int ACTION_THUMBNAIL_CROP = 2;
 	public static final int ACTION_ADD_PHOTO_CAMERA = 3;
 	public static final int ACTION_ADD_PHOTO_FILE = 4;
@@ -97,7 +99,7 @@ public class UserProfileActivity extends BaseActivity {
 			public void onClick(View v) {
 				String labelCamera = getResources().getString(R.string.take_with_camera);
 				String labelGallery = getResources().getString(R.string.select_from_gallery);
-				final String [] items = new String [] {labelCamera, labelGallery};
+				final String [] items = new String [] {/*labelCamera,*/ labelGallery};
 				ArrayAdapter<String> adapter = new ArrayAdapter<String> (UserProfileActivity.this, 
 														android.R.layout.select_dialog_item, items);
 				AlertDialog.Builder builder  = new AlertDialog.Builder(UserProfileActivity.this);
@@ -106,17 +108,19 @@ public class UserProfileActivity extends BaseActivity {
 				builder.setAdapter( adapter, new DialogInterface.OnClickListener() {
 				public void onClick( DialogInterface dialog, int item ) {
 					// Reset global image uri, so we don't use previous values by accident
-					mImageUri = Uri.EMPTY;
-					if (item == 0) {
+					mImageUri = getOutputMediaFileUri();
+					// CROPPING AFTER CAMERA NOT SUPPORTED BY SDK. DISABLE FOR NOW.
+					if (item == 0 && false) {  
 						// Capture from camera
 						Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-						startActivityForResult(Intent.createChooser(intent, "Select camera"), ACTION_PICK_THUMBNAIL_CAMERA);
+						intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri); // set the image file name
+						startActivityForResult(Intent.createChooser(intent, "Select camera"), ACTION_PICK_PROFILE_PICTURE_CAMERA);
 				    } else { 
 				    	// Pick from file
 				        Intent intent = new Intent();
 				        intent.setType("image/*");
 				        intent.setAction(Intent.ACTION_GET_CONTENT);
-				        startActivityForResult(Intent.createChooser(intent, "Select gallery"), ACTION_PICK_THUMBNAIL_FILE);
+				        startActivityForResult(Intent.createChooser(intent, "Select gallery"), ACTION_PICK_PROFILE_PICTURE_FILE);
 				    }
 				}});
 				builder.create().show();
@@ -152,10 +156,11 @@ public class UserProfileActivity extends BaseActivity {
 				builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
 				public void onClick( DialogInterface dialog, int item ) {
 					// Reset global image uri, so we don't use previous values by accident
-					mImageUri = Uri.EMPTY;
+					mImageUri = getOutputMediaFileUri();
 					if (item == 0) {
 						// Capture from camera
 						Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+						intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri); // set the image file name
 						startActivityForResult(Intent.createChooser(intent, "Select camera"), ACTION_ADD_PHOTO_CAMERA);
 				    } else { 
 				    	// Pick from file
@@ -205,11 +210,10 @@ public class UserProfileActivity extends BaseActivity {
 		
 		if (resultCode == Activity.RESULT_OK) {
 			switch(requestCode) {
-			case ACTION_PICK_THUMBNAIL_CAMERA:
-				mImageUri = data.getData();
+			case ACTION_PICK_PROFILE_PICTURE_CAMERA:
 				crop(mImageUri);
 				break;
-			case ACTION_PICK_THUMBNAIL_FILE:
+			case ACTION_PICK_PROFILE_PICTURE_FILE:
 				mImageUri = data.getData();
 				crop(mImageUri);
 				break;
@@ -219,32 +223,40 @@ public class UserProfileActivity extends BaseActivity {
 				break;
 			case ACTION_ADD_PHOTO_CAMERA:
 			case ACTION_ADD_PHOTO_FILE:
+				Uri imageUri;
+				if (data.getData() != null) {
+					imageUri = data.getData();
+				} else {
+					imageUri = mImageUri;
+				}
+				
 				try {
-					image = Media.getBitmap(this.getContentResolver(), data.getData());
-					// Scale down
-					int halfFactor = 1;
-					int resolution = image.getWidth() * image.getHeight();
-					while (resolution / Math.pow(2, halfFactor) > UserPhoto.USER_PHOTO_MAX_PIXELS) {
-						halfFactor++;
-					}
-					int newHeight = image.getHeight() / halfFactor;
-					int newWidth = image.getWidth() / halfFactor;
-					Bitmap scaledBitmap = Bitmap.createScaledBitmap(image, newWidth, newHeight, true);
-					storePhoto(scaledBitmap);
-					// Speed up garbage collection
-					scaledBitmap.recycle();
-					scaledBitmap = null;
+					image = Media.getBitmap(this.getContentResolver(), imageUri);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				
+				// Scale down
+				int halfFactor = 1;
+				int resolution = image.getWidth() * image.getHeight();
+				while (resolution / Math.pow(2, halfFactor) > UserPhoto.USER_PHOTO_MAX_PIXELS) {
+					halfFactor++;
+				}
+				int newHeight = image.getHeight() / halfFactor;
+				int newWidth = image.getWidth() / halfFactor;
+				Bitmap scaledBitmap = Bitmap.createScaledBitmap(image, newWidth, newHeight, true);
+				storePhoto(scaledBitmap);
+				// Speed up garbage collection
+				scaledBitmap.recycle();
+				scaledBitmap = null;
 			}
 				
 		} else {
 			switch(requestCode) {
 			case ACTION_THUMBNAIL_CROP:
-			// ProfilePicture cropping failed
+			// ProfilePicture cropping failed or cancelled
 			try {
 				// Do our own scaling
 				Bitmap bitmap = Media.getBitmap(this.getContentResolver(), mImageUri);
@@ -380,6 +392,7 @@ public class UserProfileActivity extends BaseActivity {
         intent.setType("image/*");
  
         intent.setData(imageUri);
+        intent.putExtra("output", getOutputMediaFileUri());
         intent.putExtra("outputX", User.PROFILE_PICTURE_WIDTH);
         intent.putExtra("outputY", User.PROFILE_PICTURE_HEIGHT);
         intent.putExtra("aspectX", 1);
@@ -389,4 +402,43 @@ public class UserProfileActivity extends BaseActivity {
         
         startActivityForResult(Intent.createChooser(intent, "Select crop method"), ACTION_THUMBNAIL_CROP);
     }
+	
+	/** Create a file Uri for saving an image or video */
+	private Uri getOutputMediaFileUri(){
+	    // Create a media file name
+	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+	    String filename =  "IMG_"+ timeStamp + ".jpg";
+
+        ContentValues values = new ContentValues();
+		values.put(MediaStore.Images.Media.TITLE, filename);
+		return getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+	}
+	
+	/** Create a File for saving an image or video */
+	private static File getOutputMediaFile(){
+	    // To be safe, you should check that the SDCard is mounted
+	    // using Environment.getExternalStorageState() before doing this.
+
+		File picturesDir = Environment.getExternalStoragePublicDirectory(
+	              Environment.DIRECTORY_PICTURES);
+	              
+	    File mediaStorageDir = new File(picturesDir, "Skope");
+	    // This location works best if you want the created images to be shared
+	    // between applications and persist after your app has been uninstalled.
+
+	    if (! mediaStorageDir.exists()){
+	        if (! mediaStorageDir.mkdirs()){
+	            Log.d(TAG, "failed to create directory");
+	            return null;
+	        }
+	    }
+
+	    // Create a media file name
+	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+	    File mediaFile;
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+        "IMG_"+ timeStamp + ".jpg");
+    
+	    return mediaFile;
+	}	
 }
