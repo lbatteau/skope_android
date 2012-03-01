@@ -17,13 +17,13 @@
 package com.skope.skope.service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,13 +36,10 @@ import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UiQueue;
-import com.skope.skope.application.User;
 import com.skope.skope.application.UserPhoto;
-import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
 import com.skope.skope.http.ImageUploader;
-import com.skope.skope.ui.UserProfileActivity;
 import com.skope.skope.util.NotificationUtils;
 import com.skope.skope.util.Type;
 
@@ -117,8 +114,8 @@ public class WorkerThread extends Thread {
             Log.i(SkopeApplication.LOG_TAG, "WorkerThread.add() "
                     + "Message type[" + Type.getType(message.what) + "]");
             mWorkQueue.add(message);
+            showQueue();
         }
-        showQueue();
     }
 
     /***
@@ -489,8 +486,10 @@ public class WorkerThread extends Thread {
      */
     private void showQueue() {
         StringBuffer stringBuffer = new StringBuffer();
-        for (Message message : mWorkQueue) {
-            stringBuffer.append("Message type[");
+        Iterator<Message> queue = mWorkQueue.iterator();
+        while (queue.hasNext()) {
+            Message message = queue.next();
+        	stringBuffer.append("Message type[");
             stringBuffer.append(Type.getType(message.what));
             stringBuffer.append("]\n");
         }

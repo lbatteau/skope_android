@@ -11,10 +11,14 @@ import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
@@ -35,6 +39,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
@@ -201,6 +206,14 @@ public class UserProfileActivity extends BaseActivity {
 		// Photos label
 		mPhotosLabel = (TextView) mMainProfile.findViewById(R.id.user_photo_label);
 
+		for (PackageInfo pack : getPackageManager().getInstalledPackages(PackageManager.GET_PROVIDERS)) {
+	        ProviderInfo[] providers = pack.providers;
+	        if (providers != null) {
+	            for (ProviderInfo provider : providers) {
+	                Log.d(TAG, "provider: " + provider.authority);
+	            }
+	        }
+	    }		
  	}
 	
 	@Override
@@ -224,39 +237,19 @@ public class UserProfileActivity extends BaseActivity {
 			case ACTION_ADD_PHOTO_CAMERA:
 			case ACTION_ADD_PHOTO_FILE:
 				Uri imageUri;
-				if (data.getData() != null) {
+				if (data != null && data.getData() != null) {
 					imageUri = data.getData();
 				} else {
 					imageUri = mImageUri;
 				}
 				
-				try {
-					image = Media.getBitmap(this.getContentResolver(), imageUri);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
-				// Scale down
-				int halfFactor = 1;
-				int resolution = image.getWidth() * image.getHeight();
-				while (resolution / Math.pow(2, halfFactor) > UserPhoto.USER_PHOTO_MAX_PIXELS) {
-					halfFactor++;
-				}
-				int newHeight = image.getHeight() / halfFactor;
-				int newWidth = image.getWidth() / halfFactor;
-				Bitmap scaledBitmap = Bitmap.createScaledBitmap(image, newWidth, newHeight, true);
-				storePhoto(scaledBitmap);
-				// Speed up garbage collection
-				scaledBitmap.recycle();
-				scaledBitmap = null;
+				storePhoto(imageUri);
 			}
 				
 		} else {
 			switch(requestCode) {
 			case ACTION_THUMBNAIL_CROP:
-			// ProfilePicture cropping failed or cancelled
+			// ProfilePicture cropping failed or canceled
 			try {
 				// Do our own scaling
 				Bitmap bitmap = Media.getBitmap(this.getContentResolver(), mImageUri);
@@ -271,6 +264,22 @@ public class UserProfileActivity extends BaseActivity {
 			}
 		}
 			
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+	    super.onSaveInstanceState(outState);
+	    if (mImageUri != null) {
+	        outState.putString("cameraImageUri", mImageUri.toString());
+	    }
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+	    super.onRestoreInstanceState(savedInstanceState);
+	    if (savedInstanceState.containsKey("cameraImageUri")) {
+	        mImageUri = Uri.parse(savedInstanceState.getString("cameraImageUri"));
+	    }
 	}
 	
 	protected Uri saveBitmapToInternalStorage(Bitmap bitmap) {
@@ -307,6 +316,14 @@ public class UserProfileActivity extends BaseActivity {
         bundle.putString(LocationService.IMAGE_UPLOAD_LOCATION, "photos");
         bundle.putString(LocationService.IMAGE_UPLOAD_NAME, "photo");
         bundle.putString(LocationService.IMAGE_UPLOAD_URI, bitmapUri.toString());
+        getServiceQueue().postToService(Type.UPLOAD_IMAGE, bundle);
+	}
+
+	protected void storePhoto(Uri uri) {
+		Bundle bundle = new Bundle();
+        bundle.putString(LocationService.IMAGE_UPLOAD_LOCATION, "photos");
+        bundle.putString(LocationService.IMAGE_UPLOAD_NAME, "photo");
+        bundle.putString(LocationService.IMAGE_UPLOAD_URI, uri.toString());
         getServiceQueue().postToService(Type.UPLOAD_IMAGE, bundle);
 	}
 
@@ -407,7 +424,7 @@ public class UserProfileActivity extends BaseActivity {
 	private Uri getOutputMediaFileUri(){
 	    // Create a media file name
 	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-	    String filename =  "IMG_"+ timeStamp + ".jpg";
+	    String filename =  "IMG_"+ timeStamp + ".png";
 
         ContentValues values = new ContentValues();
 		values.put(MediaStore.Images.Media.TITLE, filename);

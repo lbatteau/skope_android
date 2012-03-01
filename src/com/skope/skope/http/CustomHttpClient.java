@@ -46,6 +46,8 @@ import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import com.skope.skope.application.UserPhoto;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -228,13 +230,23 @@ public class CustomHttpClient {
 					// Load bitmap
 					Bitmap bmp = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), uri);
 					
+					// Scale down
+					int halfFactor = 1;
+					int resolution = bmp.getWidth() * bmp.getHeight();
+					while (resolution / Math.pow(2, halfFactor) > UserPhoto.USER_PHOTO_MAX_PIXELS) {
+						halfFactor++;
+					}
+					int newHeight = bmp.getHeight() / halfFactor;
+					int newWidth = bmp.getWidth() / halfFactor;
+					Bitmap scaledBitmap = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, true);
+
 					// Convert bitmap to byte array
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+					scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
 					
 					// Speed up garbage collection
-					bmp.recycle();
-					bmp = null;
+					scaledBitmap.recycle();
+					scaledBitmap = null;
 					
 					byte[] byteArray = stream.toByteArray();
 					stream.flush();

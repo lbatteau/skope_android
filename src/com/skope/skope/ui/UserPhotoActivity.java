@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -25,6 +26,7 @@ import com.skope.skope.application.UserPhoto.OnImageDeleteListener;
 import com.skope.skope.util.Type;
 
 public class UserPhotoActivity extends BaseActivity {
+	private static final String TAG = UserPhotoActivity.class.getName();
 	
 	private ArrayList<UserPhoto> mUserPhotoList;
 	private UserPhotoAdapter mUserPhotoAdapter;
@@ -145,9 +147,15 @@ public class UserPhotoActivity extends BaseActivity {
 	}
 
 	private void loadPhoto(int position) {
-		UserPhoto userPhoto = mUserPhotoAdapter.getItem(position);
+		UserPhoto userPhoto = null;
+		try {
+			userPhoto = mUserPhotoAdapter.getItem(position);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			Log.e(TAG, "Couldn't find photo for current position " + position);
+			return;
+		}
+		
 		final ImageView userPhotoView = (ImageView) findViewById(R.id.user_photo_view);
-		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress);
 		
 		userPhotoView.setImageBitmap(new SoftReference<Bitmap>(userPhoto.getPhoto()).get());
 		if (userPhoto.getPhoto() == null) {
@@ -155,12 +163,14 @@ public class UserPhotoActivity extends BaseActivity {
 				
 				@Override
 				public void onImageLoaded(Bitmap image) {
+					ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress);
 					progressBar.setVisibility(View.INVISIBLE);
 					userPhotoView.setImageBitmap(image);
 				}
 
 				@Override
 				public void onImageLoadStart() {
+					ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress);
 					progressBar.setVisibility(View.VISIBLE);
 				}
 			},
