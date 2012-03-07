@@ -3,7 +3,6 @@ package com.skope.skope.ui;
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,6 +19,10 @@ import com.skope.skope.application.User;
 import com.skope.skope.util.Type;
 
 public class MainTabActivity extends TabActivity {
+	public final static int TAB_LIST = 0;
+	public final static int TAB_MAP = 1;
+	public final static int TAB_PROFILE = 2;
+	
 	private SkopeApplication mApplication;
 	private Cache mCache;
 	private ServiceQueue mServiceQueue;    
@@ -78,17 +81,29 @@ public class MainTabActivity extends TabActivity {
 	    spec = tabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
+        intent = new Intent().setClass(this, UserFavoritesActivity.class);
 	    spec = tabHost.newTabSpec("favorites").setIndicator(favoritesProfile).setContent(intent);
         tabHost.addTab(spec);
 	    
-        // If user logging in for the first time...
-        if (user.isFirstTime()) {
-        	// ...direct to profile
-        	tabHost.setCurrentTab(2);
-        } else {
-        	// ...otherwise to list view
-        	tabHost.setCurrentTab(0);
+	    // Check if tab is specified in Intent
+        int tabSpecified = 0;
+        if (getIntent() != null && getIntent().getExtras() != null) {
+        	tabSpecified = getIntent().getExtras().getInt("TAB");
         }
+        
+	    if (tabSpecified != 0) {
+	    	tabHost.setCurrentTab(tabSpecified);
+	    } else {
+	        // If user logging in for the first time...
+	        if (user.isFirstTime()) {
+	        	// ...direct to profile
+	        	tabHost.setCurrentTab(2);
+	        } else {
+	        	// ...otherwise to list view
+	        	tabHost.setCurrentTab(0);
+	        }
+	    }
+	    
 	    
 	}	
 	
@@ -129,6 +144,8 @@ public class MainTabActivity extends TabActivity {
 	    }
 	}
 	
-	
+	public void switchTab(int tab) {
+		getTabHost().setCurrentTab(tab);
+	}
 
 }

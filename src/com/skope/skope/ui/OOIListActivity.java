@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.InputFilter;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -127,14 +126,12 @@ public class OOIListActivity extends BaseActivity {
 	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-			// Store selected position in shared cache
-			getCache().getObjectOfInterestList().setSelectedPosition(position);
-			
 			// Redirect to list activity
-	        Intent i = new Intent();
-        	i.setClassName("com.skope.skope",
-        				   "com.skope.skope.ui.OOIDetailMapActivity");
-        	startActivity(i);
+	        Intent i = new Intent(OOIListActivity.this, OOIDetailMapActivity.class);
+        	Bundle bundle = new Bundle();
+	        bundle.putParcelable("USER", mObjectOfInterestListAdapter.getItem(position));
+	        i.putExtras(bundle);
+			startActivity(i);
 		}
 	};	
 

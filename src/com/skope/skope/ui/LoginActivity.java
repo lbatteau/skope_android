@@ -163,7 +163,8 @@ public class LoginActivity extends BaseActivity {
 			// The user object is returned in the response
 	        User user;
 	        try {
-	        	user = new User(jsonResponse, getCache());
+	        	user = new User(jsonResponse);
+	        	user.setCache(getCache());
 	        	
 	        	// Retrieve profile picture
 	        	if (user.getProfilePictureURL() != null) {

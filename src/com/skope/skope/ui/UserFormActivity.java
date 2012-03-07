@@ -110,7 +110,8 @@ public class UserFormActivity extends BaseActivity {
 		        User user;
 		        try {
 		        	JSONObject jsonResponse = new JSONObject(client.getResponse());
-		        	user = new User(jsonResponse, getCache());
+		        	user = new User(jsonResponse);
+		        	user.setCache(getCache());
 					getCache().setUser(user);
 		        } catch (JSONException e) {
 					// Log exception

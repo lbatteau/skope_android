@@ -1,34 +1,41 @@
 package com.skope.skope.ui;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.http.HttpStatus;
+
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.drawable.LayerDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.Gallery;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
@@ -36,8 +43,13 @@ import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
+import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.UserPhoto;
+import com.skope.skope.application.User.OnImageLoadListener;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
 import com.skope.skope.maps.OOIOverlay;
+import com.skope.skope.ui.UserFavoritesActivity.ViewHolder;
 import com.skope.skope.util.Type;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
@@ -52,17 +64,24 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	private Animation mFadeInAnimation, mFadeOutAnimation;
 	private SlidingDrawer mMapDrawer;
 	private ExpandableListAdapter mListAdapter;
-	private View mUserProfileMain, mUserProfile, mUserPhotoLayout;
+	private View mUserProfileMain, mUserProfile, mUserPhotoLayout, mFavoritesLayout;
     private LayoutInflater mInflater;
     private Gallery mUserPhotoGallery;    
 	private UserPhotoAdapter mUserPhotoAdapter;
 	private ArrayList<UserPhoto> mUserPhotoList;
-	private ProgressBar mPhotosProgressBar;	 
-	private TextView mPhotosLabel;
+	private ProgressBar mPhotosProgressBar, mFavoritesProgressBar;	 
+	private TextView mPhotosLabel, mFavoritesLabel;
+	private ObjectOfInterest mSelectedOOI;
+	ObjectOfInterestList mFavoritesList;
+	ObjectOfInterestArrayAdapter mFavoritesListAdapter;
+	
 	
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
+	    
+	    mSelectedOOI = getIntent().getExtras().getParcelable("USER");
+	    mSelectedOOI.setCache(getCache());
 	    
 	    mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    
@@ -86,10 +105,99 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		});
 	    
 	    /*
+	     *  Favorites button
+	     */
+	    
+	    final View favoriteButton = findViewById(R.id.favorite_button);
+	    final View favoriteIcon = findViewById(R.id.favorite_icon);
+    	
+	    // Check for highlighting
+	    if (getCache().getUserFavoritesList().contains(mSelectedOOI)) {
+	    	// Selected user is a favorite of the current user. Highlight.
+	    	favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
+	    }
+	    
+	    // Favorites button event
+	    favoriteButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if (getCache().getUserFavoritesList().contains(mSelectedOOI)) {
+					// Delete favorite
+					String title = getResources().getString(R.string.user_favorite_confirm_remove_title);
+					String messageFormat = getResources().getString(R.string.user_favorite_confirm_remove_message);
+					String message = String.format(messageFormat, mSelectedOOI.createName());
+					new AlertDialog.Builder(OOIDetailMapActivity.this)
+			        .setTitle(title)
+			        .setMessage(message)
+			        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			            	UserFavoriteDelete runner = new UserFavoriteDelete();
+							runner.setListener(new OnFavoriteUpdateListener() {
+								@Override
+								public void onFavoriteUpdateStart() {
+								}
+								
+								@Override
+								public void onFavoriteUpdateDone(boolean isSuccess, String message) {
+									if (isSuccess) {
+										getCache().getUserFavoritesList().remove(mSelectedOOI);
+										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_selector);
+									} else {
+										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
+									}
+								}
+							});
+							runner.execute(mSelectedOOI.getUserName());
+			            }
+			        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			                // Do nothing.
+			            }
+			        }).show();
+				} else {
+					// Add favorite
+					String title = getResources().getString(R.string.user_favorite_confirm_add_title);
+					String messageFormat = getResources().getString(R.string.user_favorite_confirm_add_message);
+					String message = String.format(messageFormat, mSelectedOOI.createName());
+					new AlertDialog.Builder(OOIDetailMapActivity.this)
+			        .setTitle(title)
+			        .setMessage(message)
+			        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			            	UserFavoritePost runner = new UserFavoritePost();
+							runner.setListener(new OnFavoriteUpdateListener() {
+								@Override
+								public void onFavoriteUpdateStart() {
+								}
+								
+								@Override
+								public void onFavoriteUpdateDone(boolean isSuccess, String message) {
+									if (isSuccess) {
+										getCache().getUserFavoritesList().add(mSelectedOOI);
+										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
+									} else {
+										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
+									}
+								}
+							});
+							runner.execute(mSelectedOOI.getUserName());
+			            }
+			        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			                // Do nothing.
+			            }
+			        }).show();
+				}
+				
+			}
+		});
+	    
+	    /*
 		 * The user profile is actually an expandable list view, with the
 		 * first item containing the main info like name, status, profile
 		 * picture etc. This item has no children, so shouldn't expand.
-		 * The rest of the list consists of photos, favorites, etc.
+		 * The rest of the list consists of photos, mFavorites, etc.
 		 */
 	    mListAdapter = new UserProfileExpandableListAdapter();
 	    ExpandableListView expandableList = (ExpandableListView)findViewById(R.id.expandable_list);
@@ -99,8 +207,9 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	     * Set up navigation buttons. Transparent left and right arrows 
 	     * appear when the user touches the screen. On a 'fling' gesture to the
 	     * left or right, the previous or next user profile is loaded.
-	     */
-	    
+	     *
+	     */ 	    
+	       
 	    // Store handles to navigation buttons
 	    mNavigationHandleRight = findViewById(R.id.nav_right);
 	    mNavigationHandleLeft = findViewById(R.id.nav_left);
@@ -108,6 +217,8 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    // Make invisible
 	    mNavigationHandleLeft.setVisibility(View.INVISIBLE);
 		mNavigationHandleRight.setVisibility(View.INVISIBLE);
+		
+		/*LMB 6-3-2012: DISABLED SWIPE LEFT/RIGHT BECAUSE IT INTERFERES WITH GALLERY INTERACTION
 	    
 	    // Navigation button fade animations
     	mFadeInAnimation = AnimationUtils.loadAnimation(OOIDetailMapActivity.this, R.anim.fade_in);
@@ -179,7 +290,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		};
 		
 	    View view = findViewById(R.id.overlay);
-	    view.setOnTouchListener(mGestureListener);
+	    view.setOnTouchListener(mGestureListener);*/
 	    
 	    mUserProfileMain = mInflater.inflate(R.layout.ooi_profile_main, null);
 	    
@@ -211,7 +322,19 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		mPhotosProgressBar = (ProgressBar) mUserPhotoLayout.findViewById(R.id.user_photo_progress_bar);
 		// Photos label
 		mPhotosLabel = (TextView) mUserPhotoLayout.findViewById(R.id.user_photo_label);
-	    
+		
+		// User favorites layout
+		mFavoritesLayout = mInflater.inflate(R.layout.user_favorites, null);
+    	// Favorites progress bar
+		mFavoritesProgressBar = (ProgressBar) mFavoritesLayout.findViewById(R.id.titleProgressBar);
+		mFavoritesProgressBar.setVisibility(ProgressBar.INVISIBLE);
+
+		// List of user favorites
+        mFavoritesList = new ObjectOfInterestList();
+        mFavoritesListAdapter = new ObjectOfInterestArrayAdapter(OOIDetailMapActivity.this, R.layout.skope_view, mFavoritesList);
+        ListView listView = (ListView) mFavoritesLayout.findViewById(R.id.list);
+	    listView.setAdapter(mFavoritesListAdapter); 
+        listView.setOnItemClickListener(mOOISelectListener);
 	}
     
     @Override
@@ -226,28 +349,62 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		update();
 	}
 	
+	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		savedInstanceState.putParcelable("USER", mSelectedOOI);
+		super.onSaveInstanceState(savedInstanceState);
+	}
+	
+	@Override
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		mSelectedOOI = savedInstanceState.getParcelable("USER");
+	}
+
 	/**
 	 * Retrieves the currently selected object of interest, updates the
 	 * information in the view, and calls the necessary methods to update the
 	 * map view.
 	 */
 	protected void update() {
-		ObjectOfInterest selectedOOI = getCache().getObjectOfInterestList()
-				.getSelectedOOI();
+		// Check if object still present
+		if (mSelectedOOI == null) {
+			// No longer present, return to list view
+			// Redirect to list activity
+	        Intent i = new Intent();
+        	i.setClassName("com.skope.skope",
+        				   "com.skope.skope.ui.MainTabActivity");
+        	startActivity(i);
+        	finish();	
+		}
 
-		selectedOOI.createUserProfile(mUserProfileMain, mInflater);
+		mSelectedOOI.createUserProfile(mUserProfileMain, mInflater);
 		
 		// Empty current photo list
 		Cache.USER_PHOTOS.clear();
-		// Request new read
-		Bundle bundle = new Bundle();
-        bundle.putString("USERNAME", getCache().getObjectOfInterestList()
-				.getSelectedOOI().getUserEmail());
-        getServiceQueue().postToService(Type.READ_USER_PHOTOS, bundle);
+		// Read photos
+		Bundle photosBundle = new Bundle();
+        photosBundle.putString("USERNAME", mSelectedOOI.getUserEmail());
+        getServiceQueue().postToService(Type.READ_USER_PHOTOS, photosBundle);
+        
+        // Read favorites
+        Bundle favoritesBundle = new Bundle();
+        favoritesBundle.putString("USERNAME", mSelectedOOI.getUserName());
+		getServiceQueue().postToService(Type.READ_USER_FAVORITES, favoritesBundle);
 		
         initializeMapView();
 		populateItemizedOverlays();
 	}
+	
+	private void updateListFromCache() {
+		mFavoritesList.clear();
+    	ObjectOfInterestList cacheList = getCache().getUserFavoritesList();
+    	if (cacheList != null && !cacheList.isEmpty()) {
+        	// Cache contains items
+        	mFavoritesList.addAll(cacheList);
+		}
+    	mFavoritesListAdapter.notifyDataSetChanged();
+    }
 	
 	protected void goToNext() {
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();
@@ -285,9 +442,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 
 	@Override
 	protected void populateItemizedOverlays() {
-		ObjectOfInterest selectedObjectOfInterest = getCache()
-				.getObjectOfInterestList().getSelectedOOI();
-
 		// Clear current overlays
 		mMapOverlays = mMapView.getOverlays();
 
@@ -300,7 +454,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				R.drawable.marker);
 
 		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
-		ooiOverlay.addOverlay(createOverlay(selectedObjectOfInterest));
+		ooiOverlay.addOverlay(createOverlay(mSelectedOOI));
 		mMapOverlays.add(1, ooiOverlay);
 
 		MapController mapController = mMapView.getController();
@@ -308,9 +462,9 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
 		int userLongitude = (int) (getCache().getCurrentLocation()
 				.getLongitude() * 1E6);
-		int ooiLatitude = (int) (selectedObjectOfInterest.getLocation()
+		int ooiLatitude = (int) (mSelectedOOI.getLocation()
 				.getLatitude() * 1E6);
-		int ooiLongitude = (int) (selectedObjectOfInterest.getLocation()
+		int ooiLongitude = (int) (mSelectedOOI.getLocation()
 				.getLongitude() * 1E6);
 
 		mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
@@ -351,11 +505,24 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			}
 			
 			break;
+        case READ_USER_FAVORITES_START:
+        	// If list empty show load bar
+        	if (mFavoritesList.size() == 0) { 
+        		mFavoritesProgressBar.setVisibility(ProgressBar.VISIBLE);
+        	}
+            break;
+
+        case READ_USER_FAVORITES_END:
+        	updateListFromCache();
+        	mFavoritesProgressBar.setVisibility(ProgressBar.INVISIBLE);
+        	break;
+        	
+			
         default:
 			super.post(type, bundle);
 		}
 	}
-
+	
 	class MyGestureDetector extends SimpleOnGestureListener {
 
 		@Override
@@ -428,22 +595,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
             case 1:
             	return mUserPhotoLayout;
             case 2:
-            	LinearLayout favoritesLayout = new LinearLayout(OOIDetailMapActivity.this);
-            	favoritesLayout.setOrientation(LinearLayout.VERTICAL);
-            	// Test favorites
-            	View favorite = mInflater.inflate(R.layout.skope_item, null);
-            	favoritesLayout.addView(favorite);
-            	TextView label = (TextView) favorite.findViewById(R.id.name_text);
-            	label.setText("Favorite 1");
-            	View favorite2 = mInflater.inflate(R.layout.skope_item, null);
-            	favoritesLayout.addView(favorite2);
-            	TextView label2 = (TextView) favorite2.findViewById(R.id.name_text);
-            	label2.setText("Favorite 2");
-            	View favorite3 = mInflater.inflate(R.layout.skope_item, null);
-            	favoritesLayout.addView(favorite3);
-            	TextView label3 = (TextView) favorite3.findViewById(R.id.name_text);
-            	label3.setText("Favorite 3");
-            	return favoritesLayout;
+            	return mFavoritesLayout;
             default:
             	TextView textView = new TextView(OOIDetailMapActivity.this);
                 textView.setText(getChild(groupPosition, childPosition).toString());
@@ -515,4 +667,226 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         }
 
     }
+    
+	public interface OnFavoriteUpdateListener {
+		public void onFavoriteUpdateStart();
+		public void onFavoriteUpdateDone(boolean isSuccess, String message);
+	}
+	
+	protected class UserFavoritePost extends AsyncTask<String, Void, CustomHttpClient> {
+		OnFavoriteUpdateListener mListener;
+		
+		@Override
+		protected void onPreExecute() {
+			mListener.onFavoriteUpdateStart();
+		}
+
+		@Override
+		protected CustomHttpClient doInBackground(String... params) {
+			String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+			String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+			String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + username + "/favorites/" + params[0] + "/";
+
+			
+			// Create HTTP client
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl, OOIDetailMapActivity.this);
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        
+	        // Send HTTP request to web service
+	        try {
+	            client.execute(RequestMethod.POST);
+	        } catch (Exception e) {
+	        	// Most exceptions already handled by client
+	            e.printStackTrace();
+	        }
+	        
+	        return client;
+
+		}
+		
+		@Override
+		protected void onPostExecute(CustomHttpClient client) {
+			// Check for server response
+			switch (client.getResponseCode()) {
+			case HttpStatus.SC_OK:
+				// Call back OK
+				mListener.onFavoriteUpdateDone(true, "");
+				break;
+			case 0:
+				// No server response
+				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+			case HttpStatus.SC_UNAUTHORIZED:
+			case HttpStatus.SC_REQUEST_TIMEOUT:
+			case HttpStatus.SC_BAD_GATEWAY:
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			case HttpStatus.SC_BAD_REQUEST:
+				Log.e(SkopeApplication.LOG_TAG, "Failed to add favorite: " + client.getErrorMessage());
+				// Call back failed
+				mListener.onFavoriteUpdateDone(false, "Failed to add favorite");
+			}
+			
+	   }
+		
+		public void setListener(OnFavoriteUpdateListener listener) {
+			mListener = listener;
+		}
+
+	}
+	
+	protected class UserFavoriteDelete extends AsyncTask<String, Void, CustomHttpClient> {
+		OnFavoriteUpdateListener mListener;
+		
+		@Override
+		protected void onPreExecute() {
+			if (mListener != null) {
+				mListener.onFavoriteUpdateStart();
+			}
+		}
+
+		@Override
+		protected CustomHttpClient doInBackground(String... params) {
+			String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+			String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+			String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + username + "/favorites/" + params[0] + "/";
+
+			
+			// Create HTTP client
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl, OOIDetailMapActivity.this);
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        
+	        // Send HTTP request to web service
+	        try {
+	            client.execute(RequestMethod.DELETE);
+	        } catch (Exception e) {
+	        	// Most exceptions already handled by client
+	            e.printStackTrace();
+	        }
+	        
+	        return client;
+
+		}
+		
+		@Override
+		protected void onPostExecute(CustomHttpClient client) {
+			// Check for server response
+			switch (client.getResponseCode()) {
+			case HttpStatus.SC_NO_CONTENT:
+				// Call back OK
+				if (mListener != null) {
+					mListener.onFavoriteUpdateDone(true, "");
+				}
+				break;
+			case 0:
+				// No server response
+				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+			case HttpStatus.SC_UNAUTHORIZED:
+			case HttpStatus.SC_REQUEST_TIMEOUT:
+			case HttpStatus.SC_BAD_GATEWAY:
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			case HttpStatus.SC_BAD_REQUEST:
+				Log.e(SkopeApplication.LOG_TAG, "Failed to delete favorite: " + client.getErrorMessage());
+				// Call back failed
+				if (mListener != null) {
+					mListener.onFavoriteUpdateDone(false, "Failed to delete favorite");
+				}
+			}
+			
+	   }
+		
+		public void setListener(OnFavoriteUpdateListener listener) {
+			mListener = listener;
+		}
+
+	}
+	
+    public static class ViewHolder {
+		public TextView nameText;
+		public TextView distanceText;
+		public TextView lastUpdateText;
+		public ImageView icon;
+
+	}
+    
+	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
+		@Override
+		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+			// Check if selected ooi is current user
+			ObjectOfInterest ooi = mFavoritesListAdapter.getItem(position);
+			Intent i = new Intent();
+			if (ooi.getUserName().equals(getCache().getUser().getUserName())) {
+				// Current user, redirect to profile
+				Bundle bundle = new Bundle();
+		        bundle.putInt("TAB", MainTabActivity.TAB_PROFILE);
+		        i.putExtras(bundle);i.setClassName("com.skope.skope",
+						"com.skope.skope.ui.MainTabActivity");
+			} else {
+				// Redirect to list activity
+		        Bundle bundle = new Bundle();
+		        bundle.putParcelable("USER", ooi);
+		        i.putExtras(bundle);
+				i.setClassName("com.skope.skope",
+						"com.skope.skope.ui.OOIDetailMapActivity");
+			}
+			startActivity(i);
+		}
+	};	
+
+    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
+    	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    	
+    	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
+			@Override
+			public void onImageLoaded(Bitmap thumbnail) {
+				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
+			}
+		};
+    	
+    	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
+    			List<ObjectOfInterest> objects) {
+    		super(context, textViewResourceId, objects);
+    	}
+
+		@Override
+        public View getView(int position, View convertView, final ViewGroup parent) {
+			ViewHolder holder;
+			if (convertView == null) {
+                convertView = (View) mInflater.inflate(R.layout.skope_item, null);
+                holder = new ViewHolder();
+                holder.nameText = (TextView) convertView.findViewById(R.id.name_text);
+                holder.distanceText = (TextView) convertView.findViewById(R.id.distance_text);
+                holder.icon = (ImageView) convertView.findViewById(R.id.icon);
+                convertView.setTag(holder);
+            } else {
+            	holder = (ViewHolder) convertView.getTag();
+            }             
+            
+            ObjectOfInterest ooi = getItem(position);
+            
+            if (ooi != null) {
+                if (holder.nameText != null) {
+                	holder.nameText.setText(ooi.createName());                            
+                }
+                
+                //if (holder.distanceText != null) {
+                //	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance())
+                //			+ " - " + ooi.createLabelTimePassedSinceLastUpdate());
+                //}
+                
+                if (holder.icon != null) {
+                	holder.icon.setImageBitmap(ooi.getProfilePicture()); // even when null, otherwise previous values remain
+            		// Lazy loading
+                	if (ooi.getProfilePicture() == null) {
+                		ooi.loadProfilePicture(mProfilePictureListener);
+                	}
+                }
+            }
+            
+            return convertView;
+        }
+    }	
+
 }

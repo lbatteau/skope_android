@@ -86,8 +86,6 @@ public class WorkerThread extends Thread {
      */
     private boolean stopping = false;
     
-    private ObjectOfInterestList mObjectOfInterestList;
-
     /***
      * Constructor which stores pointers to the Application Cache, UiQueue and
      * parent Service.
@@ -101,7 +99,6 @@ public class WorkerThread extends Thread {
     	mCache = cache;
         mUiQueue = uiQueue;
         mLocationService = locationService;
-        mObjectOfInterestList = new ObjectOfInterestList();
     }
 
     /***
@@ -164,6 +161,10 @@ public class WorkerThread extends Thread {
             case READ_USER_PHOTOS:
             	readUserPhotos(bundle);
             	break;
+            	
+            case READ_USER_FAVORITES:
+            	readUserFavorites(bundle);
+            	break;
 
             case DO_LONG_TASK:
                 doLongTask(bundle);
@@ -194,6 +195,7 @@ public class WorkerThread extends Thread {
      */
     private void findObjectsOfInterest(final Bundle bundle) {
     	Location currentLocation;
+    	ObjectOfInterestList objectOfInterestList = new ObjectOfInterestList();
     	
         mCache.setStateFindObjectsOfInterest("Searching objects of interest nearby");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_START, null, true);
@@ -256,20 +258,21 @@ public class WorkerThread extends Thread {
 			}
 			
 			// Copy the JSON list of objects to our OOI list
-			mObjectOfInterestList.clear();
+			objectOfInterestList.clear();
 			for (int i=0; i < jsonResponse.length(); i++) {
 				try {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject, mCache);
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					objectOfInterest.setCache(mCache);
 					
 					// If current user, skip
 					if (!objectOfInterest.getUserName().equals(username)) {
 						// Set distance
 						objectOfInterest.setDistanceToLocation(currentLocation);
 						// Add to list
-						mObjectOfInterestList.add(objectOfInterest);
+						objectOfInterestList.add(objectOfInterest);
 					}
 					
 				} catch (JSONException e) {
@@ -279,7 +282,7 @@ public class WorkerThread extends Thread {
 			}				
         }
         
-        mCache.getObjectOfInterestList().update(mObjectOfInterestList);
+        mCache.getObjectOfInterestList().update(objectOfInterestList);
        
         mCache.setStateFindObjectsOfInterest("Finished");
         mUiQueue.postToUi(Type.FIND_OBJECTS_OF_INTEREST_FINISHED, null, true);
@@ -292,6 +295,86 @@ public class WorkerThread extends Thread {
             mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
         }*/
     }
+
+    /***
+     * Reads the list of user favorites
+     */
+    private void readUserFavorites(final Bundle bundle) {
+    	ObjectOfInterestList favoritesList = new ObjectOfInterestList();
+    	JSONArray jsonResponse = null;
+    	Location currentLocation = mCache.getCurrentLocation();
+
+    	mUiQueue.postToUi(Type.READ_USER_FAVORITES_START, null, true);
+    	
+		// Bundle present, extract mUsername
+		String favoritesUserName = bundle.getString("USERNAME");
+
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + favoritesUserName + "/favorites/";
+		
+		// Set up HTTP client
+        CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        // Send HTTP request to web service
+        try {
+            client.execute(RequestMethod.GET);
+        } catch (Exception e) {
+        	// Most exceptions already handled by client
+            e.printStackTrace();
+        }
+        
+        String response = client.getResponse();
+        
+        if (response == null) {
+        	return;
+        } else {
+        	// Extract JSON data from response
+	        try {
+	        	jsonResponse = new JSONArray(response);
+			} catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+			}
+			
+			// Copy the JSON list of objects to our OOI list
+			for (int i=0; i < jsonResponse.length(); i++) {
+				try {
+					JSONObject jsonObject = jsonResponse.getJSONObject(i);
+					
+					// Create new object of interest
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					objectOfInterest.setCache(mCache);
+					
+					if (currentLocation != null) {
+						// Set distance
+						objectOfInterest.setDistanceToLocation(currentLocation);
+					}
+					
+					// Add to list
+					favoritesList.add(objectOfInterest);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}				
+        }
+        
+        mCache.getUserFavoritesList().update(favoritesList);
+       
+        mUiQueue.postToUi(Type.READ_USER_FAVORITES_END, null, true);
+
+        /*if (bundle != null) {
+            Bundle outBundle = new Bundle();
+            outBundle.putString("TEXT",
+                    "Searching objects of interest finished. Called from ["
+                            + bundle.getString("TEXT") + "]");
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+        }*/
+    }
+
 
     /***
      * Uploads an image to the server

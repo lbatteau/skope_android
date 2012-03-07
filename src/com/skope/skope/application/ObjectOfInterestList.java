@@ -56,7 +56,12 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	}
 
 	public synchronized ObjectOfInterest getSelectedOOI() {
-		return this.get(selectedPosition);
+		try {
+			return this.get(selectedPosition);
+		} catch(IndexOutOfBoundsException e) {
+			// Selected position no longer available.
+			return null;
+		}
 	}
 	
 	@Override

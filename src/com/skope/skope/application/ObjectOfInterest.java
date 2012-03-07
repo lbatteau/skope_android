@@ -4,6 +4,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class ObjectOfInterest extends User {
 	public static final int SEX_MALE = 0;
@@ -11,8 +13,22 @@ public class ObjectOfInterest extends User {
 	
 	private float distance;
 	
-	public ObjectOfInterest(JSONObject jsonObject, Cache cache) throws JSONException {
-		super(jsonObject, cache);
+	public ObjectOfInterest(Parcel in) {
+		super(in);
+	}
+
+	public static final Parcelable.Creator<ObjectOfInterest> CREATOR = new Parcelable.Creator<ObjectOfInterest>() {
+        public ObjectOfInterest createFromParcel(Parcel in) {
+        return new ObjectOfInterest(in);
+        }
+
+        public ObjectOfInterest[] newArray(int size) {
+        return new ObjectOfInterest[size];
+        }
+    };
+    
+    public ObjectOfInterest(JSONObject jsonObject) throws JSONException {
+		super(jsonObject);
 	}
 	
 	/**

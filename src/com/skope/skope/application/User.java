@@ -1,7 +1,6 @@
 package com.skope.skope.application;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,10 +8,12 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +22,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,8 +39,8 @@ import android.widget.TextView;
 import com.skope.skope.R;
 import com.skope.skope.http.CustomHttpClient.FlushedInputStream;
 
-public class User {
-	
+public class User implements Parcelable {
+	private static final String TAG = User.class.getName();	
 	public static final int PROFILE_PICTURE_WIDTH = 200;
 	public static final int PROFILE_PICTURE_HEIGHT = 200;
 
@@ -66,6 +69,7 @@ public class User {
 	protected String mEducationCollege;
 	protected String mInterests;
 	protected boolean mIsFirstTime;
+	protected ArrayList<String> mFavorites = new ArrayList<String>();
 	
 	protected boolean mHasNoProfilePicture;
 	
@@ -73,56 +77,80 @@ public class User {
 		public void onImageLoaded(Bitmap image);
 	}
 	
-	protected class ProfilePictureLoader extends AsyncTask<String, Void, Bitmap> {
-		
-		OnImageLoadListener mListener;
-
-		@Override
-		protected Bitmap doInBackground(String... params) {
-			URL url = null;
-			
-			try {
-				url = new URL(params[0]);
-			} catch (MalformedURLException error) {
-				Log.e(SkopeApplication.LOG_TAG, error.toString());
-				mHasNoProfilePicture = true;
-				return null;
-			}
-
-			try {
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-				connection.setDoInput(true);
-				connection.setUseCaches(true);
-				connection.connect();
-				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
-				return BitmapFactory.decodeStream(input);
-			} catch (IOException e) {
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
-				mHasNoProfilePicture = true;
-			}
-			
-			return null;
+	public User(Parcel in) {
+		this.mUsername = in.readString();
+		this.mUserEmail = in.readString();
+		this.mFirstName = in.readString();
+		this.mLastName = in.readString();
+		this.mProfilePictureURL = in.readString();
+		this.mStatus = in.readString();
+		this.mRelationship = in.readInt();
+		this.mHomeTown = in.readString();
+		this.mWorkJobTitle = in.readString();
+		this.mWorkCompany = in.readString();
+		this.mEducationStudy = in.readString();
+		this.mEducationCollege = in.readString();
+		this.mInterests = in.readString();
+		try {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			this.mDateOfBirth = df.parse(in.readString());
+		} catch(ParseException e) {
+			Log.i(TAG, "Unreadable date format in parcel " + e);
 		}
-		
-		protected void onPostExecute(Bitmap bitmap) {
-			if (bitmap != null) {
-				// Set the user's profile picture
-				setProfilePicture(bitmap);
-				// Cache bitmap
-				mCache.addBitmapToCache(mProfilePictureURL, bitmap);
-				// Call back
-				mListener.onImageLoaded(bitmap);
-			}
-	     }
-
-		public void setOnProfilePictureLoadListener(OnImageLoadListener listener) {
-			mListener = listener;
+		this.mIsDateofBirthPublic = Boolean.parseBoolean(in.readString());
+		this.mSex = in.readInt();
+		this.mIsSexPublic = Boolean.parseBoolean(in.readString());
+		this.mLocation = in.readParcelable(Location.class.getClassLoader());
+		try {
+			this.mLocationTimestamp = Timestamp.valueOf(in.readString());
+		} catch(IllegalArgumentException e) {
+			Log.i(TAG, "Unreadable timestamp in parcel " + e);
 		}
+		this.mIsFirstTime = Boolean.parseBoolean(in.readString());
+		in.readStringList(this.mFavorites);
 	}
 	
-	public User(JSONObject jsonObject, Cache cache) throws JSONException {
-		mCache = cache;
-		
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(this.mUsername != null ? this.mUsername : "");
+		dest.writeString(this.mUserEmail != null ? this.mUserEmail : "");
+		dest.writeString(this.mFirstName != null ? this.mFirstName : "");
+		dest.writeString(this.mLastName != null ? this.mLastName : "");
+		dest.writeString(this.mProfilePictureURL != null ? this.mProfilePictureURL : "");
+		dest.writeString(this.mStatus != null ? this.mStatus : "");
+		dest.writeInt(this.mRelationship);
+		dest.writeString(this.mHomeTown != null ? this.mHomeTown : "");
+		dest.writeString(this.mWorkJobTitle != null ? this.mWorkJobTitle : "");
+		dest.writeString(this.mWorkCompany != null ? this.mWorkCompany : "");
+		dest.writeString(this.mEducationStudy != null ? this.mEducationStudy : "");
+		dest.writeString(this.mEducationCollege != null ? this.mEducationCollege : "");
+		dest.writeString(this.mInterests != null ? this.mInterests : "");
+		dest.writeString(this.mDateOfBirth != null ? this.mDateOfBirth.toString() : "");
+		dest.writeString(String.valueOf(this.mIsDateofBirthPublic));
+		dest.writeInt(this.mSex);
+		dest.writeString(String.valueOf(this.mIsSexPublic));
+		dest.writeParcelable(this.mLocation, 0);
+		dest.writeString(this.mLocationTimestamp != null ? this.mLocationTimestamp.toString() : "");
+		dest.writeString(String.valueOf(this.mIsFirstTime));
+		dest.writeStringList(this.mFavorites);		
+	}
+
+	public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
+        public User createFromParcel(Parcel in) {
+        return new User(in);
+        }
+
+        public User[] newArray(int size) {
+        return new User[size];
+        }
+    };
+    
+    public User(JSONObject jsonObject) throws JSONException {
 		JSONObject user = jsonObject.getJSONObject("user");
 		if (!user.isNull("username")) {
 			this.setUserName(user.getString("username"));
@@ -223,11 +251,32 @@ public class User {
 		if (!jsonObject.isNull("is_first_time")) {
 			this.setIsFirstTime(jsonObject.getBoolean("is_first_time"));
 		}
+		
+		// Favorites
+		if (!jsonObject.isNull("favorites")) {
+			this.mFavorites = new ArrayList<String>();
+			JSONArray favorites = jsonObject.getJSONArray("favorites");
+			for (int i=0; i<favorites.length(); i++) {
+				this.mFavorites.add(favorites.getString(i));				
+			}
+		}
 	}
 	
 	@Override
 	public boolean equals(Object user) {
 		return (this.mUsername.equals(((User) user).mUsername));		
+	}
+	
+	/**
+	 * Determines whether given User is favorite of current User
+	 */
+	public boolean isFavorite(User user) {
+		for (String favorite: mFavorites) {
+			if (favorite.equals(user.getUserName())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -248,7 +297,9 @@ public class User {
 	 */
 	public void loadProfilePicture(OnImageLoadListener listener) {
 		if (!this.mHasNoProfilePicture) {
-			mCache.resetPurgeTimer();
+			if (mCache != null) {
+				mCache.resetPurgeTimer();
+			}
 			ProfilePictureLoader loader = new ProfilePictureLoader();
 			loader.setOnProfilePictureLoadListener(listener);
 			loader.execute(this.getProfilePictureURL());
@@ -585,9 +636,11 @@ public class User {
 	public Bitmap getProfilePicture() {
 		if (mProfilePicture == null && mHasNoProfilePicture == false) {
 			// Not loaded, check cache
-			Bitmap bitmap = mCache.getBitmapFromCache(mProfilePictureURL);
-			if (bitmap != null) {
-				setProfilePicture(bitmap);
+			if (mCache != null) {
+				Bitmap bitmap = mCache.getBitmapFromCache(mProfilePictureURL);
+				if (bitmap != null) {
+					setProfilePicture(bitmap);
+				}
 			}
 		}
 		return mProfilePicture;
@@ -749,4 +802,65 @@ public class User {
 		this.mWorkCompany = workCompany;
 	}
 
+	public ArrayList<String> getFavorites() {
+		return mFavorites;
+	}
+
+	public void setFavorites(ArrayList<String> favorites) {
+		this.mFavorites = favorites;
+	}
+	
+	public void setCache(Cache cache) {
+		this.mCache = cache;
+	}
+
+	protected class ProfilePictureLoader extends AsyncTask<String, Void, Bitmap> {
+		
+		OnImageLoadListener mListener;
+
+		@Override
+		protected Bitmap doInBackground(String... params) {
+			URL url = null;
+			
+			try {
+				url = new URL(params[0]);
+			} catch (MalformedURLException error) {
+				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				mHasNoProfilePicture = true;
+				return null;
+			}
+
+			try {
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection.setDoInput(true);
+				connection.setUseCaches(true);
+				connection.connect();
+				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
+				return BitmapFactory.decodeStream(input);
+			} catch (IOException e) {
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				mHasNoProfilePicture = true;
+			}
+			
+			return null;
+		}
+		
+		protected void onPostExecute(Bitmap bitmap) {
+			if (bitmap != null) {
+				// Set the user's profile picture
+				setProfilePicture(bitmap);
+				if (mCache != null) {
+					// Cache bitmap
+					mCache.addBitmapToCache(mProfilePictureURL, bitmap);
+				}
+				// Call back
+				mListener.onImageLoaded(bitmap);
+			}
+	     }
+
+		public void setOnProfilePictureLoadListener(OnImageLoadListener listener) {
+			mListener = listener;
+		}
+	}
+	
 }

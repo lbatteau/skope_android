@@ -67,15 +67,18 @@ public class Cache {
     private final Context mContext;
     
     /** The custom properties for this project */
-	private Properties m_properties;
+	private Properties mProperties;
 	
 	/** The preferences shared throughout the application */
-	private SharedPreferences m_preferences;
+	private SharedPreferences mPreferences;
 	
-    private Resources m_resources;
+    private Resources mResources;
     
     /** The current list of objects of interest nearby **/
-    private ObjectOfInterestList m_objectOfInterestList;
+    private ObjectOfInterestList mObjectOfInterestList;
+    
+    /** The list of user favorites **/
+    private ObjectOfInterestList mUserFavoritesList;
     
     /** The current mLocation */
     private Location mCurrentLocation;
@@ -134,28 +137,29 @@ public class Cache {
         mContext = context;
 
 		// Get system resources
-        m_resources = mContext.getResources();
+        mResources = mContext.getResources();
         
         // Fill lookup lists
-        RELATIONSHIP_CHOICES = m_resources.getStringArray(R.array.user_relationship_choices);
-        GENDER_CHOICES = m_resources.getStringArray(R.array.user_gender_choices);
+        RELATIONSHIP_CHOICES = mResources.getStringArray(R.array.user_relationship_choices);
+        GENDER_CHOICES = mResources.getStringArray(R.array.user_gender_choices);
         
         // Get application preferences
-		m_preferences = mContext.getSharedPreferences("skopePreferences", Context.MODE_WORLD_READABLE);
+		mPreferences = mContext.getSharedPreferences("skopePreferences", Context.MODE_WORLD_READABLE);
 
 		// Read properties from the /assets directory
-        AssetManager assetManager = m_resources.getAssets();
+        AssetManager assetManager = mResources.getAssets();
         try {
             InputStream inputStream = assetManager.open("skope.properties");
-            m_properties = new Properties();
-            m_properties.load(inputStream);
-            Log.i(SkopeApplication.LOG_TAG, "properties: " + m_properties);            
+            mProperties = new Properties();
+            mProperties.load(inputStream);
+            Log.i(SkopeApplication.LOG_TAG, "properties: " + mProperties);            
         } catch (IOException e) {
             Log.e(SkopeApplication.LOG_TAG, "Failed to open skope property file");
             e.printStackTrace();
         }
         
-        m_objectOfInterestList = new ObjectOfInterestList();
+        mObjectOfInterestList = new ObjectOfInterestList();
+        mUserFavoritesList = new ObjectOfInterestList();
         
     }
 
@@ -360,19 +364,19 @@ public class Cache {
     }
     
     public String getProperty(String name) {
-		return m_properties.getProperty(name);
+		return mProperties.getProperty(name);
 	}
 
 	public Resources getResources() {
-		return m_resources;
+		return mResources;
 	}
 	
 	public SharedPreferences getPreferences() {
-		return m_preferences;
+		return mPreferences;
 	}
 	
 	public synchronized ObjectOfInterestList getObjectOfInterestList() {
-		return m_objectOfInterestList;
+		return mObjectOfInterestList;
 	}
 
 	public Location getCurrentLocation() {
@@ -397,6 +401,10 @@ public class Cache {
 	
 	public ContentResolver getContentResolver() {
 		return mContext.getContentResolver();
+	}
+
+	public ObjectOfInterestList getUserFavoritesList() {
+		return mUserFavoritesList;
 	}
 
 }
