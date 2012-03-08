@@ -363,6 +363,14 @@ public class WorkerThread extends Thread {
         }
         
         mCache.getUserFavoritesList().update(favoritesList);
+        
+        // If current user, store in User object
+        if (favoritesUserName.equals(username)) {
+        	mCache.getUser().getFavorites().clear();
+        	for (ObjectOfInterest ooi: favoritesList) {
+        		mCache.getUser().getFavorites().add(ooi.getUserName());
+        	}
+        }
        
         mUiQueue.postToUi(Type.READ_USER_FAVORITES_END, null, true);
 

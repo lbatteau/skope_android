@@ -33,7 +33,7 @@
     <LinearLayout
         android:id="@+id/user_bar"
         android:layout_width="fill_parent"
-        android:layout_height="90dip"
+        android:layout_height="wrap_content"
         android:layout_weight="0"
         android:background="@drawable/header_gradient"
         android:orientation="horizontal"
@@ -68,8 +68,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/status_selector"
                 android:clickable="true"
-                android:lines="2"
-                android:singleLine="false"
+                android:lines="1"
                 android:text="Your status here..."
                 android:textColor="@color/skope_grey"
                 android:textSize="14sp" >

@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
@@ -14,6 +15,7 @@ import android.widget.ImageView;
 import com.skope.skope.R;
 import com.skope.skope.application.UserPhoto;
 import com.skope.skope.application.UserPhoto.OnImageLoadListener;
+import com.skope.skope.http.ThumbnailManager;
 
 /**
  * This image adapter is used by the grid view in the detail page
@@ -22,10 +24,11 @@ import com.skope.skope.application.UserPhoto.OnImageLoadListener;
  */
 public class UserPhotoAdapter extends ArrayAdapter<UserPhoto> {
 
-	protected static final int THUMBNAIL_HEIGHT = 60;
-	protected static final int THUMBNAIL_WIDTH = 60;
+	private int mThumbnailHeight = 60;
+	private int mThumbnailWidth = 60;
 
 	protected Context mContext;
+	protected ThumbnailManager mThumbnailManager;
 	
 	OnImageLoadListener mImageLoadListener = new OnImageLoadListener() {
 		
@@ -42,30 +45,45 @@ public class UserPhotoAdapter extends ArrayAdapter<UserPhoto> {
 	};
 
 	public UserPhotoAdapter(Context context, int textViewResourceId,
-								 List<UserPhoto> objects) {
+								 List<UserPhoto> objects, 
+								 ThumbnailManager thumbnailManager) {
 		super(context, textViewResourceId, objects);
 		mContext = context;
+		mThumbnailManager = thumbnailManager;
 	}
 	
+	public UserPhotoAdapter(Context context, int textViewResourceId,
+			 List<UserPhoto> objects, 
+			 ThumbnailManager thumbnailManager, 
+			 int width, int height) {
+		this(context, textViewResourceId, objects, thumbnailManager);
+		mThumbnailWidth = width;
+		mThumbnailHeight = height;		
+	}
+
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ImageView imageView = new ImageView(mContext);
 		
 		UserPhoto userPhoto = getItem(position);
 
 		int width = (int) TypedValue.applyDimension(
-				TypedValue.COMPLEX_UNIT_DIP, THUMBNAIL_WIDTH, mContext
+				TypedValue.COMPLEX_UNIT_DIP, mThumbnailWidth, mContext
 						.getResources().getDisplayMetrics());
 		int height = (int) TypedValue.applyDimension(
-				TypedValue.COMPLEX_UNIT_DIP, THUMBNAIL_HEIGHT, mContext
+				TypedValue.COMPLEX_UNIT_DIP, mThumbnailHeight, mContext
 						.getResources().getDisplayMetrics());
-		imageView.setLayoutParams(new Gallery.LayoutParams(width, height));
+		if (parent instanceof Gallery) {
+			imageView.setLayoutParams(new Gallery.LayoutParams(width, height));
+		} else {
+			imageView.setLayoutParams(new AbsListView.LayoutParams(width, height));			
+		}
 		imageView.setScaleType(ImageView.ScaleType.FIT_XY);
 		imageView.setBackgroundResource(R.drawable.gallery_box);
 
 		imageView.setImageBitmap(userPhoto.getThumbnail());
 		if (userPhoto.getThumbnail() == null) {
 			imageView.setImageResource(R.drawable.empty_photo_large_icon);
-			userPhoto.loadThumbnail(mImageLoadListener);
+			mThumbnailManager.retrieve(userPhoto, imageView);
 		}
 
 		return imageView;

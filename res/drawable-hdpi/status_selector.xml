@@ -7,9 +7,9 @@
 		        android:width="1dip"
 		        android:color="#CCC"/>
 		    <padding android:left="5dip"
-		        android:top="2dip"
+		        android:top="5dip"
 		        android:right="5dip"
-		        android:bottom="2dip" />
+		        android:bottom="5dip" />
 		    <corners android:radius="5dip" />
 		</shape>
 	</item>
@@ -20,9 +20,9 @@
 		        android:width="1dip"
 		        android:color="#555"/>
 		    <padding android:left="5dip"
-		        android:top="2dip"
+		        android:top="5dip"
 		        android:right="5dip"
-		        android:bottom="2dip" />
+		        android:bottom="5dip" />
 		    <corners android:radius="5dip" />
 		</shape>
 	</item>

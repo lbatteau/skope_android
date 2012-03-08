@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent" android:id="@+id/user"
+    android:background="@drawable/silver_reverse">
+    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/user_photo_grid"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
@@ -12,5 +16,8 @@
     android:paddingRight="10dip"
     android:verticalSpacing="2dip"
     android:isScrollContainer="false"
-    android:stretchMode="none" />
+    android:stretchMode="columnWidth" />
+</LinearLayout>
+
+
 

@@ -22,13 +22,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.BaseExpandableListAdapter;
+import android.widget.EditText;
 import android.widget.ExpandableListAdapter;
-import android.widget.ExpandableListView;
 import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -44,18 +42,21 @@ import com.skope.skope.application.Cache;
 import com.skope.skope.application.ObjectOfInterest;
 import com.skope.skope.application.ObjectOfInterestList;
 import com.skope.skope.application.SkopeApplication;
-import com.skope.skope.application.UserPhoto;
 import com.skope.skope.application.User.OnImageLoadListener;
+import com.skope.skope.application.UserPhoto;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
+import com.skope.skope.http.ThumbnailManager;
 import com.skope.skope.maps.OOIOverlay;
-import com.skope.skope.ui.UserFavoritesActivity.ViewHolder;
 import com.skope.skope.util.Type;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    
+    private static final int USERMENU_PHOTOS = 0;
+    private static final int USERMENU_FAVORITES = 1;
 
     private GestureDetector mGestureDetector;
     private View.OnTouchListener mGestureListener;
@@ -64,7 +65,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	private Animation mFadeInAnimation, mFadeOutAnimation;
 	private SlidingDrawer mMapDrawer;
 	private ExpandableListAdapter mListAdapter;
-	private View mUserProfileMain, mUserProfile, mUserPhotoLayout, mFavoritesLayout;
+	private View mUserProfile, mUserPhotoLayout, mFavoritesLayout;
     private LayoutInflater mInflater;
     private Gallery mUserPhotoGallery;    
 	private UserPhotoAdapter mUserPhotoAdapter;
@@ -112,7 +113,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    final View favoriteIcon = findViewById(R.id.favorite_icon);
     	
 	    // Check for highlighting
-	    if (getCache().getUserFavoritesList().contains(mSelectedOOI)) {
+	    if (getCache().getUser().getFavorites().contains(mSelectedOOI.getUserName())) {
 	    	// Selected user is a favorite of the current user. Highlight.
 	    	favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
 	    }
@@ -122,7 +123,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			
 			@Override
 			public void onClick(View v) {
-				if (getCache().getUserFavoritesList().contains(mSelectedOOI)) {
+				if (getCache().getUser().getFavorites().contains(mSelectedOOI.getUserName())) {
 					// Delete favorite
 					String title = getResources().getString(R.string.user_favorite_confirm_remove_title);
 					String messageFormat = getResources().getString(R.string.user_favorite_confirm_remove_message);
@@ -133,15 +134,15 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
 			            public void onClick(DialogInterface dialog, int whichButton) {
 			            	UserFavoriteDelete runner = new UserFavoriteDelete();
-							runner.setListener(new OnFavoriteUpdateListener() {
+							runner.setListener(new AsyncTaskListener() {
 								@Override
-								public void onFavoriteUpdateStart() {
+								public void onTaskStart() {
 								}
 								
 								@Override
-								public void onFavoriteUpdateDone(boolean isSuccess, String message) {
+								public void onTaskDone(boolean isSuccess, String message) {
 									if (isSuccess) {
-										getCache().getUserFavoritesList().remove(mSelectedOOI);
+										getCache().getUser().getFavorites().remove(mSelectedOOI.getUserName());
 										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_selector);
 									} else {
 										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
@@ -166,15 +167,15 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
 			            public void onClick(DialogInterface dialog, int whichButton) {
 			            	UserFavoritePost runner = new UserFavoritePost();
-							runner.setListener(new OnFavoriteUpdateListener() {
+							runner.setListener(new AsyncTaskListener() {
 								@Override
-								public void onFavoriteUpdateStart() {
+								public void onTaskStart() {
 								}
 								
 								@Override
-								public void onFavoriteUpdateDone(boolean isSuccess, String message) {
+								public void onTaskDone(boolean isSuccess, String message) {
 									if (isSuccess) {
-										getCache().getUserFavoritesList().add(mSelectedOOI);
+										getCache().getUser().getFavorites().add(mSelectedOOI.getUserName());
 										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
 									} else {
 										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
@@ -193,15 +194,77 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			}
 		});
 	    
-	    /*
-		 * The user profile is actually an expandable list view, with the
-		 * first item containing the main info like name, status, profile
-		 * picture etc. This item has no children, so shouldn't expand.
-		 * The rest of the list consists of photos, mFavorites, etc.
-		 */
-	    mListAdapter = new UserProfileExpandableListAdapter();
-	    ExpandableListView expandableList = (ExpandableListView)findViewById(R.id.expandable_list);
-	    expandableList.setAdapter(mListAdapter);
+	    // Report button
+	    View reportButton = findViewById(R.id.report_button);
+	    reportButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// Report
+				String title = getResources().getString(R.string.user_report_title);
+				String messageFormat = getResources().getString(R.string.user_report_message);
+				String message = String.format(messageFormat, mSelectedOOI.createName());
+				final EditText description = new EditText(OOIDetailMapActivity.this);
+				description.setLines(2);
+				new AlertDialog.Builder(OOIDetailMapActivity.this)
+		        .setTitle(title)
+		        .setMessage(message)
+		        .setView(description)
+		        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+		            public void onClick(DialogInterface dialog, int whichButton) {
+		            	UserReport runner = new UserReport();
+						runner.setListener(new AsyncTaskListener() {
+							@Override
+							public void onTaskStart() {
+							}
+							
+							@Override
+							public void onTaskDone(boolean isSuccess, String message) {
+								if (isSuccess) {
+									Toast.makeText(OOIDetailMapActivity.this, "Report successfully sent", Toast.LENGTH_SHORT).show();
+								} else {
+									Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
+								}
+							}
+						});
+						runner.execute(mSelectedOOI.getUserName(), description.getText().toString());
+		            }
+		        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+		            public void onClick(DialogInterface dialog, int whichButton) {
+		                // Do nothing.
+		            }
+		        }).show();
+				
+			}
+		});
+	    
+	    // Inner menu items
+	    String[] items = new String[] { "Photos", "Favorites" };
+	    ArrayAdapter<String> adapter = new UserMenuArrayAdapter(this, 0, items);
+	    ListView list = (ListView) findViewById(R.id.list);
+	    list.setAdapter(adapter);
+	    list.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
+					long arg3) {
+				switch (position) {
+				case USERMENU_PHOTOS:
+					// Go to photo grid
+					// Redirect to photo activity
+			        Intent photoIntent = new Intent(OOIDetailMapActivity.this, UserPhotoGridActivity.class);
+			        startActivity(photoIntent);
+		        	break;
+				case USERMENU_FAVORITES:
+					// Go to favorites
+					Intent favoritesIntent = new Intent(OOIDetailMapActivity.this, UserFavoritesActivity.class);
+					favoritesIntent.putExtra("USERNAME", mSelectedOOI.getUserName());
+			        startActivity(favoritesIntent);
+			        break;
+				}
+				
+			}
+		});
 	    		
 	    /*
 	     * Set up navigation buttons. Transparent left and right arrows 
@@ -292,14 +355,14 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    View view = findViewById(R.id.overlay);
 	    view.setOnTouchListener(mGestureListener);*/
 	    
-	    mUserProfileMain = mInflater.inflate(R.layout.ooi_profile_main, null);
-	    
 	    mOOIPosition = getCache().getObjectOfInterestList().getSelectedPosition();
 	    
 	    // Initial empty list of user photos
 	    mUserPhotoList = new ArrayList<UserPhoto>();
+	    // Set up thumbnail manager
+	    ThumbnailManager thumbnailManager = new ThumbnailManager(getCache());
 	    // User photos adapter
-	    mUserPhotoAdapter = new UserPhotoAdapter(this, R.id.user_photo_grid, mUserPhotoList);
+	    mUserPhotoAdapter = new UserPhotoAdapter(this, R.id.user_photo_grid, mUserPhotoList, thumbnailManager);
 	    // User photos gallery 
 	    mUserPhotoLayout = mInflater.inflate(R.layout.user_photo_gallery, null);
 	    mUserPhotoGallery = (Gallery) mUserPhotoLayout.findViewById(R.id.user_photo_gallery);
@@ -378,7 +441,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         	finish();	
 		}
 
-		mSelectedOOI.createUserProfile(mUserProfileMain, mInflater);
+		mSelectedOOI.createUserProfile(mUserProfile, mInflater);
 		
 		// Empty current photo list
 		Cache.USER_PHOTOS.clear();
@@ -551,134 +614,17 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         }
 	};
 
-    /**
-     * A simple adapter which maintains an ArrayList of mPhoto resource Ids. 
-     * Each mPhoto is displayed as an image. This adapter supports clearing the
-     * list of photos and adding a new mPhoto.
-     *
-     */
-    public class UserProfileExpandableListAdapter extends BaseExpandableListAdapter {
-        public Object getChild(int groupPosition, int childPosition) {
-            switch(groupPosition) {
-            case 1:
-            	return "Test1";
-            case 2:
-            	return "Test2";
-            default:
-            	return null;
-            }
-        }
-        
-        @Override
-        public boolean areAllItemsEnabled() {
-        	return false;
-        }
-
-        public long getChildId(int groupPosition, int childPosition) {
-            return childPosition;
-        }
-
-        public int getChildrenCount(int groupPosition) {
-        	switch(groupPosition) {
-            case 1:
-            	return 1;
-            case 2:
-            	return 1;
-            default:
-            	return 0;
-            }
-        }
-
-        public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
-                View convertView, ViewGroup parent) {
-        	switch(groupPosition) {
-            case 1:
-            	return mUserPhotoLayout;
-            case 2:
-            	return mFavoritesLayout;
-            default:
-            	TextView textView = new TextView(OOIDetailMapActivity.this);
-                textView.setText(getChild(groupPosition, childPosition).toString());
-                return textView;
-            }
-        	
-        	
-        }
-
-		@Override
-		public Object getGroup(int groupPosition) {
-			return null;
-		}
-
-        public int getGroupCount() {
-            return 3;
-        }
-
-        public long getGroupId(int groupPosition) {
-            return groupPosition;
-        }
-
-        public View createGroupView(String label, boolean isExpanded, int iconDrawable) {
-            // Layout parameters for the ExpandableListView
-            AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
-                    ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            
-            View view = mInflater.inflate(R.layout.expanded_list_group, null);
-            view.setLayoutParams(lp);
-        	
-            // Set label
-        	TextView labelView = (TextView) view.findViewById(R.id.label);
-        	labelView.setCompoundDrawablePadding(10);
-        	labelView.setCompoundDrawablesWithIntrinsicBounds(iconDrawable, 0, 0, 0);
-        	labelView.setText(label);
-        	
-        	// Indicator
-        	ImageView indicator = (ImageView) view.findViewById(R.id.indicator);
-        	if (isExpanded) {
-        		indicator.setImageResource(R.drawable.nav_arrow_down);
-        	} else {
-        		indicator.setImageResource(R.drawable.nav_arrow_right);
-        	}
-        	
-            return view;
-        }
-        
-        public View getGroupView(int groupPosition, boolean isExpanded, View convertView,
-                ViewGroup parent) {
-        	switch(groupPosition) {
-            case 0: {
-            	View view = mUserProfileMain;
-            	view.setBackgroundDrawable(null);
-            	return view;
-            } case 1: {
-            	return createGroupView("Photos", isExpanded, R.drawable.expand_icon_photos);
-            } case 2:
-            	return createGroupView("Favorites", isExpanded, R.drawable.expand_icon_favorites);
-            }
-        	return null;
-        }
-
-        public boolean isChildSelectable(int groupPosition, int childPosition) {
-            return false;
-        }
-
-        public boolean hasStableIds() {
-            return true;
-        }
-
-    }
-    
-	public interface OnFavoriteUpdateListener {
-		public void onFavoriteUpdateStart();
-		public void onFavoriteUpdateDone(boolean isSuccess, String message);
+	public interface AsyncTaskListener {
+		public void onTaskStart();
+		public void onTaskDone(boolean isSuccess, String message);
 	}
 	
 	protected class UserFavoritePost extends AsyncTask<String, Void, CustomHttpClient> {
-		OnFavoriteUpdateListener mListener;
+		AsyncTaskListener mListener;
 		
 		@Override
 		protected void onPreExecute() {
-			mListener.onFavoriteUpdateStart();
+			mListener.onTaskStart();
 		}
 
 		@Override
@@ -711,7 +657,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			switch (client.getResponseCode()) {
 			case HttpStatus.SC_OK:
 				// Call back OK
-				mListener.onFavoriteUpdateDone(true, "");
+				mListener.onTaskDone(true, "");
 				break;
 			case 0:
 				// No server response
@@ -724,24 +670,24 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			case HttpStatus.SC_BAD_REQUEST:
 				Log.e(SkopeApplication.LOG_TAG, "Failed to add favorite: " + client.getErrorMessage());
 				// Call back failed
-				mListener.onFavoriteUpdateDone(false, "Failed to add favorite");
+				mListener.onTaskDone(false, "Failed to add favorite");
 			}
 			
 	   }
 		
-		public void setListener(OnFavoriteUpdateListener listener) {
+		public void setListener(AsyncTaskListener listener) {
 			mListener = listener;
 		}
 
 	}
 	
 	protected class UserFavoriteDelete extends AsyncTask<String, Void, CustomHttpClient> {
-		OnFavoriteUpdateListener mListener;
+		AsyncTaskListener mListener;
 		
 		@Override
 		protected void onPreExecute() {
 			if (mListener != null) {
-				mListener.onFavoriteUpdateStart();
+				mListener.onTaskStart();
 			}
 		}
 
@@ -776,7 +722,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			case HttpStatus.SC_NO_CONTENT:
 				// Call back OK
 				if (mListener != null) {
-					mListener.onFavoriteUpdateDone(true, "");
+					mListener.onTaskDone(true, "");
 				}
 				break;
 			case 0:
@@ -791,13 +737,76 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				Log.e(SkopeApplication.LOG_TAG, "Failed to delete favorite: " + client.getErrorMessage());
 				// Call back failed
 				if (mListener != null) {
-					mListener.onFavoriteUpdateDone(false, "Failed to delete favorite");
+					mListener.onTaskDone(false, "Failed to delete favorite");
 				}
 			}
 			
 	   }
 		
-		public void setListener(OnFavoriteUpdateListener listener) {
+		public void setListener(AsyncTaskListener listener) {
+			mListener = listener;
+		}
+
+	}
+	
+	protected class UserReport extends AsyncTask<String, Void, CustomHttpClient> {
+		AsyncTaskListener mListener;
+		
+		@Override
+		protected void onPreExecute() {
+			mListener.onTaskStart();
+		}
+
+		@Override
+		protected CustomHttpClient doInBackground(String... params) {
+			String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+			String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+			String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + username + "/report/" + params[0] + "/";
+
+			
+			// Create HTTP client
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl, OOIDetailMapActivity.this);
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        client.addParam("message", params[1]);
+	        
+	        // Send HTTP request to web service
+	        try {
+	            client.execute(RequestMethod.POST);
+	        } catch (Exception e) {
+	        	// Most exceptions already handled by client
+	            e.printStackTrace();
+	        }
+	        
+	        return client;
+
+		}
+		
+		@Override
+		protected void onPostExecute(CustomHttpClient client) {
+			// Check for server response
+			switch (client.getResponseCode()) {
+			case HttpStatus.SC_OK:
+				// Call back OK
+				mListener.onTaskDone(true, "");
+				break;
+			case 0:
+				// No server response
+				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+			case HttpStatus.SC_UNAUTHORIZED:
+			case HttpStatus.SC_REQUEST_TIMEOUT:
+			case HttpStatus.SC_BAD_GATEWAY:
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			case HttpStatus.SC_BAD_REQUEST:
+				Log.e(SkopeApplication.LOG_TAG, "Failed to report user: " + client.getErrorMessage());
+				// Call back failed
+				mListener.onTaskDone(false, "Failed to report user");
+			}
+			
+	   }
+		
+		public void setListener(AsyncTaskListener listener) {
 			mListener = listener;
 		}
 
@@ -833,8 +842,39 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 			}
 			startActivity(i);
 		}
-	};	
+	};
+	
+	private class UserMenuArrayAdapter extends ArrayAdapter<String> {
+		String[] mItems;
+		int[] mIcons = new int[] { R.drawable.expand_icon_photos, R.drawable.expand_icon_favorites };
 
+		public UserMenuArrayAdapter(Context context, int textViewResourceId,
+				String[] objects) {
+			super(context, textViewResourceId, objects);
+			mItems = objects;
+		}
+		
+		@Override
+        public View getView(int position, View convertView, final ViewGroup parent) {
+			ViewHolder holder;
+			if (convertView == null) {
+                convertView = (View) mInflater.inflate(R.layout.simple_item, null);
+                holder = new ViewHolder();
+                holder.nameText = (TextView) convertView.findViewById(R.id.name_text);
+                convertView.setTag(holder);
+            } else {
+            	holder = (ViewHolder) convertView.getTag();
+            }             
+            
+            holder.nameText.setText(mItems[position]);
+            holder.nameText.setCompoundDrawablePadding(5);
+            holder.nameText.setCompoundDrawablesWithIntrinsicBounds(mIcons[position], 0, 0, 0);
+            
+            return convertView;
+        }
+		
+	}
+	
     private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
@@ -871,10 +911,10 @@ public class OOIDetailMapActivity extends OOIMapActivity {
                 	holder.nameText.setText(ooi.createName());                            
                 }
                 
-                //if (holder.distanceText != null) {
-                //	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance())
-                //			+ " - " + ooi.createLabelTimePassedSinceLastUpdate());
-                //}
+                if (holder.distanceText != null) {
+                	// For favorites don't display distance, not really useful
+                	holder.distanceText.setText("");
+                }
                 
                 if (holder.icon != null) {
                 	holder.icon.setImageBitmap(ooi.getProfilePicture()); // even when null, otherwise previous values remain

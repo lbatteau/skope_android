@@ -28,6 +28,7 @@ import com.skope.skope.application.User;
 import com.skope.skope.http.BMPFromURL;
 import com.skope.skope.http.CustomHttpClient;
 import com.skope.skope.http.CustomHttpClient.RequestMethod;
+import com.skope.skope.util.Type;
 
 public class LoginActivity extends BaseActivity {
 	String mUsername;
@@ -238,6 +239,11 @@ public class LoginActivity extends BaseActivity {
 	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
 	        prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
 	        prefsEditor.commit();
+	        
+	        // Retrieve favorites
+	        Bundle favoritesBundle = new Bundle();
+	        favoritesBundle.putString("USERNAME", mUsername);
+			getServiceQueue().postToService(Type.READ_USER_FAVORITES, favoritesBundle);
 	        
 	        // Redirect to list activity
 	        Intent i = new Intent();

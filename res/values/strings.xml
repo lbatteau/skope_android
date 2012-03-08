@@ -89,4 +89,6 @@
     <string name="user_favorite_confirm_remove_message">Are you sure you want to remove %s from your favorites?</string>
     <string name="user_favorite_confirm_add_title">Add favorite</string>
     <string name="user_favorite_confirm_add_message">Add %s to your favorites?</string>
+    <string name="user_report_title">Report user</string>
+    <string name="user_report_message">If you have found %s to behave inappropriately, please let us know and we will take immediate action.</string>
 </resources>

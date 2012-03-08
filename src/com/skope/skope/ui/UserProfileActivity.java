@@ -47,6 +47,7 @@ import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
 import com.skope.skope.application.User.OnImageLoadListener;
 import com.skope.skope.application.UserPhoto;
+import com.skope.skope.http.ThumbnailManager;
 import com.skope.skope.service.LocationService;
 import com.skope.skope.util.Type;
 
@@ -181,8 +182,10 @@ public class UserProfileActivity extends BaseActivity {
 		
 	    // Initial empty list of user photos
 	    mUserPhotoList = new ArrayList<UserPhoto>();
+	    // Set up thumbnail manager
+	    ThumbnailManager thumbnailManager = new ThumbnailManager(getCache());
 	    // User photos adapter
-	    mUserPhotoAdapter = new UserPhotoAdapter(getApplicationContext(), R.id.user_photo_grid, mUserPhotoList);
+	    mUserPhotoAdapter = new UserPhotoAdapter(getApplicationContext(), R.id.user_photo_grid, mUserPhotoList, thumbnailManager);
 	    // User photos gallery 
 	    mUserPhotoGallery = (Gallery) mMainProfile.findViewById(R.id.user_photo_gallery);
 	    

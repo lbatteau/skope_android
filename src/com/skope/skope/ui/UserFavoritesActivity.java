@@ -45,6 +45,7 @@ public class UserFavoritesActivity extends BaseActivity {
 	
     private ObjectOfInterestList mFavoritesList = null;
     private ObjectOfInterestArrayAdapter mFavoritesListAdapter;
+    private String mUsername;
 
     protected Dialog mSplashDialog;
     
@@ -53,15 +54,27 @@ public class UserFavoritesActivity extends BaseActivity {
 	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-			// Redirect to list activity
-	        Intent i = new Intent(UserFavoritesActivity.this, OOIDetailMapActivity.class);
-	        Bundle bundle = new Bundle();
-	        bundle.putParcelable("USER", mFavoritesListAdapter.getItem(position));
-	        i.putExtras(bundle);
+			// Check if selected ooi is current user
+			ObjectOfInterest ooi = mFavoritesListAdapter.getItem(position);
+			Intent i = new Intent();
+			if (ooi.getUserName().equals(getCache().getUser().getUserName())) {
+				// Current user, redirect to profile
+				Bundle bundle = new Bundle();
+		        bundle.putInt("TAB", MainTabActivity.TAB_PROFILE);
+		        i.putExtras(bundle);i.setClassName("com.skope.skope",
+						"com.skope.skope.ui.MainTabActivity");
+			} else {
+				// Redirect to list activity
+		        Bundle bundle = new Bundle();
+		        bundle.putParcelable("USER", ooi);
+		        i.putExtras(bundle);
+				i.setClassName("com.skope.skope",
+						"com.skope.skope.ui.OOIDetailMapActivity");
+			}
 			startActivity(i);
 		}
-	};	
-
+	};
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
@@ -79,6 +92,9 @@ public class UserFavoritesActivity extends BaseActivity {
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mFavoritesListAdapter); 
         listView.setOnItemClickListener(mOOISelectListener);
+        
+        // Favorites should already be in cache
+        updateListFromCache();
 
     }
 
@@ -195,9 +211,14 @@ public class UserFavoritesActivity extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
+		String username; 
 		Bundle bundle = new Bundle();
-        bundle.putString("USERNAME", getCache().getUser().getUserName());
+		if (getIntent() != null && getIntent().getExtras() != null) {
+			username = getIntent().getExtras().getString("USERNAME");
+		} else {
+			username = getCache().getUser().getUserName();
+		}
+		bundle.putString("USERNAME", username);
 		getServiceQueue().postToService(Type.READ_USER_FAVORITES, bundle);
-
 	}
 }
