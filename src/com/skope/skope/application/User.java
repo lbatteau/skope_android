@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -55,13 +56,13 @@ public class User implements Parcelable {
 	protected Date mDateOfBirth;
 	protected boolean mIsDateofBirthPublic;
 	protected String mStatus;
-	protected int mSex = -1; // Lookup list, initial 0 would be first item
+	protected String mSex;
 	protected boolean mIsSexPublic;
 	protected String mProfilePictureURL;
 	protected Bitmap mProfilePicture;
 	protected Location mLocation;
 	protected Timestamp mLocationTimestamp;
-	protected int mRelationship = -1; // Lookup list, initial 0 would be first item
+	protected String mRelationship;
 	protected String mHomeTown;
 	protected String mWorkJobTitle;
 	protected String mWorkCompany;
@@ -84,7 +85,7 @@ public class User implements Parcelable {
 		this.mLastName = in.readString();
 		this.mProfilePictureURL = in.readString();
 		this.mStatus = in.readString();
-		this.mRelationship = in.readInt();
+		this.mRelationship = in.readString();
 		this.mHomeTown = in.readString();
 		this.mWorkJobTitle = in.readString();
 		this.mWorkCompany = in.readString();
@@ -98,7 +99,7 @@ public class User implements Parcelable {
 			Log.i(TAG, "Unreadable date format in parcel " + e);
 		}
 		this.mIsDateofBirthPublic = Boolean.parseBoolean(in.readString());
-		this.mSex = in.readInt();
+		this.mSex = in.readString();
 		this.mIsSexPublic = Boolean.parseBoolean(in.readString());
 		this.mLocation = in.readParcelable(Location.class.getClassLoader());
 		try {
@@ -123,7 +124,7 @@ public class User implements Parcelable {
 		dest.writeString(this.mLastName != null ? this.mLastName : "");
 		dest.writeString(this.mProfilePictureURL != null ? this.mProfilePictureURL : "");
 		dest.writeString(this.mStatus != null ? this.mStatus : "");
-		dest.writeInt(this.mRelationship);
+		dest.writeString(this.mRelationship);
 		dest.writeString(this.mHomeTown != null ? this.mHomeTown : "");
 		dest.writeString(this.mWorkJobTitle != null ? this.mWorkJobTitle : "");
 		dest.writeString(this.mWorkCompany != null ? this.mWorkCompany : "");
@@ -132,7 +133,7 @@ public class User implements Parcelable {
 		dest.writeString(this.mInterests != null ? this.mInterests : "");
 		dest.writeString(this.mDateOfBirth != null ? this.mDateOfBirth.toString() : "");
 		dest.writeString(String.valueOf(this.mIsDateofBirthPublic));
-		dest.writeInt(this.mSex);
+		dest.writeString(this.mSex);
 		dest.writeString(String.valueOf(this.mIsSexPublic));
 		dest.writeParcelable(this.mLocation, 0);
 		dest.writeString(this.mLocationTimestamp != null ? this.mLocationTimestamp.toString() : "");
@@ -184,7 +185,7 @@ public class User implements Parcelable {
 		}
 		
 		if (!jsonObject.isNull("relationship_status")) {
-			this.setRelationshipStatus(jsonObject.getInt("relationship_status"));
+			this.setRelationshipStatus(jsonObject.getString("relationship_status"));
 		}
 		
 		if (!jsonObject.isNull("home_town")) {
@@ -225,7 +226,7 @@ public class User implements Parcelable {
 		}
 		
 		if (!jsonObject.isNull("gender")) {
-			this.setSex(jsonObject.getInt("gender"));
+			this.setSex(jsonObject.getString("gender"));
 		}
 		
 		if (!jsonObject.isNull("is_gender_public")) {
@@ -322,7 +323,7 @@ public class User implements Parcelable {
 	
 	public String createLabelStatus() {
 		if(mStatus == null) {
-			return "";
+			return String.format("%s just started using Skope!", createName());
 		} else {
 			return "\"" + mStatus.trim() + "\"";
 		}
@@ -504,13 +505,13 @@ public class User implements Parcelable {
 			}
 		}
 
-		int relationship = this.getRelationship();
-		if (relationship != -1) {
+		String relationship = this.getRelationship();
+		if (relationship != null && !relationship.equals("")) {
 			userInfoItem = (TextView) inflater.inflate(
 					R.layout.user_info_item, null);
 			userInfoItem.setCompoundDrawablesWithIntrinsicBounds(
 					R.drawable.details_profile_icon_relationship, 0, 0, 0);
-			userInfoItem.setText(Cache.RELATIONSHIP_CHOICES[this.getRelationship()]);
+			userInfoItem.setText(relationship);
 			userInfoBlock.addView(userInfoItem);
 		}
 
@@ -559,9 +560,9 @@ public class User implements Parcelable {
 		EditText lastName = (EditText) activity.findViewById(R.id.last_name);
 		lastName.setText(this.getLastName());
 		
-		if (this.getSex() != -1) {
+		if (this.getSex() != null && !this.getSex().equals("")) {
 			RadioButton button = (RadioButton) activity.findViewById(R.id.gender_male);
-			if (button.getText().equals(Cache.GENDER_CHOICES[this.getSex()])) {
+			if (button.getText().toString().toLowerCase().equals(this.getSex().toLowerCase())) {
 				button.setChecked(true);
 			} else {
 				button = (RadioButton) activity.findViewById(R.id.gender_female);
@@ -591,9 +592,9 @@ public class User implements Parcelable {
 			homeTownEdit.setText(this.getHomeTown());
 		}
 		
-		if (this.getRelationship() != -1) {
+		if (this.getRelationship() != null) {
 			Spinner relationship = (Spinner) activity.findViewById(R.id.relationship);
-			relationship.setSelection(this.getRelationship());
+			relationship.setSelection(Arrays.asList(Cache.RELATIONSHIP_CHOICES).indexOf(this.getRelationship()));
 		}
 		
 		if (this.getWorkJobTitle() != null) {
@@ -666,11 +667,11 @@ public class User implements Parcelable {
 		this.mStatus = status;
 	}
 
-	public int getSex() {
+	public String getSex() {
 		return mSex;
 	}
 
-	public void setSex(int sex) {
+	public void setSex(String sex) {
 		this.mSex = sex;
 	}
 
@@ -722,11 +723,11 @@ public class User implements Parcelable {
 		return this.mHasNoProfilePicture;
 	}
 
-	public int getRelationship() {
+	public String getRelationship() {
 		return mRelationship;
 	}
 
-	public void setRelationshipStatus(int relationship) {
+	public void setRelationshipStatus(String relationship) {
 		this.mRelationship = relationship;
 	}
 	
@@ -763,7 +764,7 @@ public class User implements Parcelable {
 	}
 
 	public boolean isFirstTime() {
-		return mIsFirstTime;
+		return this.mIsFirstTime;
 	}
 
 	public void setIsFirstTime(boolean isFirstTime) {

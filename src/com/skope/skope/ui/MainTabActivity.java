@@ -26,6 +26,7 @@ public class MainTabActivity extends TabActivity {
 	private SkopeApplication mApplication;
 	private Cache mCache;
 	private ServiceQueue mServiceQueue;    
+	private TabHost mTabHost;
 
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
@@ -48,7 +49,7 @@ public class MainTabActivity extends TabActivity {
         	return;
     	}
     	
-	    TabHost tabHost = getTabHost();  // The activity TabHost
+	    mTabHost = getTabHost();  // The activity TabHost
 	    TabHost.TabSpec spec;  // Reusable TabSpec for each tab
 	    Intent intent;  // Reusable Intent for each tab
 
@@ -63,48 +64,27 @@ public class MainTabActivity extends TabActivity {
 
 	    // Create an Intent to launch an Activity for the tab (to be reused)
 	    intent = new Intent().setClass(this, OOIListActivity.class);
-	    spec = tabHost.newTabSpec("list").setIndicator(tabList)
+	    spec = mTabHost.newTabSpec("list").setIndicator(tabList)
 	                  .setContent(intent);
-	    tabHost.addTab(spec);
+	    mTabHost.addTab(spec);
 
 	    // Do the same for the other tabs
 	    intent = new Intent().setClass(this, OOIListMapActivity.class);
-	    spec = tabHost.newTabSpec("map").setIndicator(tabMap)
+	    spec = mTabHost.newTabSpec("map").setIndicator(tabMap)
 	                  .setContent(intent);
-	    tabHost.addTab(spec);
+	    mTabHost.addTab(spec);
 
 	    intent = new Intent().setClass(this, UserProfileActivity.class);
-	    spec = tabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
-        tabHost.addTab(spec);
+	    spec = mTabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
+        mTabHost.addTab(spec);
 	    
 	    intent = new Intent().setClass(this, UserProfileActivity.class);
-	    spec = tabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
-        tabHost.addTab(spec);
+	    spec = mTabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
+        mTabHost.addTab(spec);
 	    
         intent = new Intent().setClass(this, UserFavoritesActivity.class);
-	    spec = tabHost.newTabSpec("favorites").setIndicator(favoritesProfile).setContent(intent);
-        tabHost.addTab(spec);
-	    
-	    // Check if tab is specified in Intent
-        int tabSpecified = 0;
-        if (getIntent() != null && getIntent().getExtras() != null) {
-        	tabSpecified = getIntent().getExtras().getInt("TAB");
-        }
-        
-	    if (tabSpecified != 0) {
-	    	tabHost.setCurrentTab(tabSpecified);
-	    } else {
-	        // If user logging in for the first time...
-	        if (user.isFirstTime()) {
-	        	// ...direct to profile
-	        	tabHost.setCurrentTab(2);
-	        } else {
-	        	// ...otherwise to list view
-	        	tabHost.setCurrentTab(0);
-	        }
-	    }
-	    
-	    
+	    spec = mTabHost.newTabSpec("favorites").setIndicator(favoritesProfile).setContent(intent);
+        mTabHost.addTab(spec);
 	}	
 	
 	/***
@@ -113,6 +93,25 @@ public class MainTabActivity extends TabActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+	    
+		// Check if tab is specified in Intent
+        int tabSpecified = 0;
+        if (getIntent() != null && getIntent().getExtras() != null) {
+        	tabSpecified = getIntent().getExtras().getInt("TAB");
+        }
+        
+	    if (tabSpecified != 0) {
+	    	mTabHost.setCurrentTab(tabSpecified);
+	    } else {
+	        // If user logging in for the first time
+	        if (mCache.getUser().isFirstTime()) {
+	        	// Direct to profile
+	        	mTabHost.setCurrentTab(2);
+	        } else {
+	        	// Otherwise to list view
+	        	mTabHost.setCurrentTab(0);
+	        }
+	    }		
 	}
 
 	@Override

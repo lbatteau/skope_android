@@ -52,8 +52,7 @@ public class UserSignupActivity extends BaseActivity {
 
 	private static class UserSignupForm {
 		public String email, password1, password2, firstName, lastName,
-		dateOfBirth;
-		public int gender;
+		dateOfBirth, gender;
 	}
 
 	private class SignupTask extends AsyncTask<UserSignupForm, Void, CustomHttpClient> {
@@ -79,7 +78,7 @@ public class UserSignupActivity extends BaseActivity {
 			client.addParam("first_name", mForm.firstName);
 			client.addParam("last_name", mForm.lastName);
 			client.addParam("date_of_birth", mForm.dateOfBirth);
-			client.addParam("gender", String.valueOf(mForm.gender));
+			client.addParam("gender", mForm.gender);
 
 			// Send HTTP request to web service
 			try {
@@ -241,7 +240,7 @@ public class UserSignupActivity extends BaseActivity {
 				if (checkedGenderId >= 0) {
 					String gender = ((RadioButton) findViewById(checkedGenderId))
 														.getText().toString();
-					mForm.gender = Arrays.asList(Cache.GENDER_CHOICES).indexOf(gender);
+					mForm.gender = gender;
 				}
 
 				new SignupTask().execute(mForm);

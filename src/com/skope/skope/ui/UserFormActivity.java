@@ -203,8 +203,7 @@ public class UserFormActivity extends BaseActivity {
 				if (checkedGenderId >= 0) {
 					String gender = ((RadioButton) findViewById(checkedGenderId))
 														.getText().toString();
-					int genderId = Arrays.asList(Cache.GENDER_CHOICES).indexOf(gender);
-					form.gender = String.valueOf(genderId);
+					form.gender = gender;
 				}
 
 				
@@ -228,7 +227,7 @@ public class UserFormActivity extends BaseActivity {
 				Spinner relationship = (Spinner) findViewById(R.id.relationship);
 				String value = (String) relationship.getSelectedItem();
 				if (value != null && !value.equals("")) {
-					form.relationship_status = String.valueOf(relationship.getSelectedItemPosition());
+					form.relationship_status = (String) relationship.getSelectedItem();
 				} else {
 					form.relationship_status = "";
 				}

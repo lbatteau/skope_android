@@ -90,6 +90,13 @@
             android:layout_weight="0"
             android:text="@string/edit" />
 
+        <Button
+            android:id="@+id/facebook_connect"
+            style="@style/FacebookConnect"
+            android:layout_width="160dip"
+            android:layout_height="38dip"
+            android:layout_weight="0" />
+
         <FrameLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"

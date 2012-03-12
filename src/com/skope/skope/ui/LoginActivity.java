@@ -34,6 +34,8 @@ public class LoginActivity extends BaseActivity {
 	String mUsername;
 	String mPassword;
 	
+	private SharedPreferences mPreferences;
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -41,6 +43,8 @@ public class LoginActivity extends BaseActivity {
 		
 		final String loginUrl = getCache().getProperty("skope_service_url") + "/login/";
 		
+		mPreferences = getCache().getPreferences();
+	    
 		// load up the layout
 		setContentView(R.layout.login);
 		
@@ -68,7 +72,7 @@ public class LoginActivity extends BaseActivity {
         	finish();	
 		}
 		
-		// Check if username and password already present
+        // Check if username and password already present
 		if (!username.equals("") && !password.equals("")) {
 			// Present, fill edit fields
 			EditText usernameEditText = (EditText) findViewById(R.id.txt_username);
@@ -107,7 +111,19 @@ public class LoginActivity extends BaseActivity {
 	        	startActivity(i);
 			}
 		});
+		
 	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+	}
+	
+	@Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+    }	
 	
 	private class LoginTask extends AsyncTask<String, Void, CustomHttpClient> {
 		private ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
@@ -169,9 +185,8 @@ public class LoginActivity extends BaseActivity {
 	        	
 	        	// Retrieve profile picture
 	        	if (user.getProfilePictureURL() != null) {
-		        	BMPFromURL bmpFromURL = new BMPFromURL(user.getProfilePictureURL());
-					if (bmpFromURL != null) {
-						Bitmap profilePicture = bmpFromURL.getBitmap();
+					Bitmap profilePicture = BMPFromURL.getBitmapFromURL(user.getProfilePictureURL());
+					if (profilePicture != null) {
 						user.setProfilePicture(profilePicture);
 					}
 	        	}
@@ -180,9 +195,6 @@ public class LoginActivity extends BaseActivity {
 				Log.e(SkopeApplication.LOG_TAG, e.toString());
 				return client;
 	        }
-	        
-	        // Mark login as first time
-	        user.setIsFirstTime(true);
 	        
 	        // Store the user in the cache
 	        getCache().setUser(user);
@@ -235,10 +247,10 @@ public class LoginActivity extends BaseActivity {
 	    	}
 
 	    	// Store credentials
-	        SharedPreferences.Editor prefsEditor = getCache().getPreferences().edit();
-	        prefsEditor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
-	        prefsEditor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
-	        prefsEditor.commit();
+	    	SharedPreferences.Editor editor = mPreferences.edit();
+	    	editor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
+	    	editor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
+	    	editor.commit();
 	        
 	        // Retrieve favorites
 	        Bundle favoritesBundle = new Bundle();
@@ -253,6 +265,5 @@ public class LoginActivity extends BaseActivity {
         	finish();	
 	    }
 	}
-
 	
 }

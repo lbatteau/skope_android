@@ -4,24 +4,32 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.http.HttpStatus;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -41,12 +49,21 @@ import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
+import com.facebook.android.DialogError;
+import com.facebook.android.Facebook;
+import com.facebook.android.Facebook.DialogListener;
+import com.facebook.android.FacebookError;
 import com.skope.skope.R;
 import com.skope.skope.application.Cache;
 import com.skope.skope.application.SkopeApplication;
 import com.skope.skope.application.User;
 import com.skope.skope.application.User.OnImageLoadListener;
 import com.skope.skope.application.UserPhoto;
+import com.skope.skope.http.BMPFromURL;
+import com.skope.skope.http.CustomHttpClient;
+import com.skope.skope.http.CustomHttpClient.RequestMethod;
 import com.skope.skope.http.ThumbnailManager;
 import com.skope.skope.service.LocationService;
 import com.skope.skope.util.Type;
@@ -70,6 +87,10 @@ public class UserProfileActivity extends BaseActivity {
 	private ProgressDialog mDialog;
 	private ProgressBar mPhotosProgressBar;
 	private TextView mPhotosLabel;
+	private SharedPreferences mPreferences;
+	
+	private Facebook mFacebook = new Facebook("390475844314781");
+	private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(mFacebook);
 	
 
 	 OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
@@ -87,6 +108,9 @@ public class UserProfileActivity extends BaseActivity {
 		
 		// load the layout
 		setContentView(R.layout.user);
+		
+		// Shared preferences
+		mPreferences = getCache().getPreferences();
 		
 		// Progress dialog
 		mDialog = new ProgressDialog(this);
@@ -216,7 +240,56 @@ public class UserProfileActivity extends BaseActivity {
 	                Log.d(TAG, "provider: " + provider.authority);
 	            }
 	        }
-	    }		
+	    }
+		
+		/*
+		 * FACEBOOK
+		 */
+		Button facebookConnect = (Button) findViewById(R.id.facebook_connect);
+		facebookConnect.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+		        
+		        /*
+		         * Only call authorize if the access_token has expired.
+		         */
+		        if(!mFacebook.isSessionValid() || true) {
+		        	mFacebook.authorize(UserProfileActivity.this,
+						new String[] {"email", "user_relationships", "user_hometown",
+		        			"user_education_history", "user_birthday", "user_work_history"},
+						new DialogListener() {
+			            @Override
+			            public void onComplete(Bundle values) {
+			            	SharedPreferences.Editor editor = mPreferences.edit();
+		                    editor.putString("access_token", mFacebook.getAccessToken());
+		                    editor.putLong("access_expires", mFacebook.getAccessExpires());
+		                    editor.commit();
+			            	Log.i("FB", values.toString());
+			            	
+			            	// get information about the currently logged in user
+			                mAsyncRunner.request("me", new FBMeRequestListener());
+			                
+			                new ExternalProfilePicture().execute("https://graph.facebook.com/me/picture?type=large&access_token=" + mFacebook.getAccessToken());
+			            }
+	
+			            @Override
+			            public void onFacebookError(FacebookError error) {
+			            	Log.e("FB", error.toString());
+			            }
+	
+			            @Override
+			            public void onError(DialogError e) {
+			            	Log.e("FB", e.toString());
+			            }
+	
+			            @Override
+			            public void onCancel() {}
+			        });
+		        }
+			}
+		});
+		
  	}
 	
 	@Override
@@ -266,7 +339,8 @@ public class UserProfileActivity extends BaseActivity {
 			}
 			}
 		}
-			
+		
+        mFacebook.authorizeCallback(requestCode, resultCode, data);
 	}
 	
 	@Override
@@ -340,11 +414,9 @@ public class UserProfileActivity extends BaseActivity {
 	protected void onResume() {
 		super.onResume();
 		
-		User user = getCache().getUser();
-		user.createUserProfile(mMainProfile, mInflater);
-		user.loadProfilePicture(mProfilePictureListener);
+		update();
 		
-		refreshUserPhotos(user);
+		mFacebook.extendAccessTokenIfNeeded(this, null);
 	}
 
 	@Override
@@ -396,6 +468,14 @@ public class UserProfileActivity extends BaseActivity {
 			User user = getCache().getUser();
 			refreshUserPhotos(user);
 		}
+	}
+	
+	private void update() {
+		User user = getCache().getUser();
+		user.createUserProfile(mMainProfile, mInflater);
+		user.loadProfilePicture(mProfilePictureListener);
+		
+		refreshUserPhotos(user);
 	}
 	
 	private void refreshUserPhotos(User user) {
@@ -460,5 +540,220 @@ public class UserProfileActivity extends BaseActivity {
         "IMG_"+ timeStamp + ".jpg");
     
 	    return mediaFile;
+	}
+	
+	private class ExternalProfilePicture extends AsyncTask<String, Void, Bitmap> {
+		protected Bitmap doInBackground(String... args) {
+            // Profile picture
+            return BMPFromURL.getBitmapFromURL(args[0]);
+		}
+		
+		protected void onPostExecute(Bitmap bitmap) {
+			storeProfilePicture(bitmap);
+		}		
+        
+	}
+	
+	private class UpdateTask extends AsyncTask<Object, Void, CustomHttpClient> {
+		// can use UI thread here
+		protected void onPreExecute() {
+			//mDialog.setMessage("Contacting server...");
+			//mDialog.show();
+		}
+
+		protected CustomHttpClient doInBackground(Object... args) {
+			String username = (String) args[0];
+			String password = (String) args[1];
+			String serviceUrl = getCache().getProperty("skope_service_url") + "/user/" + username + "/";
+			
+			// Set up HTTP client
+	        CustomHttpClient client = new CustomHttpClient(serviceUrl, getApplicationContext());
+	        client.setUseBasicAuthentication(true);
+	        client.setUsernamePassword(username, password);
+	        
+			// Add POST parameters
+			JSONObject response;
+			try {
+				response = new JSONObject((String) args[2]);
+			} catch (JSONException e1) { 
+				return client;
+			}
+			
+			// Unchanged
+			User user = getCache().getUser();
+			if (user.isSexPublic()) {
+				client.addParam("is_gender_public", "on");
+			}
+			if (user.isDateofBirthPublic()) {
+				client.addParam("is_date_of_birth_public", "on");
+			}	
+			
+			// Process FB response
+			try {
+				client.addParam("first_name", response.getString("first_name"));
+			} catch (JSONException e) {}
+			try {
+				client.addParam("last_name", response.getString("last_name"));
+			} catch (JSONException e) {}
+			try {
+				client.addParam("relationship_status", response.getString("relationship_status"));
+			} catch (JSONException e) {}
+			try {
+				client.addParam("home_town", response.getJSONObject("hometown").getString("name"));
+			} catch (JSONException e) {}
+			try {
+				JSONArray work = response.getJSONArray("work");
+				JSONObject latest = work.getJSONObject(0);
+				client.addParam("work_job_title", latest.getJSONObject("position").getString("name"));
+				client.addParam("work_company", latest.getJSONObject("employer").getString("name"));
+			} catch (JSONException e) {}
+			try {
+				JSONArray work = response.getJSONArray("education");
+				JSONObject latest = work.getJSONObject(0);
+				client.addParam("education_study", latest.getJSONObject("degree").getString("name"));
+				client.addParam("education_college", latest.getJSONObject("school").getString("name"));
+			} catch (JSONException e) {}
+			try {
+				SimpleDateFormat formatFrom = new SimpleDateFormat("MM/dd/yyyy");
+				Date birthday = formatFrom.parse(response.getString("birthday"));
+				SimpleDateFormat formatTo = new SimpleDateFormat("yyyy-MM-dd");
+				client.addParam("date_of_birth", formatTo.format(birthday));
+			} catch (Exception e) {}
+			try {
+				client.addParam("gender", response.getString("gender"));
+			} catch (JSONException e) {}
+
+			// Send HTTP request to web service
+			try {
+				client.execute(RequestMethod.PUT);
+			} catch (Exception e) {
+				// Most exceptions already handled by client
+				e.printStackTrace();
+			}
+			
+			// Return server response
+			return client;
+		}
+
+		protected void onPostExecute(CustomHttpClient client) {
+			//mDialog.dismiss();
+
+			// Check HTTP response code
+			int httpResponseCode = client.getResponseCode();
+			// Check for server response
+			if (httpResponseCode == 0) {
+				// No server response
+				Toast.makeText(UserProfileActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
+				return;
+			} else if (httpResponseCode == HttpStatus.SC_OK) {
+		        User user;
+		        try {
+		        	JSONObject jsonResponse = new JSONObject(client.getResponse());
+		        	user = new User(jsonResponse);
+		        	user.setCache(getCache());
+					getCache().setUser(user);
+		        } catch (JSONException e) {
+					// Log exception
+					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Toast.makeText(UserProfileActivity.this, "Invalid content", Toast.LENGTH_SHORT).show();
+					return;
+				}
+		        
+		        update();
+		        return;
+				
+			} else {
+				// Server returned error code
+				switch (client.getResponseCode()) {
+				case HttpStatus.SC_UNAUTHORIZED:
+					// Login not successful, authorization required
+					Toast.makeText(UserProfileActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_REQUEST_TIMEOUT:
+				case HttpStatus.SC_BAD_GATEWAY:
+				case HttpStatus.SC_GATEWAY_TIMEOUT:
+					// Connection timeout
+					Toast.makeText(
+							UserProfileActivity.this,
+							getResources().getText(R.string.error_connection_failed), Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+					Toast.makeText(
+							UserProfileActivity.this,
+							getResources().getText(R.string.error_server_error), Toast.LENGTH_SHORT).show();
+					break;
+				case HttpStatus.SC_BAD_REQUEST:
+					// Validation failed, extract form errors from response
+					JSONObject jsonResponse = null;
+					try {
+						jsonResponse = new JSONObject(client.getResponse());
+					} catch (JSONException e) {
+						// Log exception
+						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Toast.makeText(UserProfileActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
+						return;
+					}
+
+					if (jsonResponse.length() > 0) {
+						JSONArray fields = jsonResponse.names();
+						try {
+							JSONArray errorList = jsonResponse .getJSONArray(fields.getString(0));
+							String error = errorList.getString(0);
+							Toast.makeText(UserProfileActivity.this, error, Toast.LENGTH_LONG).show();
+						} catch (JSONException e) {
+							Log.e(SkopeApplication.LOG_TAG, e.toString());
+						}
+						break;
+					}
+					break;
+				default:
+					Toast.makeText(UserProfileActivity.this, String.valueOf(httpResponseCode), Toast.LENGTH_SHORT).show();
+					break;
+				}
+				return;
+			}
+		}
+	}
+	
+	private class FBMeRequestListener implements RequestListener {
+
+		@Override
+		public void onComplete(String response, Object state) {
+			// TODO Auto-generated method stub
+			Log.i("FB", response);
+			String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+			String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+			Object[] params = {username, password, response};
+			new UpdateTask().execute(params);
+			
+		}
+
+		@Override
+		public void onIOException(IOException e, Object state) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onFileNotFoundException(FileNotFoundException e,
+				Object state) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onMalformedURLException(MalformedURLException e,
+				Object state) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onFacebookError(FacebookError e, Object state) {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}	
+
 }

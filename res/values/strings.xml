@@ -68,7 +68,8 @@
         <item>Separated</item>
         <item>Divorced</item>
         <item>Widowed</item>
-        <item></item>
+        <item>In a civil union</item>
+        <item>In a domestic partnership</item>
     </string-array>
     <string name="user_gender_male">Male</string>
     <string name="user_gender_female">Female</string>
