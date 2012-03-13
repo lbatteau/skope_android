@@ -1,23 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="fill_parent"
-    android:layout_height="fill_parent" android:id="@+id/user"
-    android:background="@drawable/silver_reverse">
-    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/user_photo_grid"
+    android:id="@+id/user"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:background="@null"
-    android:columnWidth="60dip"
-    android:horizontalSpacing="2dip"
-    android:listSelector="@null"
-    android:numColumns="auto_fit"
-    android:paddingLeft="10dip"
-    android:paddingRight="10dip"
-    android:verticalSpacing="2dip"
-    android:isScrollContainer="false"
-    android:stretchMode="columnWidth" />
+    android:layout_height="fill_parent"
+    android:background="@drawable/silver_reverse"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:background="@drawable/tab_selector"
+        android:orientation="horizontal" >
+
+        <include
+            android:layout_width="60dip"
+            android:layout_height="fill_parent"
+            layout="@layout/detail_button_back" >
+        </include>
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableLeft="@drawable/expand_icon_photos_white"
+            android:drawablePadding="5dip"
+            android:text="@string/photos"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@android:color/white" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frameLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:background="@color/skope_grey_extra_dark" >
+    </FrameLayout>
+
+    <GridView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/user_photo_grid"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:columnWidth="60dip"
+        android:horizontalSpacing="2dip"
+        android:isScrollContainer="false"
+        android:listSelector="@null"
+        android:numColumns="auto_fit"
+        android:padding="10dip"
+        android:stretchMode="spacingWidthUniform"
+        android:verticalSpacing="5dip" />
+
 </LinearLayout>
-
-
-

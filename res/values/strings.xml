@@ -12,6 +12,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="at">at</string>
+    <string name="retrieving_data">Retrieving data</string>
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
     <string name="error_connection_failed">Connection failed. Please make sure you are connected to the internet.</string>
     <string name="error_image_upload_not_found">Sorry, image upload failed.</string>
@@ -86,10 +87,14 @@
     <string name="user_photos_add">Add photo</string>
     <string name="user_photos_none">No photos added yet</string>
     <string name="crash_toast_text">Unfortunately Skope just crashed. Please send us the crash report so we can fix things.</string>
+    <string name="favorites">Favorites</string>
+    <string name="photos">Photos</string>
     <string name="user_favorite_confirm_remove_title">Remove favorite</string>
     <string name="user_favorite_confirm_remove_message">Are you sure you want to remove %s from your favorites?</string>
     <string name="user_favorite_confirm_add_title">Add favorite</string>
     <string name="user_favorite_confirm_add_message">Add %s to your favorites?</string>
     <string name="user_report_title">Report user</string>
     <string name="user_report_message">If you have found %s to behave inappropriately, please let us know and we will take immediate action.</string>
+    <string name="facebook_connect_confirm_title">Replace profile?</string>
+    <string name="facebook_connect_confirm_message">Using Facebook Connect will replace your current profile and profile picture with your Facebook profile. Do you want to proceed?</string>
 </resources>

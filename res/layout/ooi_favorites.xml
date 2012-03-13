@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <FrameLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:orientation="horizontal"
+        android:background="@drawable/tab_selector" >
+
+        <include
+            android:layout_width="60dip"
+            android:layout_height="fill_parent"
+            layout="@layout/detail_button_back" >
+        </include>
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableLeft="@drawable/expand_icon_favorites_white"
+            android:drawablePadding="5dip"
+            android:text="@string/favorites"
+            android:textColor="@android:color/white"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </FrameLayout>
+    
+    <FrameLayout
+        android:id="@+id/frameLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:background="@color/skope_grey_extra_dark" >
+    </FrameLayout>
+    
+    <include layout="@layout/user_favorites"/>
+
+</LinearLayout>

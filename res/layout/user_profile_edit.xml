@@ -117,7 +117,7 @@
                 android:drawableLeft="@drawable/details_profile_icon_hometown"
                 android:drawablePadding="5dip"
                 android:inputType="textCapWords"
-                android:maxLength="20" />
+                android:maxLength="40" />
 
             <TextView
                 android:id="@+id/TextView01"
