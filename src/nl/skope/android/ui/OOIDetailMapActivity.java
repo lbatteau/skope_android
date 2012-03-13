@@ -144,7 +144,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 								@Override
 								public void onTaskDone(boolean isSuccess, String message) {
 									if (isSuccess) {
-										getCache().getUser().getFavorites().remove(mSelectedOOI.getId());
+										getCache().getUser().getFavorites().remove(new Integer(mSelectedOOI.getId()));
 										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_selector);
 									} else {
 										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
@@ -229,7 +229,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 								}
 							}
 						});
-						runner.execute(String.valueOf(mSelectedOOI.getId()), description.getText().toString());
+						runner.execute(mSelectedOOI.getId(), description.getText().toString());
 		            }
 		        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 		            public void onClick(DialogInterface dialog, int whichButton) {
@@ -752,7 +752,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 
 	}
 	
-	protected class UserReport extends AsyncTask<String, Void, CustomHttpClient> {
+	protected class UserReport extends AsyncTask<Object, Void, CustomHttpClient> {
 		AsyncTaskListener mListener;
 		
 		@Override
@@ -761,7 +761,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		}
 
 		@Override
-		protected CustomHttpClient doInBackground(String... params) {
+		protected CustomHttpClient doInBackground(Object... params) {
 			int userId = mCache.getUser().getId();
 			String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 			String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
@@ -771,7 +771,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	        CustomHttpClient client = new CustomHttpClient(serviceUrl, OOIDetailMapActivity.this);
 	        client.setUseBasicAuthentication(true);
 	        client.setUsernamePassword(username, password);
-	        client.addParam("message", params[1]);
+	        client.addParam("message", (String) params[1]);
 	        
 	        // Send HTTP request to web service
 	        try {

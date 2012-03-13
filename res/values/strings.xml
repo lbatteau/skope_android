@@ -95,6 +95,6 @@
     <string name="user_favorite_confirm_add_message">Add %s to your favorites?</string>
     <string name="user_report_title">Report user</string>
     <string name="user_report_message">If you have found %s to behave inappropriately, please let us know and we will take immediate action.</string>
-    <string name="facebook_connect_confirm_title">Replace profile?</string>
-    <string name="facebook_connect_confirm_message">Using Facebook Connect will replace your current profile and profile picture with your Facebook profile. Do you want to proceed?</string>
+    <string name="facebook_connect_confirm_title">Connect with Facebook?</string>
+    <string name="facebook_connect_confirm_message">Using Facebook Connect will overwrite your Skope profile and profile picture with your Facebook profile and profile picture. Do you want to proceed?</string>
 </resources>

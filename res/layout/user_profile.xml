@@ -165,11 +165,6 @@
             android:layout_weight="0"
             android:text="@string/user_photos_add" />
 
-        <FrameLayout
-            android:id="@+id/frameLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
-        </FrameLayout>
     </LinearLayout>
 
 </ScrollView>

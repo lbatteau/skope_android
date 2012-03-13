@@ -348,9 +348,10 @@ public class User implements Parcelable {
 		}
 		
 		if (mWorkCompany != null  && !mWorkCompany.equals("")) {
-			if (mWorkJobTitle != null && !mWorkJobTitle.equals("")) {
-				label += " at ";
+			if (mWorkJobTitle == null || mWorkJobTitle.equals("")) {
+				label += "Works";
 			}
+			label += " at ";
 			label += mWorkCompany;
 		}
 		return label;

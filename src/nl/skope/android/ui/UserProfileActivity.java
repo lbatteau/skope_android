@@ -233,14 +233,14 @@ public class UserProfileActivity extends BaseActivity {
 		// Photos label
 		mPhotosLabel = (TextView) mMainProfile.findViewById(R.id.user_photo_label);
 
-		for (PackageInfo pack : getPackageManager().getInstalledPackages(PackageManager.GET_PROVIDERS)) {
+		/*for (PackageInfo pack : getPackageManager().getInstalledPackages(PackageManager.GET_PROVIDERS)) {
 	        ProviderInfo[] providers = pack.providers;
 	        if (providers != null) {
 	            for (ProviderInfo provider : providers) {
 	                Log.d(TAG, "provider: " + provider.authority);
 	            }
 	        }
-	    }
+	    }*/
 		
 		/*
 		 * FACEBOOK
@@ -264,8 +264,9 @@ public class UserProfileActivity extends BaseActivity {
 				         */
 				        if(!mFacebook.isSessionValid() || true) {
 				        	mFacebook.authorize(UserProfileActivity.this,
-								new String[] {"email", "user_relationships", "user_hometown",
-				        			"user_education_history", "user_birthday", "user_work_history"},
+								new String[] {"user_relationships", "user_hometown", "user_location",
+				        			"user_education_history", "user_birthday", "user_work_history",
+				        			"publish_stream"},
 								new DialogListener() {
 					            @Override
 					            public void onComplete(Bundle values) {
@@ -281,7 +282,6 @@ public class UserProfileActivity extends BaseActivity {
 					            	// get information about the currently logged in user
 					                mAsyncRunner.request("me", new FBMeRequestListener());
 					                
-					                new ExternalProfilePicture().execute("https://graph.facebook.com/me/picture?type=large&access_token=" + mFacebook.getAccessToken());
 					            }
 			
 					            @Override
@@ -473,17 +473,17 @@ public class UserProfileActivity extends BaseActivity {
 			mDialog.show();
 			break;
 		case UPLOAD_PROFILE_PICTURE_END:
-			mDialog.hide();
+			mDialog.dismiss();
 			String profilePictureURL = bundle.getString("profile_picture_url");
 			getCache().getUser().setProfilePictureURL(profilePictureURL);
-			mProfilePictureView.setImageBitmap(getCache().getUser().getProfilePicture());
+			mProfilePictureView.setImageBitmap(getCache().getUser().getProfilePicture());			
 			break;
 		case UPLOAD_IMAGE_START:
 			mDialog.setMessage(getResources().getString(R.string.user_profile_uploading_image));
 			mDialog.show();
 			break;
 		case UPLOAD_IMAGE_END:
-			mDialog.hide();
+			mDialog.dismiss();
 			User user = getCache().getUser();
 			refreshUserPhotos(user);
 		}
@@ -606,7 +606,8 @@ public class UserProfileActivity extends BaseActivity {
 			}
 			if (user.isDateofBirthPublic()) {
 				client.addParam("is_date_of_birth_public", "on");
-			}	
+			}
+			client.addParam("status_message", user.getStatus());
 			
 			// Process FB response
 			try {
@@ -619,19 +620,28 @@ public class UserProfileActivity extends BaseActivity {
 				client.addParam("relationship_status", response.getString("relationship_status"));
 			} catch (JSONException e) {}
 			try {
-				client.addParam("home_town", response.getJSONObject("hometown").getString("name"));
+				client.addParam("home_town", response.getJSONObject("location").getString("name"));
 			} catch (JSONException e) {}
 			try {
 				JSONArray work = response.getJSONArray("work");
 				JSONObject latest = work.getJSONObject(0);
-				client.addParam("work_job_title", latest.getJSONObject("position").getString("name"));
-				client.addParam("work_company", latest.getJSONObject("employer").getString("name"));
+				try {
+					client.addParam("work_job_title", latest.getJSONObject("position").getString("name"));
+				} catch (JSONException e) {}
+				try {
+					client.addParam("work_company", latest.getJSONObject("employer").getString("name"));
+				} catch (JSONException e) {}
 			} catch (JSONException e) {}
 			try {
 				JSONArray work = response.getJSONArray("education");
 				JSONObject latest = work.getJSONObject(0);
-				client.addParam("education_study", latest.getJSONObject("degree").getString("name"));
-				client.addParam("education_college", latest.getJSONObject("school").getString("name"));
+				try {
+					JSONObject concentration = latest.getJSONArray("concentration").getJSONObject(0);
+					client.addParam("education_study", concentration.getString("name"));
+				} catch (JSONException e) {}
+				try {
+					client.addParam("education_college", latest.getJSONObject("school").getString("name"));
+				} catch (JSONException e) {}
 			} catch (JSONException e) {}
 			try {
 				SimpleDateFormat formatFrom = new SimpleDateFormat("MM/dd/yyyy");
@@ -677,7 +687,11 @@ public class UserProfileActivity extends BaseActivity {
 					return;
 				}
 		        
-		        update();
+		        // Update profile
+		        user.createUserProfile(mMainProfile, mInflater);
+		        
+                new ExternalProfilePicture().execute("https://graph.facebook.com/me/picture?type=large&access_token=" + mFacebook.getAccessToken());
+
 		        return;
 				
 			} else {
