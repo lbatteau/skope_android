@@ -78,30 +78,31 @@
             <include
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 layout="@layout/user_info_block" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/buttons"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:paddingTop="0dip"
+            android:paddingRight="10dip"
+            android:paddingLeft="10dip"
+            android:paddingBottom="10dip" >
 
             <Button
                 android:id="@+id/button_edit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5dip"
-                android:layout_marginRight="5dip"
-                android:layout_weight="0"
+                android:layout_marginRight="10dip"
                 android:text="@string/edit" />
 
             <Button
                 android:id="@+id/facebook_connect"
                 style="@style/FacebookConnect"
-                android:layout_width="120dip"
-                android:layout_height="30dip"
-                android:layout_weight="0" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Facebook Connect" />
         </LinearLayout>
 
         <FrameLayout

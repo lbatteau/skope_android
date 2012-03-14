@@ -1,5 +1,6 @@
 package nl.skope.android.ui;
 
+import nl.skope.android.R;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.http.CustomHttpClient;
@@ -19,17 +20,15 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import nl.skope.android.R;
 
 public class LoginActivity extends BaseActivity {
 	String mUsername;
@@ -49,13 +48,6 @@ public class LoginActivity extends BaseActivity {
 		// load up the layout
 		setContentView(R.layout.login);
 		
-		// Set the closed beta text
-		TextView text = (TextView) findViewById(R.id.text_closedbeta);
-		text.setText(Html.fromHtml("This is a beta release.<br> Please visit <a href=\"http://www.skope.net\">www.skope.net</a> for more information!"));
-		// Otherwise link has no response
-		// http://stackoverflow.com/questions/2734270/how-do-i-make-links-in-a-textview-clickable
-		text.setMovementMethod(LinkMovementMethod.getInstance());
-
 		// Read username and password from shared preferences
 		String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");

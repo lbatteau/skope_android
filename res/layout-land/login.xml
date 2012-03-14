@@ -8,7 +8,7 @@
     <FrameLayout
         android:id="@+id/header"
         android:layout_width="fill_parent"
-        android:layout_height="160dip"
+        android:layout_height="140dip"
         android:background="@drawable/header_gradient" >
 
         <ImageView
@@ -36,32 +36,40 @@
         android:paddingRight="16dip"
         android:paddingTop="20dip" >
 
-        <EditText
-            android:id="@+id/txt_username"
+        <LinearLayout
+            android:id="@+id/inputs"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dip"
-            android:hint="@string/login_hint_user"
-            android:imeOptions="actionNext"
-            android:inputType="textEmailAddress|textNoSuggestions"
-            android:maxLength="255"
-            android:maxLines="1" >
+            android:layout_height="wrap_content" >
 
-            <requestFocus>
-            </requestFocus>
-        </EditText>
+            <EditText
+                android:id="@+id/txt_username"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dip"
+                android:layout_weight="1"
+                android:hint="@string/login_hint_user"
+                android:imeOptions="actionNext"
+                android:inputType="textEmailAddress|textNoSuggestions"
+                android:maxLength="255"
+                android:maxLines="1" >
 
-        <EditText
-            android:id="@+id/txt_password"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dip"
-            android:hint="@string/login_hint_password"
-            android:imeOptions="actionNext"
-            android:inputType="textPassword"
-            android:maxLength="255"
-            android:maxLines="1" >
-        </EditText>
+                <requestFocus>
+                </requestFocus>
+            </EditText>
+
+            <EditText
+                android:id="@+id/txt_password"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dip"
+                android:layout_weight="1"
+                android:hint="@string/login_hint_password"
+                android:imeOptions="actionNext"
+                android:inputType="textPassword"
+                android:maxLength="255"
+                android:maxLines="1" >
+            </EditText>
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/linearLayout1"

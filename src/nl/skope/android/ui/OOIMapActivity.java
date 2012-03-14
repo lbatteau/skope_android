@@ -115,11 +115,11 @@ public abstract class OOIMapActivity extends MapActivity {
 	protected OOIOverlayItem createOverlay(User user) {
 		// Create the drawable containing a profile picture 
         final LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicWidth(), getResources().getDisplayMetrics());
-	    int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicHeight(), getResources().getDisplayMetrics());
+        final int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicWidth(), getResources().getDisplayMetrics());
+	    final int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicHeight(), getResources().getDisplayMetrics());
 	    Bitmap profilePicture = user.getProfilePicture();
 	    if (profilePicture != null) {
-	    	Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, true));
+	    	Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, false));
 	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);
 	    } else {
 	    	// Lazy loading
@@ -128,8 +128,8 @@ public abstract class OOIMapActivity extends MapActivity {
 				
 				@Override
 				public void onImageLoaded(Bitmap profilePicture) {
-					mMapView.invalidateDrawable(marker);
-					
+					Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, false));
+			    	marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);					
 				}
 			});
 	    }

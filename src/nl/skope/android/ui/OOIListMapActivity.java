@@ -160,9 +160,17 @@ public class OOIListMapActivity extends OOIMapActivity {
 		for (ArrayList<ObjectOfInterest> cluster: mClusters) {
 			// Check length of cluster
 			if (cluster.size() > 1) {
-				// Multiple objects in cluster, create cluster overlay
-				//ooiPin = createClusteredPin(cluster, cluster.size());
-				ooiOverlay.addOverlay(createClusterOverlay(cluster));
+				// Multiple objects in cluster
+				if (mMapView.getZoomLevel() == mMapView.getMaxZoomLevel()) {
+					// Max zoom level, add all objects in cluster
+					for (ObjectOfInterest ooi: cluster) {
+						ooiOverlay.addOverlay(createOverlay(ooi));
+					}
+				} else {
+					// Create cluster overlay
+					//ooiPin = createClusteredPin(cluster, cluster.size());
+					ooiOverlay.addOverlay(createClusterOverlay(cluster));
+				}
 			} else {
 				// One object in cluster, create regular overlay
 				ooiOverlay.addOverlay(createOverlay(cluster.get(0)));	

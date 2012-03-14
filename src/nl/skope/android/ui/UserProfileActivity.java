@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,9 +36,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ProviderInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
@@ -393,7 +391,6 @@ public class UserProfileActivity extends BaseActivity {
 	}
 	
 	protected void storeProfilePicture(Bitmap bitmap) {
-		getCache().getUser().setProfilePicture(bitmap);
 		// Prevents current profile picture from being reloaded
 		// before the new one is finished uploading
 		getCache().getUser().setProfilePictureURL("");
@@ -476,7 +473,7 @@ public class UserProfileActivity extends BaseActivity {
 			mDialog.dismiss();
 			String profilePictureURL = bundle.getString("profile_picture_url");
 			getCache().getUser().setProfilePictureURL(profilePictureURL);
-			mProfilePictureView.setImageBitmap(getCache().getUser().getProfilePicture());			
+			getCache().getUser().loadProfilePicture(mProfilePictureListener);
 			break;
 		case UPLOAD_IMAGE_START:
 			mDialog.setMessage(getResources().getString(R.string.user_profile_uploading_image));
@@ -492,7 +489,10 @@ public class UserProfileActivity extends BaseActivity {
 	private void update() {
 		User user = getCache().getUser();
 		user.createUserProfile(mMainProfile, mInflater);
-		user.loadProfilePicture(mProfilePictureListener);
+		
+		if (user.getProfilePictureURL() != null && !user.getProfilePictureURL().equals("")) {
+			user.loadProfilePicture(mProfilePictureListener);
+		}
 		
 		refreshUserPhotos(user);
 	}
@@ -624,7 +624,7 @@ public class UserProfileActivity extends BaseActivity {
 			} catch (JSONException e) {}
 			try {
 				JSONArray work = response.getJSONArray("work");
-				JSONObject latest = work.getJSONObject(0);
+				JSONObject latest = findMostRecentWorkItem(work);
 				try {
 					client.addParam("work_job_title", latest.getJSONObject("position").getString("name"));
 				} catch (JSONException e) {}
@@ -633,8 +633,8 @@ public class UserProfileActivity extends BaseActivity {
 				} catch (JSONException e) {}
 			} catch (JSONException e) {}
 			try {
-				JSONArray work = response.getJSONArray("education");
-				JSONObject latest = work.getJSONObject(0);
+				JSONArray education = response.getJSONArray("education");
+				JSONObject latest = findMostRecentEducationItem(education);
 				try {
 					JSONObject concentration = latest.getJSONArray("concentration").getJSONObject(0);
 					client.addParam("education_study", concentration.getString("name"));
@@ -663,6 +663,106 @@ public class UserProfileActivity extends BaseActivity {
 			
 			// Return server response
 			return client;
+		}
+		
+		/**
+		 * Find the most recent work item in the JSONArray returned by the
+		 * Facebook Graph API.
+		 * @param array The list of items
+		 * @return The JSONObject with the most recent start date
+		 */
+		private JSONObject findMostRecentWorkItem(JSONArray array) {
+			JSONObject mostRecentItem = null;
+			Date date, mostRecentDate = null;
+			for (int i=0; i<array.length(); i++) {
+				// Get object at index
+				JSONObject item;
+				try {
+					item = array.getJSONObject(i);
+				} catch (JSONException e) {
+					continue;
+				}
+				
+				// Extract date
+				SimpleDateFormat formatFrom = new SimpleDateFormat("yyyy-MM");
+				try {
+					date = formatFrom.parse(item.getString("start_date"));
+				} catch (ParseException e) {
+					continue;
+				} catch (JSONException e) {
+					continue;
+				}
+				
+				// Compare
+				if (mostRecentDate == null) {
+					// First date found
+					mostRecentDate = date;
+					mostRecentItem = item;
+				} else {
+					// Check if current date is after our most recent date 
+					if (date.after(mostRecentDate)) {
+						// After, replace most recent date
+						mostRecentDate = date;
+						mostRecentItem = item;
+					}
+				}
+			}
+			
+			return mostRecentItem;
+		}
+
+		/**
+		 * Find the most recent education item in the JSONArray returned by 
+		 * the Facebook Graph API.
+		 * @param array The list of items
+		 * @return The JSONObject with the most recent start date
+		 */
+		private JSONObject findMostRecentEducationItem(JSONArray array) {
+			JSONObject mostRecentItem = null;
+			Date date, mostRecentDate = null;
+			for (int i=0; i<array.length(); i++) {
+				// Get object at index
+				JSONObject item;
+				try {
+					item = array.getJSONObject(i);
+				} catch (JSONException e) {
+					continue;
+				}
+				
+				// Check if data present
+				if (!item.has("year")) {
+					// Education containing field year is in the past
+					mostRecentDate = new Date();
+					mostRecentItem = item;
+					continue;
+				}
+				
+				// Extract date
+				SimpleDateFormat formatFrom = new SimpleDateFormat("yyyy");
+				try {
+					date = formatFrom.parse(item.getJSONObject("year").getString("name"));
+				} catch (ParseException e) {
+					continue;
+				} catch (JSONException e) {
+					continue;
+				}
+				
+				// Compare
+				if (mostRecentDate == null) {
+					// First date found
+					mostRecentDate = date;
+					mostRecentItem = item;
+				} else {
+					// Check if current date is after our most recent date 
+					if (date.after(mostRecentDate)) {
+						// After, replace most recent date
+						mostRecentDate = date;
+						mostRecentItem = item;
+					}
+				}
+			}
+			
+			return mostRecentItem;
 		}
 
 		protected void onPostExecute(CustomHttpClient client) {

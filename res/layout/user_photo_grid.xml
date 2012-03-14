@@ -3,7 +3,7 @@
     android:id="@+id/user"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/silver_reverse"
+    android:background="@drawable/silver"
     android:orientation="vertical">
 
     <FrameLayout
