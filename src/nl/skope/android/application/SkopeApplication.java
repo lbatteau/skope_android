@@ -35,6 +35,9 @@ public class SkopeApplication extends Application {
     /** Application wide constants **/
 	public static final String PREFS_USERNAME = "USERNAME";
 	public static final String PREFS_PASSWORD = "PASSWORD";
+	public static final String PREFS_USERID = "USERID";
+	public static final String PREFS_C2DM_REGISTRATIONID = "REGISTRATIONID";
+	public static final String PREFS_C2DM_REGISTRATIONTIMESTAMP = "REGISTRATIONTIMESTAMP";
 	public static final String PREFS_RANGE = "RANGE";
 
 	/** Skope server response codes **/

@@ -1,9 +1,9 @@
 package nl.skope.android.ui;
 
+import nl.skope.android.R;
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
-import nl.skope.android.application.User;
 import nl.skope.android.util.Type;
 import android.app.TabActivity;
 import android.content.Context;
@@ -16,12 +16,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
 
-import nl.skope.android.R;
-
 public class MainTabActivity extends TabActivity {
 	public final static int TAB_LIST = 0;
 	public final static int TAB_MAP = 1;
 	public final static int TAB_PROFILE = 2;
+	public final static int TAB_CHAT = 3;
+	public final static int TAB_FAVORITES = 4;
 	
 	private SkopeApplication mApplication;
 	private Cache mCache;
@@ -36,20 +36,7 @@ public class MainTabActivity extends TabActivity {
 	    mCache = mApplication.getCache();
 	    mServiceQueue = mApplication.getServiceQueue();
 	    
-    	User user = mCache.getUser();
-    	
-    	// Cache empty?
-    	if (user == null) {
-    		// Redirect to login screen
-    		Intent i = new Intent();
-        	i.setClassName("nl.skope.android",
-        				   "nl.skope.android.ui.LoginActivity");
-        	startActivity(i);
-        	finish();
-        	return;
-    	}
-    	
-	    mTabHost = getTabHost();  // The activity TabHost
+		mTabHost = getTabHost();  // The activity TabHost
 	    TabHost.TabSpec spec;  // Reusable TabSpec for each tab
 	    Intent intent;  // Reusable Intent for each tab
 
@@ -78,7 +65,7 @@ public class MainTabActivity extends TabActivity {
 	    spec = mTabHost.newTabSpec("profile").setIndicator(tabProfile).setContent(intent);
         mTabHost.addTab(spec);
 	    
-	    intent = new Intent().setClass(this, UserProfileActivity.class);
+	    intent = new Intent().setClass(this, UserChatsActivity.class);
 	    spec = mTabHost.newTabSpec("chat").setIndicator(chatProfile).setContent(intent);
         mTabHost.addTab(spec);
 	    

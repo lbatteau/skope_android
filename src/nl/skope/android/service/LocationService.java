@@ -98,7 +98,7 @@ public class LocationService extends Service implements LocationListener  {
 	@Override
 	public void onCreate() {
         SkopeApplication skopeApplication = (SkopeApplication) getApplication();
-        Log.i(SkopeApplication.LOG_TAG, "MyService.onCreate() " + "myApplication["
+        Log.i(SkopeApplication.LOG_TAG, "LocationService.onCreate() " + "Skope["
                 + skopeApplication + "]");
         mCache = skopeApplication.getCache();
         mUiQueue = skopeApplication.getUiQueue();
@@ -122,7 +122,7 @@ public class LocationService extends Service implements LocationListener  {
 		m_locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		
 		// Get the notification manager
-		m_notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		m_notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		// Determine mLocation. Start with fine.
 		m_currentLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -233,7 +233,7 @@ public class LocationService extends Service implements LocationListener  {
 
         // The PendingIntent to launch our activity if the user selects this notification
         Intent intent = new Intent(this, MainTabActivity.class);
-        //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
 

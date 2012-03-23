@@ -78,7 +78,7 @@ public class Cache {
     private ObjectOfInterestList mObjectOfInterestList;
     
     /** The list of user favorites **/
-    private ObjectOfInterestList mUserFavoritesList;
+    private ObjectOfInterestList mUserFavoritesList, mUserChatsList;
     
     /** The current mLocation */
     private Location mCurrentLocation;
@@ -89,7 +89,7 @@ public class Cache {
     /** The current user */
     private User user;
     
-    private boolean mUserSignedOut = false;
+    private boolean mUserSignedOut = true;
     
     // Hard cache, with a fixed maximum capacity and a life duration
     private final HashMap<String, Bitmap> sHardBitmapCache =
@@ -162,6 +162,7 @@ public class Cache {
         
         mObjectOfInterestList = new ObjectOfInterestList();
         mUserFavoritesList = new ObjectOfInterestList();
+        mUserChatsList = new ObjectOfInterestList();
         
     }
 
@@ -407,6 +408,10 @@ public class Cache {
 
 	public ObjectOfInterestList getUserFavoritesList() {
 		return mUserFavoritesList;
+	}
+
+	public ObjectOfInterestList getUserChatsList() {
+		return mUserChatsList;
 	}
 
 	public boolean isUserSignedOut() {

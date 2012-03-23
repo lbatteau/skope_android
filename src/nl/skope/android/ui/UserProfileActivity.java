@@ -260,7 +260,7 @@ public class UserProfileActivity extends BaseActivity {
 		            	/*
 				         * Only call authorize if the access_token has expired.
 				         */
-				        if(!mFacebook.isSessionValid() || true) {
+				        if(!mFacebook.isSessionValid()) {
 				        	mFacebook.authorize(UserProfileActivity.this,
 								new String[] {"user_relationships", "user_hometown", "user_location",
 				        			"user_education_history", "user_birthday", "user_work_history",

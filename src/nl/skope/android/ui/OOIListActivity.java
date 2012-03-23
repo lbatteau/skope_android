@@ -321,8 +321,9 @@ public class OOIListActivity extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-		updateStatusBar();
-
+		if (performCheckUp()) {
+			getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+			updateStatusBar();
+		}
 	}
 }

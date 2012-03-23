@@ -167,6 +167,14 @@ public class WorkerThread extends Thread {
             	readUserFavorites(bundle);
             	break;
 
+            case READ_USER_CHATS:
+            	readUserChats(bundle);
+            	break;
+            
+            case READ_USER_CHAT_MESSAGES:
+            	readUserChatMessages(bundle);
+            	break;
+
             case DO_LONG_TASK:
                 doLongTask(bundle);
                 break;
@@ -382,6 +390,124 @@ public class WorkerThread extends Thread {
                             + bundle.getString("TEXT") + "]");
             mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
         }*/
+    }
+
+
+    /***
+     * Reads the list of user chats
+     */
+    private void readUserChats(final Bundle bundle) {
+    	ObjectOfInterestList chatsList = new ObjectOfInterestList();
+    	JSONArray jsonResponse = null;
+    	Location currentLocation = mCache.getCurrentLocation();
+
+    	mUiQueue.postToUi(Type.READ_USER_CHATS_START, null, true);
+    	
+		// Bundle present, extract mId
+		int userId = bundle.getInt("USER_ID");
+
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + userId + "/chat/";
+		
+		// Set up HTTP client
+        CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        // Send HTTP request to web service
+        try {
+            client.execute(RequestMethod.GET);
+        } catch (Exception e) {
+        	// Most exceptions already handled by client
+            e.printStackTrace();
+        }
+        
+        String response = client.getResponse();
+        
+        if (response == null) {
+        	return;
+        } else {
+        	// Extract JSON data from response
+	        try {
+	        	jsonResponse = new JSONArray(response);
+			} catch (JSONException e) {
+				// Log exception
+				Log.e(SkopeApplication.LOG_TAG, e.toString());
+			}
+			
+			// Copy the JSON list of objects to our OOI list
+			for (int i=0; i < jsonResponse.length(); i++) {
+				try {
+					JSONObject jsonObject = jsonResponse.getJSONObject(i);
+					
+					// Create new object of interest
+					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					objectOfInterest.setCache(mCache);
+					
+					if (currentLocation != null) {
+						// Set distance
+						objectOfInterest.setDistanceToLocation(currentLocation);
+					}
+					
+					// Add to list
+					chatsList.add(objectOfInterest);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}				
+        }
+        
+        mCache.getUserChatsList().update(chatsList);
+        
+        mUiQueue.postToUi(Type.READ_USER_CHATS_END, null, true);
+
+        /*if (bundle != null) {
+            Bundle outBundle = new Bundle();
+            outBundle.putString("TEXT",
+                    "Searching objects of interest finished. Called from ["
+                            + bundle.getString("TEXT") + "]");
+            mUiQueue.postToUi(Type.SHOW_DIALOG, outBundle, false);
+        }*/
+    }
+
+
+    /***
+     * Reads the list of user chats
+     */
+    private void readUserChatMessages(final Bundle bundle) {
+    	mUiQueue.postToUi(Type.READ_USER_CHAT_MESSAGES_START, null, true);
+    	
+		// Bundle present, extract mId
+    	int userId = mCache.getUser().getId();
+		int userFromId = bundle.getInt("USER_ID");
+
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String serviceUrl = String.format("%s/user/%d/chat/%d/", 
+								mCache.getProperty("skope_service_url"),
+								userId ,
+								userFromId);
+		
+		// Set up HTTP client
+        CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        // Send HTTP request to web service
+        try {
+            client.execute(RequestMethod.GET);
+        } catch (Exception e) {
+        	// Most exceptions already handled by client
+            e.printStackTrace();
+        }
+        
+        String response = client.getResponse();
+        
+        Bundle outBundle = new Bundle();
+        outBundle.putString("response", response);
+        mUiQueue.postToUi(Type.READ_USER_CHAT_MESSAGES_END, outBundle, false);
     }
 
 
