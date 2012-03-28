@@ -72,7 +72,7 @@ public class BaseActivity extends Activity {
 		super.onCreate(savedInstanceState);
 	}
 	
-	protected boolean performCheckUp() {
+	protected boolean checkCacheSanity() {
 		// Check user signed out
 		if (cache.isUserSignedOut()) {
 			// User signed out, always go to login screen

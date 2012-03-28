@@ -295,7 +295,10 @@ public class UserProfileActivity extends BaseActivity {
 					            @Override
 					            public void onCancel() {}
 					        });
-				        }		            	
+				        } else {
+				    		// get information about the currently logged in user
+				        	mAsyncRunner.request("me", new FBMeRequestListener());
+				        }
 		            }
 		        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 		            public void onClick(DialogInterface dialog, int whichButton) {
@@ -430,9 +433,12 @@ public class UserProfileActivity extends BaseActivity {
 	protected void onResume() {
 		super.onResume();
 		
-		update();
+		if (checkCacheSanity()) {
+			update();
+
+			mFacebook.extendAccessTokenIfNeeded(this, null);
+		}
 		
-		mFacebook.extendAccessTokenIfNeeded(this, null);
 	}
 
 	@Override

@@ -29,9 +29,12 @@ import android.os.Vibrator;
 import android.util.Log;
 
 public class C2DMBroadcastReceiver extends BroadcastReceiver {
+	public final static String C2DM_MESSAGE_ID = "id";
 	public final static String C2DM_MESSAGE_SENDER = "sender";
 	public final static String C2DM_MESSAGE_THUMBNAIL = "thumbnail";
 	public final static String C2DM_MESSAGE_CONTENT = "content";
+	public final static String C2DM_MESSAGE_USERID = "user_id";
+	public final static String C2DM_MESSAGE_TIMESTAMP = "timestamp";
 
 	SharedPreferences mPreferences;
 	String mRegistrationId;
@@ -103,9 +106,10 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 	private void handleMessage(Context context, Intent intent) {
 		String content = intent.getExtras().getString(C2DM_MESSAGE_CONTENT);
 		String sender = intent.getExtras().getString(C2DM_MESSAGE_SENDER);
+		int userId = Integer.parseInt(intent.getExtras().getString(C2DM_MESSAGE_USERID));
 		
 		// Show notification
-		CharSequence text = context.getText(R.string.message_received);
+		CharSequence text = String.format("%s: %s", sender, content);
 
 		// Set the icon, scrolling text and timestamp
 		Notification notification = new Notification(R.drawable.ic_launcher,
@@ -115,31 +119,26 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 		// notification
 		Intent notificationIntent = new Intent(context, GatewayActivity.class);
 		notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		Bundle bundle = new Bundle();
-		bundle.putInt("TAB", MainTabActivity.TAB_CHAT);
-		notificationIntent.putExtras(bundle);
-		
+		notificationIntent.putExtras(intent.getExtras());
+		notificationIntent.putExtra(SkopeApplication.BUNDLEKEY_USERID, userId);
+		notificationIntent.putExtra(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY, "nl.skope.android.ui.OOIChatActivity");
 
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, 0);
 
 		// Set the info for the views that show in the notification panel.
-		notification
-				.setLatestEventInfo(context, sender, content, contentIntent);
+		notification.setLatestEventInfo(context, sender, content, contentIntent);
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
 		// Send the notification
-		NotificationManager notificationManager = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
+		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.notify(sender, 0, notification);
 
 		// Get instance of Vibrator from current Context
-		Vibrator v = (Vibrator) context
-				.getSystemService(Context.VIBRATOR_SERVICE);
+		Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 
 		// Vibrate for 300 milliseconds
 		v.vibrate(300);
-
 	}
 	
 	protected class UserC2DMRegister extends

@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 public class GatewayActivity extends BaseActivity {
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -75,15 +74,25 @@ public class GatewayActivity extends BaseActivity {
 		/**
 		 * Everything seems OK, proceed
 		 */
-        Intent i = new Intent();
-    	i.setClassName("nl.skope.android",
-    				   "nl.skope.android.ui.MainTabActivity");
-		if (getIntent() != null) {
-	        i.putExtras(getIntent().getExtras());			
+		
+		Intent i = new Intent();
+		// Check if redirect present in intent
+		if (getIntent() != null 
+			&& getIntent().hasExtra(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY)) {
+			// Redirect present, set target activity
+			String redirectActivity = getIntent().getExtras().getString(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY);
+			i.setClassName("nl.skope.android", redirectActivity);
+			i.putExtras(getIntent().getExtras());
+		} else {
+			// No redirect, target activity is home
+			i.setClassName("nl.skope.android",
+			   "nl.skope.android.ui.MainTabActivity");
+			if (getIntent() != null && getIntent().getExtras() != null) {
+				i.putExtras(getIntent().getExtras());
+			}
 		}
     	startActivity(i);
     	finish();	
 
 	}
-
 }

@@ -224,14 +224,16 @@ public class UserFavoritesActivity extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		int userId; 
-		Bundle bundle = new Bundle();
-		if (getIntent() != null && getIntent().getExtras() != null) {
-			userId = getIntent().getExtras().getInt("USER_ID");
-		} else {
-			userId = getCache().getUser().getId();
+		if (checkCacheSanity()) {
+			int userId; 
+			Bundle bundle = new Bundle();
+			if (getIntent() != null && getIntent().getExtras() != null) {
+				userId = getIntent().getExtras().getInt("USER_ID");
+			} else {
+				userId = getCache().getUser().getId();
+			}
+			bundle.putInt("USER_ID", userId);
+			getServiceQueue().postToService(Type.READ_USER_FAVORITES, bundle);
 		}
-		bundle.putInt("USER_ID", userId);
-		getServiceQueue().postToService(Type.READ_USER_FAVORITES, bundle);
 	}
 }

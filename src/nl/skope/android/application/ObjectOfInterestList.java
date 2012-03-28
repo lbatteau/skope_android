@@ -38,9 +38,9 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 * @return The object of interest with the given username.
 	 * If not found it returns null.
 	 */
-	public synchronized ObjectOfInterest find(String username) {
+	public synchronized ObjectOfInterest find(int id) {
 		for (ObjectOfInterest ooi : this) {
-            if (ooi.getUserName().equals(username)) {
+            if (ooi.getId() == id) {
             	return ooi;
             }
         }
@@ -72,6 +72,35 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	public synchronized void update(ObjectOfInterestList list) {
 		this.clear();
 		this.addAll(list);
+	}
+	
+	public synchronized boolean exists(ObjectOfInterest ooi) {
+		for (ObjectOfInterest existingOOI: this) {
+			if (existingOOI.getId() == ooi.getId()) {
+				return true;
+        	}
+        }
+		
+		return false;
+	}
+
+	public synchronized ObjectOfInterest exists(int id) {
+		for (ObjectOfInterest existingOOI: this) {
+			if (id == existingOOI.getId()) {
+				return existingOOI;
+        	}
+        }
+		
+		return null;
+	}
+	
+	public synchronized ObjectOfInterest getById(int id) {
+		for (ObjectOfInterest ooi: this) {
+			if (ooi.getId() == id) {
+				return ooi;
+        	}
+        }
+		return null;
 	}
 
 }

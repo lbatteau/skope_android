@@ -11,20 +11,29 @@ package nl.skope.android.ui;
 
 import java.util.List;
 
+import nl.skope.android.R;
+import nl.skope.android.application.ChatMessage;
 import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
+import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.util.Type;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -33,8 +42,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import nl.skope.android.R;
 
 /**
  * Class description goes here.
@@ -48,6 +55,7 @@ public class UserChatsActivity extends BaseActivity {
     private ObjectOfInterestList mChatsList = null;
     private ObjectOfInterestArrayAdapter mChatsListAdapter;
     private String mUsername;
+    private int mNrUnreadMessages;
 
     protected Dialog mSplashDialog;
     
@@ -61,10 +69,9 @@ public class UserChatsActivity extends BaseActivity {
 			Intent i = new Intent();
 			// Redirect to detail chat activity
 	        Bundle bundle = new Bundle();
-	        bundle.putParcelable("USER", ooi);
+	        bundle.putParcelable(SkopeApplication.BUNDLEKEY_USER, ooi);
 	        i.putExtras(bundle);
-			i.setClassName("nl.skope.android",
-					"nl.skope.android.ui.OOIDetailMapActivity");
+			i.setClassName("nl.skope.android","nl.skope.android.ui.OOIChatActivity");
 			startActivity(i);
 		}
 	};
@@ -100,9 +107,23 @@ public class UserChatsActivity extends BaseActivity {
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mChatsListAdapter); 
         listView.setOnItemClickListener(mOOISelectListener);
-
     }
 
+	@Override
+	public void onResume() {
+		super.onResume();
+		int userId; 
+		Bundle bundle = new Bundle();
+		userId = getCache().getUser().getId();
+		bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userId);
+		getServiceQueue().postToService(Type.READ_USER_CHATS, bundle);
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+	}	
+	
 	private void updateListFromCache() {
 		mChatsList.clear();
     	ObjectOfInterestList cacheList = getCache().getUserChatsList();
@@ -129,14 +150,78 @@ public class UserChatsActivity extends BaseActivity {
             	if (mChatsList.size() == 0) { 
             		mProgressBar.setVisibility(ProgressBar.VISIBLE);
             	}
+            	mNrUnreadMessages = 0;
                 break;
 
             case READ_USER_CHATS_END:
             	updateListFromCache();
+            	MainTabActivity parent = (MainTabActivity) getParent();
+            	parent.updateNrUnreadMessages(mNrUnreadMessages);
             	mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            	
             	break;
             	
-            case UNDETERMINED_LOCATION:
+    		case READ_USER_CHAT_MESSAGES_START:
+    			break;
+    		case READ_USER_CHAT_MESSAGES_END:
+    			// Get ooi from bundle
+    			ObjectOfInterest ooi = getCache().getUserChatsList().
+    							getById(bundle.getInt(SkopeApplication.BUNDLEKEY_USERID));
+				// Get messages from bundle
+    			String response = bundle.getString(SkopeApplication.BUNDLEKEY_RESPONSE);
+    			// Check for 'unread' flag
+    			boolean isUnreadMessages = false;
+    			if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
+    				isUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_UNREAD);
+    			}		
+    			JSONArray jsonArray = null;
+    			if (response == null) {
+    				return;
+    			} else {
+    				// Extract JSON data from response
+    				try {
+    					jsonArray = new JSONArray(response);
+    				} catch (JSONException e) {
+    					// Log exception
+    					Log.e(SkopeApplication.LOG_TAG, e.toString());
+    				}
+    				
+    				if (isUnreadMessages) {
+    					// Update unread messages marker
+						
+    					// Check size
+    					int nrUnreadMessages = jsonArray.length();
+        				if (nrUnreadMessages == 0) {
+        					// Nothing in result
+        					ooi.setNrUnreadMessages(0);
+        				} else {
+            				ooi.setNrUnreadMessages(nrUnreadMessages);	      					
+        				}
+        				
+        				mNrUnreadMessages = nrUnreadMessages;
+        				
+    				} else {
+    					// Extract the last chat message
+        				ChatMessage lastChat = null;
+    					try {
+    						JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
+    	    				lastChat = new ChatMessage(jsonObject);
+    					} catch (JSONException e) {
+    						Log.e(SkopeApplication.LOG_TAG, e.toString());
+    					}
+    					
+    					if (lastChat != null) {
+    						if (ooi != null) {
+		    					// Update user's last message and notify adapter
+								ooi.setLastChatMessage(lastChat.createTimeLabel() + ": " + lastChat.getMessage());
+    						}
+    					}
+					}
+					mChatsListAdapter.notifyDataSetChanged();
+
+    			}
+    			break;
+    		case UNDETERMINED_LOCATION:
             	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
             	break;
             	
@@ -155,6 +240,7 @@ public class UserChatsActivity extends BaseActivity {
 		public TextView nameText;
 		public TextView distanceText;
 		public TextView lastUpdateText;
+		public TextView nrUnreadMessages;
 		public ImageView icon;
 
 	}
@@ -182,6 +268,7 @@ public class UserChatsActivity extends BaseActivity {
                 holder = new ViewHolder();
                 holder.nameText = (TextView) convertView.findViewById(R.id.name_text);
                 holder.distanceText = (TextView) convertView.findViewById(R.id.distance_text);
+                holder.nrUnreadMessages = (TextView) convertView.findViewById(R.id.nr_unread_messages);
                 holder.icon = (ImageView) convertView.findViewById(R.id.icon);
                 convertView.setTag(holder);
             } else {
@@ -196,8 +283,16 @@ public class UserChatsActivity extends BaseActivity {
                 }
                 
                 if (holder.distanceText != null) {
-                	holder.distanceText.setText("Distance: " + String.valueOf(ooi.createLabelDistance())
-                			+ " - " + ooi.createLabelTimePassedSinceLastUpdate());
+                	holder.distanceText.setText(ooi.getLastChatMessage());
+                }
+                
+                if (holder.nrUnreadMessages != null) {
+                	if (ooi.getNrUnreadMessages() > 0) {
+                		holder.nrUnreadMessages.setText(String.valueOf(ooi.getNrUnreadMessages()));
+                		holder.nrUnreadMessages.setVisibility(View.VISIBLE);
+                	} else {
+                		holder.nrUnreadMessages.setVisibility(View.GONE);
+                	}
                 }
                 
                 if (holder.icon != null) {
@@ -212,14 +307,4 @@ public class UserChatsActivity extends BaseActivity {
             return convertView;
         }
     }
-    
-	@Override
-	public void onResume() {
-		super.onResume();
-		int userId; 
-		Bundle bundle = new Bundle();
-		userId = getCache().getUser().getId();
-		bundle.putInt("USER_ID", userId);
-		getServiceQueue().postToService(Type.READ_USER_CHATS, bundle);
-	}
 }

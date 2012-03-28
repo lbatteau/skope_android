@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/LinearLayout1" android:layout_width="fill_parent"
-	android:layout_height="90dip"
-	android:background="@drawable/tab_selector">
-	<FrameLayout android:id="@+id/FrameLayout1" android:layout_weight="1"
-		android:layout_width="fill_parent" android:layout_height="fill_parent">
-		<FrameLayout android:layout_width="wrap_content"
-			android:id="@+id/frameLayout1" android:layout_height="wrap_content"
-			android:background="@drawable/tab_chat_selector"
-			android:layout_gravity="center|center_vertical" />
-	</FrameLayout>
-	<FrameLayout android:background="@color/skope_grey_extra_dark" android:layout_height="match_parent" android:layout_width="1dip" android:id="@+id/frameLayout2"></FrameLayout>
+    android:id="@+id/LinearLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="90dip"
+    android:background="@drawable/tab_selector" >
+
+    <FrameLayout
+        android:id="@+id/FrameLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1" >
+
+        <FrameLayout
+            android:id="@+id/frameLayout1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|center_vertical"
+            android:background="@drawable/tab_chat_selector" />
+
+        <FrameLayout
+            android:id="@+id/notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dip"
+            android:layout_marginTop="10dip"
+            android:layout_gravity="center" >
+
+            <TextView
+                android:id="@+id/nr_unread_messages"
+                android:layout_width="20dip"
+                android:layout_height="20dip"
+                android:background="@drawable/notification"
+                android:textColor="@android:color/white"
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:gravity="center" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frameLayout2"
+        android:layout_width="1dip"
+        android:layout_height="match_parent"
+        android:background="@color/skope_grey_extra_dark" >
+    </FrameLayout>
+
 </LinearLayout>

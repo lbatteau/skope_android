@@ -21,45 +21,38 @@ package nl.skope.android.util;
  */
 public enum Type {
 
-    /***
-     * UI to Service messages.
-     */
-    FIND_OBJECTS_OF_INTEREST, LOCATION_CHANGED, UPDATE_NOTIFICATION, 
-    DO_LONG_TASK, UPLOAD_PROFILE_PICTURE, UPLOAD_IMAGE, READ_USER_PHOTOS,
-    READ_USER_FAVORITES, READ_USER_CHATS, READ_USER_CHAT_MESSAGES,
+	/***
+	 * UI to Service messages.
+	 */
+	READ_USER, FIND_OBJECTS_OF_INTEREST, LOCATION_CHANGED, UPDATE_NOTIFICATION, DO_LONG_TASK, UPLOAD_PROFILE_PICTURE, UPLOAD_IMAGE, READ_USER_PHOTOS, READ_USER_FAVORITES, READ_USER_CHATS, READ_USER_CHAT_MESSAGES,
 
-    /***
-     * Service to UI messages.
-     */
-    FIND_OBJECTS_OF_INTEREST_START, FIND_OBJECTS_OF_INTEREST_FINISHED, 
-    UNDETERMINED_LOCATION, UPDATE_LONG_TASK, UPDATE_QUEUE, SHOW_DIALOG,
-    UPLOAD_PROFILE_PICTURE_START, UPLOAD_PROFILE_PICTURE_END, UPLOAD_IMAGE_START, 
-    UPLOAD_IMAGE_END, READ_USER_PHOTOS_START,
-    READ_USER_PHOTOS_END, READ_USER_FAVORITES_START, READ_USER_FAVORITES_END,
-    READ_USER_CHATS_START, READ_USER_CHATS_END, READ_USER_CHAT_MESSAGES_START,
-    READ_USER_CHAT_MESSAGES_END,
+	/***
+	 * Service to UI messages.
+	 */
+	READ_USER_START, READ_USER_END, FIND_OBJECTS_OF_INTEREST_START, FIND_OBJECTS_OF_INTEREST_FINISHED, UNDETERMINED_LOCATION, UPDATE_LONG_TASK, UPDATE_QUEUE, SHOW_DIALOG, UPLOAD_PROFILE_PICTURE_START, UPLOAD_PROFILE_PICTURE_END, UPLOAD_IMAGE_START, UPLOAD_IMAGE_END, READ_USER_PHOTOS_START, READ_USER_PHOTOS_END, READ_USER_FAVORITES_START, READ_USER_FAVORITES_END, READ_USER_CHATS_START, READ_USER_CHATS_END, READ_USER_CHAT_MESSAGES_START, READ_USER_CHAT_MESSAGES_END,
 
-    /***
-     * UI Dialogs.
-     */
-    DIALOG_STATUS,
+	/***
+	 * UI Dialogs.
+	 */
+	DIALOG_STATUS,
 
-    /***
-     * Do not handle this message.
-     */
-    UNKNOWN;
+	/***
+	 * Do not handle this message.
+	 */
+	UNKNOWN;
 
-    /***
-     * Get the Type from a given Integer value.
-     *
-     * @param input Integer.ordinal value of the UiEvent
-     * @return Relevant Type or UNKNOWN if the Integer is not known.
-     */
-    public static Type getType(final int input) {
-        if (input < 0 || input > UNKNOWN.ordinal()) {
-            return UNKNOWN;
-        } else {
-            return Type.values()[input];
-        }
-    }
+	/***
+	 * Get the Type from a given Integer value.
+	 * 
+	 * @param input
+	 *            Integer.ordinal value of the UiEvent
+	 * @return Relevant Type or UNKNOWN if the Integer is not known.
+	 */
+	public static Type getType(final int input) {
+		if (input < 0 || input > UNKNOWN.ordinal()) {
+			return UNKNOWN;
+		} else {
+			return Type.values()[input];
+		}
+	}
 }

@@ -5,7 +5,6 @@
     android:paddingTop="5dip"
     android:paddingBottom="5dip"
     android:paddingLeft="5dip"
-    android:background="@drawable/list_selector"
     >
 
     <ImageView
@@ -48,6 +47,17 @@
         </LinearLayout>
     </RelativeLayout>
 
+    <TextView
+        android:id="@+id/nr_unread_messages"
+        android:layout_width="20dip"
+        android:layout_height="20dip"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textSize="10sp"
+        android:textColor="@android:color/white"
+        android:background="@drawable/notification"
+        android:visibility="gone" />
+    
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"

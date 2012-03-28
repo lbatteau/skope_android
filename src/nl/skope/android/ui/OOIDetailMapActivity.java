@@ -1,6 +1,5 @@
 package nl.skope.android.ui;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import nl.skope.android.R;
@@ -8,11 +7,10 @@ import nl.skope.android.application.Cache;
 import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
+import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
-import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
-import nl.skope.android.http.ThumbnailManager;
 import nl.skope.android.maps.OOIOverlay;
 import nl.skope.android.util.Type;
 
@@ -39,11 +37,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
-import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,15 +60,10 @@ public class OOIDetailMapActivity extends OOIMapActivity {
     private View mNavigationHandleRight, mNavigationHandleLeft;
 	private Animation mFadeInAnimation, mFadeOutAnimation;
 	private SlidingDrawer mMapDrawer;
-	private ExpandableListAdapter mListAdapter;
 	private View mUserProfile, mUserPhotoLayout, mFavoritesLayout;
     private LayoutInflater mInflater;
-    private Gallery mUserPhotoGallery;    
-	private UserPhotoAdapter mUserPhotoAdapter;
-	private ArrayList<UserPhoto> mUserPhotoList;
-	private ProgressBar mPhotosProgressBar, mFavoritesProgressBar;	 
 	private TextView mPhotosLabel, mFavoritesLabel;
-	private ObjectOfInterest mSelectedOOI;
+	private User mSelectedOOI;
 	ObjectOfInterestList mFavoritesList;
 	ObjectOfInterestArrayAdapter mFavoritesListAdapter;
 	
@@ -82,8 +72,20 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    
-	    mSelectedOOI = getIntent().getExtras().getParcelable("USER");
-	    mSelectedOOI.setCache(getCache());
+	    mSelectedOOI = getIntent().getExtras().getParcelable(SkopeApplication.BUNDLEKEY_USER);
+
+        // Redirect?
+        if (getIntent() != null && getIntent().hasExtra(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY)) {
+        	Intent i = new Intent();
+			// Redirect to detail chat activity
+	        Bundle bundle = new Bundle();
+	        bundle.putParcelable("USER", mSelectedOOI);
+	        i.putExtras(bundle);
+			i.setClassName("nl.skope.android","nl.skope.android.ui.OOIChatActivity");
+			startActivity(i);
+        }
+
+        mSelectedOOI.setCache(getCache());
 	    
 	    mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    
@@ -206,7 +208,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				// Redirect to chat activity
 		        Intent i = new Intent(OOIDetailMapActivity.this, OOIChatActivity.class);
 	        	Bundle bundle = new Bundle();
-		        bundle.putParcelable("USER", mSelectedOOI);
+		        bundle.putParcelable(SkopeApplication.BUNDLEKEY_USER, mSelectedOOI);
 		        i.putExtras(bundle);
 				startActivity(i);	
 			}
@@ -376,47 +378,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    
 	    mOOIPosition = getCache().getObjectOfInterestList().getSelectedPosition();
 	    
-	    // Initial empty list of user photos
-	    mUserPhotoList = new ArrayList<UserPhoto>();
-	    // Set up thumbnail manager
-	    ThumbnailManager thumbnailManager = new ThumbnailManager(getCache());
-	    // User photos adapter
-	    mUserPhotoAdapter = new UserPhotoAdapter(this, R.id.user_photo_grid, mUserPhotoList, thumbnailManager);
-	    // User photos gallery 
-	    mUserPhotoLayout = mInflater.inflate(R.layout.user_photo_gallery, null);
-	    mUserPhotoGallery = (Gallery) mUserPhotoLayout.findViewById(R.id.user_photo_gallery);
-	    mUserPhotoGallery.setAdapter(mUserPhotoAdapter);
-	    
-	    mUserPhotoGallery.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
-					long id) {
-				// Redirect to photo activity
-		        Intent i = new Intent(OOIDetailMapActivity.this, UserPhotoActivity.class);
-		        i.putExtra("position", position);
-		        i.putExtra("is_current_user", false);
-	        	startActivity(i);
-			}
-		});
-	    
-	    // Photos progress bar
-		mPhotosProgressBar = (ProgressBar) mUserPhotoLayout.findViewById(R.id.user_photo_progress_bar);
-		// Photos label
-		mPhotosLabel = (TextView) mUserPhotoLayout.findViewById(R.id.user_photo_label);
-		
-		// User favorites layout
-		mFavoritesLayout = mInflater.inflate(R.layout.user_favorites, null);
-    	// Favorites progress bar
-		mFavoritesProgressBar = (ProgressBar) mFavoritesLayout.findViewById(R.id.titleProgressBar);
-		mFavoritesProgressBar.setVisibility(ProgressBar.INVISIBLE);
-
-		// List of user favorites
-        mFavoritesList = new ObjectOfInterestList();
-        mFavoritesListAdapter = new ObjectOfInterestArrayAdapter(OOIDetailMapActivity.this, R.layout.skope_view, mFavoritesList);
-        ListView listView = (ListView) mFavoritesLayout.findViewById(R.id.list);
-	    listView.setAdapter(mFavoritesListAdapter); 
-        listView.setOnItemClickListener(mOOISelectListener);
+        
 	}
     
     @Override
@@ -428,19 +390,21 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		update();
+		if (sanityCheck()) {
+			update();
+		}
 	}
 	
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
-		savedInstanceState.putParcelable("USER", mSelectedOOI);
+		savedInstanceState.putParcelable(SkopeApplication.BUNDLEKEY_USER, mSelectedOOI);
 		super.onSaveInstanceState(savedInstanceState);
 	}
 	
 	@Override
 	public void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		mSelectedOOI = savedInstanceState.getParcelable("USER");
+		mSelectedOOI = savedInstanceState.getParcelable(SkopeApplication.BUNDLEKEY_USER);
 	}
 
 	/**
@@ -476,6 +440,25 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		
         initializeMapView();
 		populateItemizedOverlays();
+		
+		// Update map to span and center between user and ooi
+		if (getCache().getCurrentLocation() != null) {
+			MapController mapController = mMapView.getController();
+
+			int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
+			int userLongitude = (int) (getCache().getCurrentLocation()
+					.getLongitude() * 1E6);
+			int ooiLatitude = (int) (mSelectedOOI.getLocation()
+					.getLatitude() * 1E6);
+			int ooiLongitude = (int) (mSelectedOOI.getLocation()
+					.getLongitude() * 1E6);
+	
+			mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
+					(userLongitude + ooiLongitude) / 2));
+	
+			mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
+					Math.abs(userLongitude - ooiLongitude));
+		}
 	}
 	
 	private void updateListFromCache() {
@@ -493,7 +476,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		if (ooiList.size() <= mOOIPosition) {
 			return;
 		} else {
-			mUserPhotoAdapter.clear();
 			ooiList.setSelectedPosition(++mOOIPosition);
 			update();
 		}		
@@ -504,7 +486,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		if (mOOIPosition == 0) {
 			return;
 		} else {
-			mUserPhotoAdapter.clear();
 			ooiList.setSelectedPosition(--mOOIPosition);
 			update();
 		}		
@@ -539,74 +520,8 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		ooiOverlay.addOverlay(createOverlay(mSelectedOOI));
 		mMapOverlays.add(1, ooiOverlay);
 
-		MapController mapController = mMapView.getController();
-
-		if (getCache().getCurrentLocation() != null) {
-			int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
-			int userLongitude = (int) (getCache().getCurrentLocation()
-					.getLongitude() * 1E6);
-			int ooiLatitude = (int) (mSelectedOOI.getLocation()
-					.getLatitude() * 1E6);
-			int ooiLongitude = (int) (mSelectedOOI.getLocation()
-					.getLongitude() * 1E6);
-	
-			mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
-					(userLongitude + ooiLongitude) / 2));
-	
-			mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
-					Math.abs(userLongitude - ooiLongitude));
-		}
-
 	}
 
-	@Override
-	public void post(final Type type, final Bundle bundle) {
-		switch (type) {
-		case READ_USER_PHOTOS_START:
-			// Hide label
-			mPhotosLabel.setVisibility(View.INVISIBLE);
-			
-			// Display progress bar when gallery is empty
-			if (mUserPhotoAdapter.isEmpty()) {
-				mPhotosProgressBar.setVisibility(View.VISIBLE);
-			}
-			break;
-		case READ_USER_PHOTOS_END:
-			// Hide progress bar
-			mPhotosProgressBar.setVisibility(View.INVISIBLE);
-			// Copy user photo list from cache
-			mUserPhotoAdapter.clear();
-			for(UserPhoto userphoto: Cache.USER_PHOTOS) {
-				mUserPhotoAdapter.add(userphoto);
-			}
-			
-			// Show label if no photos present
-			if (mUserPhotoAdapter.getCount() == 0) {
-				mPhotosLabel.setVisibility(View.VISIBLE);
-				mPhotosLabel.setText(getResources().getString(R.string.user_photos_none));
-			} else {
-				mPhotosLabel.setVisibility(View.INVISIBLE);
-			}
-			
-			break;
-        case READ_USER_FAVORITES_START:
-        	// If list empty show load bar
-        	if (mFavoritesList.size() == 0) { 
-        		mFavoritesProgressBar.setVisibility(ProgressBar.VISIBLE);
-        	}
-            break;
-
-        case READ_USER_FAVORITES_END:
-        	updateListFromCache();
-        	mFavoritesProgressBar.setVisibility(ProgressBar.INVISIBLE);
-        	break;
-        	
-			
-        default:
-			super.post(type, bundle);
-		}
-	}
-	
 	class MyGestureDetector extends SimpleOnGestureListener {
 
 		@Override
@@ -842,31 +757,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 
 	}
     
-	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
-		@Override
-		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-			// Check if selected ooi is current user
-			ObjectOfInterest ooi = mFavoritesListAdapter.getItem(position);
-			Intent i = new Intent();
-			if (ooi.getId() == getCache().getUser().getId()) {
-				// Current user, redirect to profile
-				Bundle bundle = new Bundle();
-		        bundle.putInt("TAB", MainTabActivity.TAB_PROFILE);
-		        i.putExtras(bundle);
-		        i.setClassName("nl.skope.android",
-						"nl.skope.android.ui.MainTabActivity");
-			} else {
-				// Redirect to list activity
-		        Bundle bundle = new Bundle();
-		        bundle.putParcelable("USER", ooi);
-		        i.putExtras(bundle);
-				i.setClassName("nl.skope.android",
-						"nl.skope.android.ui.OOIDetailMapActivity");
-			}
-			startActivity(i);
-		}
-	};
-	
 	private class UserMenuArrayAdapter extends ArrayAdapter<String> {
 		String[] mItems;
 		int[] mIcons = new int[] { R.drawable.expand_icon_photos, R.drawable.expand_icon_favorites };

@@ -51,13 +51,12 @@ public class User implements Parcelable {
 	private Cache mCache;
 	
 	protected int mId;
-	protected String mUsername;
-	protected String mUserEmail;
 	protected String mFirstName;
 	protected String mLastName;
 	protected Date mDateOfBirth;
 	protected boolean mIsDateofBirthPublic;
 	protected String mStatus;
+	protected boolean mIsStatusChanged;
 	protected String mSex;
 	protected boolean mIsSexPublic;
 	protected String mProfilePictureURL;
@@ -76,18 +75,23 @@ public class User implements Parcelable {
 	
 	protected boolean mHasNoProfilePicture;
 	
+	/** Placeholder for most recent chat **/ 
+	protected String mLastChatMessage;
+	
+	/** Placeholder for number of unread messages **/
+	protected int mNrUnreadMessages;
+	
 	public interface OnImageLoadListener {
 		public void onImageLoaded(Bitmap image);
 	}
 	
 	public User(Parcel in) {
 		this.mId = in.readInt();
-		this.mUsername = in.readString();
-		this.mUserEmail = in.readString();
 		this.mFirstName = in.readString();
 		this.mLastName = in.readString();
 		this.mProfilePictureURL = in.readString();
 		this.mStatus = in.readString();
+		this.mIsStatusChanged = Boolean.parseBoolean(in.readString());
 		this.mRelationship = in.readString();
 		this.mHomeTown = in.readString();
 		this.mWorkJobTitle = in.readString();
@@ -121,12 +125,11 @@ public class User implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(this.mId);
-		dest.writeString(this.mUsername != null ? this.mUsername : "");
-		dest.writeString(this.mUserEmail != null ? this.mUserEmail : "");
 		dest.writeString(this.mFirstName != null ? this.mFirstName : "");
 		dest.writeString(this.mLastName != null ? this.mLastName : "");
 		dest.writeString(this.mProfilePictureURL != null ? this.mProfilePictureURL : "");
 		dest.writeString(this.mStatus != null ? this.mStatus : "");
+		dest.writeString(String.valueOf(this.mIsStatusChanged));
 		dest.writeString(this.mRelationship);
 		dest.writeString(this.mHomeTown != null ? this.mHomeTown : "");
 		dest.writeString(this.mWorkJobTitle != null ? this.mWorkJobTitle : "");
@@ -157,14 +160,6 @@ public class User implements Parcelable {
     	this.setId(jsonObject.getInt("id"));
 		
     	JSONObject user = jsonObject.getJSONObject("user");
-		if (!user.isNull("username")) {
-			this.setUserName(user.getString("username"));
-		}
-		
-		if (!user.isNull("email")) {
-			this.setUserEmail(user.getString("email"));
-		}
-		
 		if (!user.isNull("first_name")) {
 			this.setFirstName(user.getString("first_name"));
 		}
@@ -184,8 +179,12 @@ public class User implements Parcelable {
 		}
 		
 
-		if (!jsonObject.isNull("status_message")) {
-			this.setStatus(jsonObject.getString("status_message"));
+		if (!jsonObject.isNull("status")) {
+			this.setStatus(jsonObject.getString("status"));
+		}
+		
+		if (!jsonObject.isNull("is_status_changed")) {
+			this.setStatusChanged(jsonObject.getBoolean("is_status_changed"));
 		}
 		
 		if (!jsonObject.isNull("relationship_status")) {
@@ -269,7 +268,7 @@ public class User implements Parcelable {
 	
 	@Override
 	public boolean equals(Object user) {
-		return (this.mUsername.equals(((User) user).mUsername));		
+		return (this.mId == ((User) user).getId());		
 	}
 	
 	/**
@@ -301,7 +300,7 @@ public class User implements Parcelable {
 	 * 				   method is never called.
 	 */
 	public void loadProfilePicture(OnImageLoadListener listener) {
-		if (!this.mHasNoProfilePicture) {
+		if (this.getProfilePictureURL() != null && !this.getProfilePictureURL().equals("")) {
 			if (mCache != null) {
 				mCache.resetPurgeTimer();
 			}
@@ -321,13 +320,13 @@ public class User implements Parcelable {
 			|| (mLastName != null && !"".equals(mLastName))) {
 			return mFirstName + " " + mLastName;
 		} else {
-			return mUsername;
+			return "";
 		}
 	}
 	
 	public String createLabelStatus() {
 		if(mStatus == null) {
-			return String.format("%s just started using Skope!", createName());
+			return "";
 		} else {
 			return "\"" + mStatus.trim() + "\"";
 		}
@@ -623,22 +622,6 @@ public class User implements Parcelable {
 		}		
 	}
 	
-	public String getUserName() {
-		return mUsername;
-	}
-
-	public void setUserName(String userName) {
-		this.mUsername = userName;
-	}
-
-	public String getUserEmail() {
-		return mUserEmail;
-	}
-
-	public void setUserEmail(String userEmail) {
-		this.mUserEmail = userEmail;
-	}
-
 	public Bitmap getProfilePicture() {
 		if (mProfilePicture == null && mHasNoProfilePicture == false) {
 			// Not loaded, check cache
@@ -875,6 +858,30 @@ public class User implements Parcelable {
 
 	public void setId(int id) {
 		this.mId = id;
+	}
+
+	public boolean isStatusChanged() {
+		return mIsStatusChanged;
+	}
+
+	public void setStatusChanged(boolean isStatusChanged) {
+		this.mIsStatusChanged = isStatusChanged;
+	}
+
+	public String getLastChatMessage() {
+		return mLastChatMessage;
+	}
+
+	public void setLastChatMessage(String lastChatMessage) {
+		this.mLastChatMessage = lastChatMessage;
+	}
+
+	public int getNrUnreadMessages() {
+		return mNrUnreadMessages;
+	}
+
+	public void setNrUnreadMessages(int nrUnreadMessages) {
+		this.mNrUnreadMessages = nrUnreadMessages;
 	}
 	
 }

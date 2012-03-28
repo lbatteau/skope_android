@@ -31,8 +31,15 @@ public class ThumbnailManager {
     }
     
     public void retrieve(UserPhoto userPhoto, ImageView imageView) {
-    	// TODO: Check cache
-    	
+    	// Check cache
+    	Bitmap bitmap = mCache.getBitmapFromCache(userPhoto.getThumbnailURL());
+    	if (bitmap != null) {
+    		// Bitmap found in cache
+    		userPhoto.setThumbnail(new WeakReference<Bitmap>(bitmap));
+    		imageView.setImageBitmap(bitmap);
+    		return;
+    	}
+		
     	// Queue image
     	synchronized (mWorkerThreadLock) {
             if (mWorker == null || mWorker.isStopping()) {
@@ -42,7 +49,7 @@ public class ThumbnailManager {
             } else {
             	mWorker.add(userPhoto, imageView);
             }
-        }    	
+        }
     }
     
     public class ThumbnailWorker extends Thread {

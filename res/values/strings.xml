@@ -15,8 +15,9 @@
     <string name="send">Send</string>
     <string name="retrieving_data">Retrieving data</string>
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
-    <string name="error_connection_failed">Connection failed. Please make sure you are connected to the internet.</string>
-    <string name="error_image_upload_not_found">Sorry, image upload failed.</string>
+    <string name="error_connection_failed">Please make sure you are connected to the internet</string>
+    <string name="error_username_password">Invalid username or password</string>
+    <string name="error_image_upload_not_found">Sorry, image upload failed</string>
     <string name="error_profile_picture_result">There was a problem saving your new profile picture.</string>
     <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
     <string name="no_location_title">Can\&apos;t locate&#8230;</string>
@@ -97,6 +98,6 @@
     <string name="user_report_title">Report user</string>
     <string name="user_report_message">If you have found %s to behave inappropriately, please let us know and we will take immediate action.</string>
     <string name="facebook_connect_confirm_title">Connect with Facebook?</string>
-    <string name="facebook_connect_confirm_message">Using Facebook Connect will overwrite your Skope profile and profile picture with your Facebook profile and profile picture. Do you want to proceed?</string>
+    <string name="facebook_connect_confirm_message">Facebook Connect will retrieve some of your basic Facebook profile information and profile picture and use it as your Skope profile. This is a one time action, which you can repeat as often as you like. Proceed?</string>
     <string name="message_received">You have received a message</string>
 </resources>

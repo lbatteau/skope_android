@@ -14,6 +14,7 @@ import nl.skope.android.maps.OOIOverlayItem;
 import nl.skope.android.maps.SkopeMapView;
 import nl.skope.android.util.Type;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -138,7 +139,7 @@ public abstract class OOIMapActivity extends MapActivity {
 				.getLatitude() * 1e6), (int) (user.getLocation()
 				.getLongitude() * 1e6));
 		
-		OOIOverlayItem overlayItem = new OOIOverlayItem(point, user.getUserName(),
+		OOIOverlayItem overlayItem = new OOIOverlayItem(point, user.createName(),
 				"Last update: " + user.createLabelTimePassedSinceLastUpdate());
 		
 		overlayItem.setMarker(marker);
@@ -218,6 +219,36 @@ public abstract class OOIMapActivity extends MapActivity {
 	
 	protected void initializeMapView() {
 		mMapView.setBuiltInZoomControls(true);
+	}
+
+	protected boolean sanityCheck() {
+		// Check user signed out
+		if (mCache.isUserSignedOut()) {
+			// User signed out, always go to login screen
+			Intent i = new Intent();
+			i.setClassName("nl.skope.android",
+					"nl.skope.android.ui.LoginActivity");
+			startActivity(i);
+			finish();
+			return false;
+		} else {
+			// Not signed out. Check if user present
+			if (mCache.getUser() == null) {
+				// Not present, could have been garbage collected.
+				// Go back to login screen and set the auto login flag.
+				Intent i = new Intent();
+				i.setClassName("nl.skope.android",
+						"nl.skope.android.ui.LoginActivity");
+				// Add auto login flag
+				Bundle bundle = new Bundle();
+				bundle.putBoolean(LoginActivity.INTENT_AUTOLOGIN, true);
+				startActivity(i);
+				finish();
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	/***

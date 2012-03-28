@@ -39,6 +39,16 @@ public class SkopeApplication extends Application {
 	public static final String PREFS_C2DM_REGISTRATIONID = "REGISTRATIONID";
 	public static final String PREFS_C2DM_REGISTRATIONTIMESTAMP = "REGISTRATIONTIMESTAMP";
 	public static final String PREFS_RANGE = "RANGE";
+	public final static String BUNDLEKEY_REDIRECTACTIVITY = "REDIRECT";
+	public final static String BUNDLEKEY_BACKACTIVITY = "BACK";
+	public final static String BUNDLEKEY_TAB = "TAB";
+	public final static String BUNDLEKEY_USERID = "USERID";
+	public final static String BUNDLEKEY_UNREAD = "UNREAD";
+	public final static String BUNDLEKEY_MARKASREAD = "MARKASREAD";
+	public final static String BUNDLEKEY_USER = "USER";
+	public final static String BUNDLEKEY_RESPONSE = "RESPONSE";
+
+
 
 	/** Skope server response codes **/
 	public static final int RESPONSECODE_OK = 0;

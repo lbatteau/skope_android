@@ -20,15 +20,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import nl.skope.android.R;
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
+import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
+import nl.skope.android.application.User;
 import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient;
-import nl.skope.android.http.ImageUploader;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
+import nl.skope.android.http.ImageUploader;
 import nl.skope.android.util.NotificationUtils;
 import nl.skope.android.util.Type;
 
@@ -41,8 +44,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
-
-import nl.skope.android.R;
 
 /***
  * Used by the Service to perform long running tasks (e.g. network
@@ -81,6 +82,7 @@ public class WorkerThread extends Thread {
     private final UiQueue mUiQueue;
     /** Pointer to the parent Service.. **/
     private LocationService mLocationService;
+    
     /***
      * TRUE when the WorkerThread can no longer handle incoming messages,
      * because it is shutting down or dead.
@@ -95,10 +97,11 @@ public class WorkerThread extends Thread {
      * @param uiQueue UiQueue.
      * @param myService MyService.
      */
-    protected WorkerThread(final Cache cache, final UiQueue uiQueue,
-            final LocationService locationService) {
+    protected WorkerThread(final Cache cache, 
+				    		final UiQueue uiQueue,
+				            final LocationService locationService) {
     	mCache = cache;
-        mUiQueue = uiQueue;
+    	mUiQueue = uiQueue;
         mLocationService = locationService;
     }
 
@@ -147,6 +150,10 @@ public class WorkerThread extends Thread {
             showQueue();
 
             switch (type) {
+            case READ_USER:
+            	readUser(bundle);
+            	break;
+            	
             case FIND_OBJECTS_OF_INTEREST:
                 findObjectsOfInterest(bundle);
                 break;
@@ -277,7 +284,7 @@ public class WorkerThread extends Thread {
 					objectOfInterest.setCache(mCache);
 					
 					// If current user, skip
-					if (!objectOfInterest.getUserName().equals(username)) {
+					if (objectOfInterest.getId() != mCache.getUser().getId()) {
 						// Set distance
 						objectOfInterest.setDistanceToLocation(currentLocation);
 						// Add to list
@@ -396,16 +403,62 @@ public class WorkerThread extends Thread {
     /***
      * Reads the list of user chats
      */
+    private void readUser(final Bundle bundle) {
+    	mUiQueue.postToUi(Type.READ_USER_START, null, true);
+    	
+		// Bundle present, extract mId
+    	int userId = bundle.getInt(SkopeApplication.BUNDLEKEY_USERID);
+
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String serviceUrl = String.format("%s/user/%d/", 
+								mCache.getProperty("skope_service_url"),
+								userId);
+		
+		// Set up HTTP client
+        CustomHttpClient client = new CustomHttpClient(serviceUrl);
+        client.setUseBasicAuthentication(true);
+        client.setUsernamePassword(username, password);
+        
+        // Send HTTP request to web service
+        try {
+            client.execute(RequestMethod.GET);
+        } catch (Exception e) {
+        	// Most exceptions already handled by client
+            e.printStackTrace();
+        }
+        
+        String response = client.getResponse();
+        
+        JSONObject jsonObject = null;
+        User user = null;
+        try {
+        	jsonObject = new JSONObject(response);
+        	user = new User(jsonObject);
+        } catch (JSONException e) {
+			// Log exception
+			Log.e(SkopeApplication.LOG_TAG, e.toString());
+		}
+		
+        Bundle outBundle = new Bundle();
+        outBundle.putParcelable(SkopeApplication.BUNDLEKEY_USER, user);
+        mUiQueue.postToUi(Type.READ_USER_END, outBundle, false);
+    }
+
+    /***
+     * Reads the list of user chats
+     */
     private void readUserChats(final Bundle bundle) {
-    	ObjectOfInterestList chatsList = new ObjectOfInterestList();
     	JSONArray jsonResponse = null;
     	Location currentLocation = mCache.getCurrentLocation();
+    	ObjectOfInterestList chatsList = new ObjectOfInterestList();
+    	ObjectOfInterestList cachedList = mCache.getUserChatsList();
 
     	mUiQueue.postToUi(Type.READ_USER_CHATS_START, null, true);
     	
-		// Bundle present, extract mId
-		int userId = bundle.getInt("USER_ID");
-
+		// Bundle present, extract id
+		int userId = bundle.getInt(SkopeApplication.BUNDLEKEY_USERID);
+		
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
 		String serviceUrl = mCache.getProperty("skope_service_url") + "/user/" + userId + "/chat/";
@@ -441,17 +494,27 @@ public class WorkerThread extends Thread {
 				try {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
-					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
-					objectOfInterest.setCache(mCache);
-					
-					if (currentLocation != null) {
-						// Set distance
-						objectOfInterest.setDistanceToLocation(currentLocation);
+					// Check if this OOI is already in our cached list
+					ObjectOfInterest ooiInCache = cachedList.exists(jsonObject.getInt("id"));
+					if (ooiInCache == null) {
+						// Not cached
+						
+						// Create new object of interest
+						ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+						objectOfInterest.setCache(mCache);
+						
+						if (currentLocation != null) {
+							// Set distance
+							objectOfInterest.setDistanceToLocation(currentLocation);
+						}
+						
+						// Add to list
+						chatsList.add(objectOfInterest);
+					} else {
+						// Already in cache, add cached OOI instead
+						chatsList.add(ooiInCache);
 					}
 					
-					// Add to list
-					chatsList.add(objectOfInterest);
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -459,7 +522,24 @@ public class WorkerThread extends Thread {
 			}				
         }
         
+        // Replace cached list with new list
         mCache.getUserChatsList().update(chatsList);
+        
+        // Now retrieve all corresponding
+    	// Update status message
+    	for (ObjectOfInterest ooi: chatsList) {
+    		Bundle messagesBundle = new Bundle();
+        	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
+        	readUserChatMessages(messagesBundle);
+    	}
+    	
+    	// Update nr unread messages
+    	for (ObjectOfInterest ooi: chatsList) {
+    		Bundle messagesBundle = new Bundle();
+        	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
+        	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_UNREAD, true);
+        	readUserChatMessages(messagesBundle);
+    	}
         
         mUiQueue.postToUi(Type.READ_USER_CHATS_END, null, true);
 
@@ -481,7 +561,18 @@ public class WorkerThread extends Thread {
     	
 		// Bundle present, extract mId
     	int userId = mCache.getUser().getId();
-		int userFromId = bundle.getInt("USER_ID");
+		int userFromId = bundle.getInt(SkopeApplication.BUNDLEKEY_USERID);
+
+		// Check for 'unread' flag
+		boolean filterUnreadMessages = false;
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
+			filterUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_UNREAD);
+		}
+
+		boolean markAsRead = false;
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_MARKASREAD)) {
+			markAsRead = bundle.getBoolean(SkopeApplication.BUNDLEKEY_MARKASREAD);
+		}
 
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
@@ -489,6 +580,18 @@ public class WorkerThread extends Thread {
 								mCache.getProperty("skope_service_url"),
 								userId ,
 								userFromId);
+		
+		if (filterUnreadMessages) {
+			serviceUrl += "?new";
+		}
+		
+		if (markAsRead) {
+			if (filterUnreadMessages) {
+				serviceUrl += "&mark_as_read";
+			} else {
+				serviceUrl += "?mark_as_read";
+			}
+		}
 		
 		// Set up HTTP client
         CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
@@ -506,7 +609,11 @@ public class WorkerThread extends Thread {
         String response = client.getResponse();
         
         Bundle outBundle = new Bundle();
-        outBundle.putString("response", response);
+        outBundle.putString(SkopeApplication.BUNDLEKEY_RESPONSE, response);
+        outBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userFromId);
+        if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
+			outBundle.putBoolean(SkopeApplication.BUNDLEKEY_UNREAD, filterUnreadMessages);
+		}
         mUiQueue.postToUi(Type.READ_USER_CHAT_MESSAGES_END, outBundle, false);
     }
 

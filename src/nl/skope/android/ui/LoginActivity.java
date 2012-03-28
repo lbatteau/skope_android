@@ -220,7 +220,7 @@ public class LoginActivity extends BaseActivity {
 		// Check for server response
     	if (httpResponseCode == 0) {
     		// No server response
-    		Toast.makeText(LoginActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
+    		Toast.makeText(LoginActivity.this, getResources().getText(R.string.error_connection_failed), Toast.LENGTH_SHORT).show();
     		return false;
     	} else {
     		// Check for error
@@ -229,7 +229,7 @@ public class LoginActivity extends BaseActivity {
 		        switch(httpResponseCode) {
 		        case HttpStatus.SC_UNAUTHORIZED:
 		        	// Login not successful, authorization required 
-		        	Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+		        	Toast.makeText(LoginActivity.this, getResources().getText(R.string.error_username_password), Toast.LENGTH_SHORT).show();
 		        	break;
 		        case HttpStatus.SC_REQUEST_TIMEOUT:
 		        case HttpStatus.SC_BAD_GATEWAY:
@@ -276,7 +276,7 @@ public class LoginActivity extends BaseActivity {
 	    	if (handleLoginResultCode(httpResponseCode)) {
 		        // Redirect to list activity
 	        	Bundle bundle = new Bundle();
-		        bundle.putInt("TAB", MainTabActivity.TAB_PROFILE);
+		        bundle.putInt(SkopeApplication.BUNDLEKEY_TAB, MainTabActivity.TAB_PROFILE);
 		        Intent i = new Intent();
 	        	i.setClassName("nl.skope.android",
 	        				   "nl.skope.android.ui.GatewayActivity");
