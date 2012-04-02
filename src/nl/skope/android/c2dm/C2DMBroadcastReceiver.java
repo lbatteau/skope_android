@@ -9,8 +9,7 @@ import nl.skope.android.R;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
-import nl.skope.android.ui.GatewayActivity;
-import nl.skope.android.ui.MainTabActivity;
+import nl.skope.android.ui.OOIChatActivity;
 import nl.skope.android.ui.OOIDetailMapActivity.AsyncTaskListener;
 
 import org.apache.http.HttpStatus;
@@ -24,7 +23,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 
@@ -112,19 +110,19 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 		CharSequence text = String.format("%s: %s", sender, content);
 
 		// Set the icon, scrolling text and timestamp
-		Notification notification = new Notification(R.drawable.ic_launcher,
+		Notification notification = new Notification(R.drawable.ic_stat_notify,
 				text, System.currentTimeMillis());
 
 		// The PendingIntent to launch our activity if the user selects this
 		// notification
-		Intent notificationIntent = new Intent(context, GatewayActivity.class);
-		notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		Intent notificationIntent = new Intent(context, OOIChatActivity.class);
+		notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		notificationIntent.putExtras(intent.getExtras());
 		notificationIntent.putExtra(SkopeApplication.BUNDLEKEY_USERID, userId);
 		notificationIntent.putExtra(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY, "nl.skope.android.ui.OOIChatActivity");
 
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
-				notificationIntent, 0);
+				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		// Set the info for the views that show in the notification panel.
 		notification.setLatestEventInfo(context, sender, content, contentIntent);
@@ -132,7 +130,7 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 
 		// Send the notification
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.notify(sender, 0, notification);
+		notificationManager.notify(SkopeApplication.NOTIFICATION_CHATMESSAGE, userId, notification);
 
 		// Get instance of Vibrator from current Context
 		Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);

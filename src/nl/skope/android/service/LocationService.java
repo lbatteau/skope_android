@@ -226,7 +226,7 @@ public class LocationService extends Service implements LocationListener  {
         CharSequence text = getText(R.string.location_service_started);
 
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(R.drawable.ic_launcher, text,
+        Notification notification = new Notification(R.drawable.ic_stat_notify, text,
                 System.currentTimeMillis());
         
         notification.flags |= Notification.FLAG_ONGOING_EVENT;

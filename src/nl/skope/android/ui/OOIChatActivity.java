@@ -1,12 +1,13 @@
 package nl.skope.android.ui;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.List;
 
 import nl.skope.android.R;
 import nl.skope.android.application.ChatMessage;
+import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
@@ -21,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -62,40 +64,18 @@ public class OOIChatActivity extends BaseActivity {
 
 	private LayoutInflater mInflater;
 	
+	// Conversation
+	private ArrayList<ChatMessage> mChatMessages;
 	// Array adapter for the conversation thread
 	private ChatArrayAdapter mChatArrayAdapter;
 	// String buffer for outgoing messages
 	private StringBuffer mOutStringBuffer;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.chat);
-		
-		if (getIntent() != null && getIntent().hasExtra(SkopeApplication.BUNDLEKEY_USER)) {
-			// User already retrieved and passed inside intent
-			mUser = getIntent().getParcelableExtra(SkopeApplication.BUNDLEKEY_USER);
-			mUser.setCache(getCache());
-
-		    update();
-		    
-			// Back button should go to detail
-		    View backButton = findViewById(R.id.detail_back_button);
-		    backButton.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					finish();
-				}
-			});		
-
-
-		} else if (getIntent() != null && getIntent().hasExtra(SkopeApplication.BUNDLEKEY_USERID)) {
-			// User not yet retrieved, but user ID passed
-			// Post request for retrieval of user
-			getServiceQueue().postToService(Type.READ_USER, getIntent().getExtras());
-			
-		}
 		
 		mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -103,30 +83,101 @@ public class OOIChatActivity extends BaseActivity {
 				"com.google.android.c2dm.intent.RECEIVE");
 		mIntentFilter.setPriority(1);
 		mIntentFilter.addCategory("nl.skope.android");
+		
+	}
+	
+	@Override
+	protected void onNewIntent(Intent intent) {
+		handleIntent(intent);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (mUser != null && checkCacheSanity()) {
+		if (checkCacheSanity()) {
 			registerReceiver(mIntentReceiver, mIntentFilter);
-			Bundle bundle = new Bundle();
-			bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mUser.getId());
-			bundle.putBoolean(SkopeApplication.BUNDLEKEY_MARKASREAD, true);
-			getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, bundle);
+			if (mUser != null) {
+				requestChatMessagesUpdate();
+			}
 		}
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
-		setupChat();
+		if (checkCacheSanity()) {
+			setupChat();
+			handleIntent(getIntent());
+		}
 	}
 
 	@Override
 	protected void onPause() {
+		try {
+			unregisterReceiver(mIntentReceiver);
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}
 		super.onPause();
-		unregisterReceiver(mIntentReceiver);
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		savedInstanceState.putParcelableArrayList("chat_messages", mChatMessages);
+		super.onSaveInstanceState(savedInstanceState);
+	}
+	
+	@Override
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		mChatMessages = savedInstanceState.getParcelableArrayList("chat_messages");
+	}
+	
+	protected void handleIntent(Intent intent) {
+		if (intent != null && intent.hasExtra(SkopeApplication.BUNDLEKEY_USER)) {
+			// User already retrieved and passed inside intent
+			User user = intent.getParcelableExtra(SkopeApplication.BUNDLEKEY_USER);
+			
+			if (mUser == null || user.getId() != mUser.getId()) {
+				mUser = user;
+				mUser.setCache(getCache());
+				update();
+				mChatArrayAdapter.clear();
+			}
+			
+			// Having a user present in the bundle means this activity was
+			// launched from either UserChatsActivity or OOIDetailActivity.
+			// Either way, finishing this activity is enough to go back.
+		    View backButton = findViewById(R.id.detail_back_button);
+		    backButton.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					finish();
+				}
+			});
+			
+			requestChatMessagesUpdate();
+
+		} else if (intent != null && intent.hasExtra(SkopeApplication.BUNDLEKEY_USERID)) {
+			// User ID passed. Check if user is already loaded.
+			int userId = intent.getIntExtra(SkopeApplication.BUNDLEKEY_USERID, 0);
+			if (mUser == null || userId != mUser.getId()) {
+				// Not loaded. Post request for retrieval of user
+				getServiceQueue().postToService(Type.READ_USER, intent.getExtras());
+				// Clear conversation
+				mChatArrayAdapter.clear();
+			}
+			
+		}		
+	}
+	
+	protected void requestChatMessagesUpdate() {
+		if (mUser != null && checkCacheSanity()) {
+			Bundle bundle = new Bundle();
+			bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mUser.getId());
+			bundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_MARKASREAD, true);
+			getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, bundle);
+		}		
 	}
 	
 	protected void update() {
@@ -199,7 +250,8 @@ public class OOIChatActivity extends BaseActivity {
 		Log.d(TAG, "setupChat()");
 
 		// Initialize the array adapter for the conversation thread
-		mChatArrayAdapter = new ChatArrayAdapter(this, R.layout.chat_message_to);
+		mChatMessages = new ArrayList<ChatMessage>();
+		mChatArrayAdapter = new ChatArrayAdapter(this, R.layout.chat_message_to, mChatMessages);
 		
 		mConversationView = (ListView) findViewById(R.id.in);
 		mConversationView.setAdapter(mChatArrayAdapter);
@@ -231,7 +283,7 @@ public class OOIChatActivity extends BaseActivity {
 		case READ_USER_END:
 			mUser = bundle.getParcelable(SkopeApplication.BUNDLEKEY_USER);
 			update();
-			onResume();
+			requestChatMessagesUpdate();
 			// Back button should go to detail
 		    View backButton = findViewById(R.id.detail_back_button);
 		    backButton.setOnClickListener(new OnClickListener() {
@@ -242,6 +294,7 @@ public class OOIChatActivity extends BaseActivity {
 		        	Bundle bundle = new Bundle();
 			        bundle.putParcelable(SkopeApplication.BUNDLEKEY_USER, mUser);
 			        i.putExtras(bundle);
+			        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 					startActivity(i);
 					finish();
 				}
@@ -265,13 +318,21 @@ public class OOIChatActivity extends BaseActivity {
 				}
 
 				// Copy the JSON list of messages to our adapter
-				mChatArrayAdapter.clear();
+				
+				// Check if this is the full list or only new messages
+				boolean isNewMessages = bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_UNREAD);
+				
+				if (!isNewMessages) {
+					// Full list, clear existing list 
+					mChatArrayAdapter.clear();
+				}
+
 				ChatMessage lastChat = null;
 				for (int i = 0; i < jsonResponse.length(); i++) {
 					try {
 						JSONObject jsonObject = jsonResponse.getJSONObject(i);
 						ChatMessage chat = new ChatMessage(jsonObject);
-						if (i == 0) {
+						if (mChatArrayAdapter.getCount() == 0) {
 							ChatMessage dateGroup = new ChatMessage(true, chat.getTimestamp());
 							mChatArrayAdapter.add(dateGroup);
 						} else if(lastChat != null && isMessageOnDifferentDay(chat, lastChat)) {
@@ -285,6 +346,14 @@ public class OOIChatActivity extends BaseActivity {
 						e.printStackTrace();
 					}
 				}
+				
+				// Clear notification
+				if (mUser != null) {
+					NotificationManager notificationManager =
+						(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+					notificationManager.cancel(SkopeApplication.NOTIFICATION_CHATMESSAGE, mUser.getId());
+				}
+				
 			}
 			break;
 		default:
@@ -304,58 +373,17 @@ public class OOIChatActivity extends BaseActivity {
 	private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			boolean isMessageAlreadyPresent = false;
-			
-			// Extract message ID
-			int id = intent.getExtras().getInt(C2DMBroadcastReceiver.C2DM_MESSAGE_ID);
-			
 			// Extract sender user ID
 			int userId = Integer.parseInt(intent.getExtras().getString(C2DMBroadcastReceiver.C2DM_MESSAGE_USERID));
 
 			// Check if sender ID matches the selected user ID
 			if (userId == mUser.getId()) {
-				// Match
-				
-				// It is possible that at the moment this C2DM message is received, 
-				// the chat message has already been retrieved from the server.
-				// Check if already present.
-				for (int i=0; i<mChatArrayAdapter.getCount(); i++) {
-					if (mChatArrayAdapter.getItem(i).getId() == id) {
-						// Message already present
-						isMessageAlreadyPresent = true;
-						break;
-					}
-				}
-				
-				// Only add message to conversation if not already present
-				if (!isMessageAlreadyPresent) {
-					// Extract message information from bundle
-					String content = intent.getExtras().getString(C2DMBroadcastReceiver.C2DM_MESSAGE_CONTENT);
-					Date timestamp = null;
-					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					try {
-						timestamp = df.parse(intent.getExtras().getString(C2DMBroadcastReceiver.C2DM_MESSAGE_TIMESTAMP));
-					} catch (ParseException e) {
-						Log.e(TAG, e.toString());
-					}
-					
-					// Create chat message
-					ChatMessage chat = new ChatMessage(id, userId, timestamp, content, true);
-
-					// Check if we need to add a date group header
-					int chatArraySize = mChatArrayAdapter.getCount();
-					// Check if the conversation is empty, 
-					// or the last chat is on a different day
-					if (chatArraySize == 0
-						|| isMessageOnDifferentDay(chat, 
-									mChatArrayAdapter.getItem(chatArraySize - 1))) {
-						// Add header
-						ChatMessage dateGroup = new ChatMessage(true, chat.getTimestamp());
-						mChatArrayAdapter.add(dateGroup);
-					}
-					mChatArrayAdapter.add(chat);
-
-				}
+				// Match, request update
+				Bundle bundle = new Bundle();
+				bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mUser.getId());
+				bundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD, true);
+				bundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_MARKASREAD, true);
+				getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, bundle);
 
 				// Get instance of Vibrator from current Context
 				Vibrator v = (Vibrator) context
@@ -462,8 +490,8 @@ public class OOIChatActivity extends BaseActivity {
 	private class ChatArrayAdapter extends ArrayAdapter<ChatMessage> {
 		SimpleDateFormat mDateFormat = new SimpleDateFormat("MMM d");
 
-		public ChatArrayAdapter(Context context, int textViewResourceId) {
-			super(context, textViewResourceId);
+		public ChatArrayAdapter(Context context, int textViewResourceId, List<ChatMessage> list) {
+			super(context, textViewResourceId, list);
 		}
 		
 		@Override

@@ -7,8 +7,13 @@ import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
+import nl.skope.android.http.CustomHttpClient;
+import nl.skope.android.http.CustomHttpClient.RequestMethod;
+import nl.skope.android.ui.OOIChatActivity.ChatPost;
+import nl.skope.android.ui.OOIDetailMapActivity.AsyncTaskListener;
 import nl.skope.android.util.Type;
 
+import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +23,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -34,6 +40,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainTabActivity extends TabActivity {
+	private static final String TAG = "MainTabActivity";
 	public final static int TAB_LIST = 0;
 	public final static int TAB_MAP = 1;
 	public final static int TAB_PROFILE = 2;
@@ -49,28 +56,7 @@ public class MainTabActivity extends TabActivity {
     // C2DM Intent Filter
 	private IntentFilter mIntentFilter;
 	
-	private int mTotalUnreadMessages;
 	private TextView mUnreadMessagesView;
-
-	/***
-	 * Handler which is subscribed to the UiQueue whenever the Activity is on
-	 * screen.
-	 */
-	private final Handler mHandler = new Handler() {
-			@Override
-			public void handleMessage(final Message message) {
-	
-				/** TEST: Try and catch an error condition **/
-				if (message.what == Type.SHOW_DIALOG.ordinal()
-						&& message.obj == null) {
-					Log.e(SkopeApplication.LOG_TAG, "BaseActivity.Handler."
-							+ "handleMessage() ERROR");
-				}
-				/** TEST: Try and catch an error condition **/
-	
-				processMessage(message);
-			}
-		};
 
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
@@ -139,19 +125,6 @@ public class MainTabActivity extends TabActivity {
 	        }
 	    }*/
 	    
-	    mTabHost.setOnTabChangedListener(new OnTabChangeListener() {
-
-	        @Override
-	        public void onTabChanged(String tabId) {
-	            if (tabId.equals("chat")) {
-	            	mUiQueue.unsubscribe(mHandler);
-	            } else {
-	            	mUiQueue.subscribe(mHandler);
-	            }
-
-	        }
-	    });
-	    
 		mIntentFilter = new IntentFilter("com.google.android.c2dm.intent.RECEIVE");
 		mIntentFilter.setPriority(1);
 		mIntentFilter.addCategory("nl.skope.android");
@@ -161,21 +134,19 @@ public class MainTabActivity extends TabActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (mTabHost.getCurrentTab() != TAB_CHAT) {
-			mUiQueue.subscribe(mHandler);
-			int userId; 
-			Bundle bundle = new Bundle();
-			userId = mCache.getUser().getId();
-			bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userId);
-			mServiceQueue.postToService(Type.READ_USER_CHATS, bundle);
+		if (checkCacheSanity()) {
+			registerReceiver(mIntentReceiver, mIntentFilter);
+			updateChatNotification();
 		}
-		registerReceiver(mIntentReceiver, mIntentFilter);
 	}
 	
 	@Override
 	protected void onPause() {
-		mUiQueue.unsubscribe(mHandler);
-		unregisterReceiver(mIntentReceiver);
+		try {
+			unregisterReceiver(mIntentReceiver);
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}
 		super.onPause();
 	}
 
@@ -208,108 +179,35 @@ public class MainTabActivity extends TabActivity {
 	    }
 	}
 	
-	/***
-	 * Overridable method for handling any messages not caught by the Activities
-	 * own post() method. The code pattern allows more generic messages to be
-	 * handled here (show battery warning dialog, etc).
-	 * 
-	 * @param type
-	 *            Message type.
-	 * @param bundle
-	 *            Optional Bundle of extra information.
-	 */
-	public void post(final Type type, final Bundle bundle) {
-		switch (type) {
-		case READ_USER_CHATS_START:
-			mTotalUnreadMessages = 0;
-			break;
-		case READ_USER_CHATS_END:
-			updateNrUnreadMessages(mTotalUnreadMessages);
-			break;
-		case READ_USER_CHAT_MESSAGES_START:
-			break;
-		case READ_USER_CHAT_MESSAGES_END:
-			// Get ooi from bundle
-			ObjectOfInterest ooi = mCache.getUserChatsList().
-							getById(bundle.getInt(SkopeApplication.BUNDLEKEY_USERID));
-			// Get messages from bundle
-			String response = bundle.getString(SkopeApplication.BUNDLEKEY_RESPONSE);
-			// Check for 'unread' flag
-			boolean isUnreadMessages = false;
-			if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
-				isUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_UNREAD);
-			}		
-			JSONArray jsonArray = null;
-			if (response == null) {
-				return;
-			} else {
-				// Extract JSON data from response
-				try {
-					jsonArray = new JSONArray(response);
-				} catch (JSONException e) {
-					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
-				}
-				
-				if (isUnreadMessages) {
-					// Update unread messages marker
-					
-					// Check size
-					int nrOfMessages = jsonArray.length();
-					mTotalUnreadMessages += nrOfMessages;
-					if (mTotalUnreadMessages == 0) {
-    					// Nothing in result
-    					ooi.setNrUnreadMessages(0);
-    				} else {
-        				ooi.setNrUnreadMessages(mTotalUnreadMessages);	      					
-    				}
-    				
-				} else {
-					// Extract the last chat message
-    				ChatMessage lastChat = null;
-					try {
-						JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
-	    				lastChat = new ChatMessage(jsonObject);
-					} catch (JSONException e) {
-						Log.e(SkopeApplication.LOG_TAG, e.toString());
-					}
-					
-					if (lastChat != null) {
-						if (ooi != null) {
-	    					// Update user's last message and notify adapter
-							ooi.setLastChatMessage(lastChat.createTimeLabel() + ": " + lastChat.getMessage());
-						}
-					}
-				}
-			}
-			break;
-        case UNDETERMINED_LOCATION:
-        	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
-        	break;
-        	
-	
-		default:
-			// Do nothing.
-			break;
-		}
-	}
-	
-	/***
-	 * Process an incoming message by getting the Type and optional bundle and
-	 * passing it to the overridable post() method.
-	 * 
-	 * @param message
-	 *            Message to process.
-	 */
-	private void processMessage(final Message message) {
-		if (message.obj != null && message.obj.getClass() == Bundle.class) {
-			post(Type.getType(message.what), (Bundle) message.obj);
+	protected boolean checkCacheSanity() {
+		// Check user signed out
+		if (mCache.isUserSignedOut()) {
+			// User signed out, always go to login screen
+			Intent i = new Intent();
+			i.setClassName("nl.skope.android",
+					"nl.skope.android.ui.LoginActivity");
+			startActivity(i);
+			finish();
+			return false;
 		} else {
-			post(Type.getType(message.what), null);
+			// Not signed out. Check if user present
+			if (mCache.getUser() == null) {
+				// Not present, could have been garbage collected.
+				// Go back to login screen and set the auto login flag.
+				Intent i = new Intent();
+				i.setClassName("nl.skope.android",
+						"nl.skope.android.ui.LoginActivity");
+				// Add auto login flag
+				Bundle bundle = new Bundle();
+				bundle.putBoolean(LoginActivity.INTENT_AUTOLOGIN, true);
+				startActivity(i);
+				finish();
+				return false;
+			}
 		}
-	}
-
-	public void switchTab(int tab) {
+		
+		return true;
+	}	public void switchTab(int tab) {
 		getTabHost().setCurrentTab(tab);
 	}
 	
@@ -317,9 +215,7 @@ public class MainTabActivity extends TabActivity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// Update chats
-    		Bundle bundle = new Bundle();
-        	bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mCache.getUser().getId());
-        	mServiceQueue.postToService(Type.READ_USER_CHATS, bundle);
+    		updateChatNotification();
         	
 			// Get instance of Vibrator from current Context
 			Vibrator v = (Vibrator) context
@@ -332,15 +228,77 @@ public class MainTabActivity extends TabActivity {
 		}
 	};
 	
-	public void updateNrUnreadMessages(int nrUnreadMessages) {
-		mTotalUnreadMessages = nrUnreadMessages;
-		if (nrUnreadMessages > 0) {
-			mUnreadMessagesView.setText(String.valueOf(nrUnreadMessages));
-			mUnreadMessagesView.setVisibility(View.VISIBLE);
-		} else {
-			mUnreadMessagesView.setVisibility(View.GONE);
-		}
-		mTabHost.invalidate();
+	public void updateChatNotification() {
+		int userId = mCache.getUser().getId();
+		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+		String url = String.format("%s/user/%d/chat/?count&new", 
+							mCache.getProperty("skope_service_url"),
+							userId);
+		// Send message
+		new RetrieveNrUnreadMessages().execute(url, username, password);
 	}
+	
+	protected class RetrieveNrUnreadMessages extends AsyncTask<String, Void, CustomHttpClient> {
+		@Override
+		protected CustomHttpClient doInBackground(String... params) {
+			// Create HTTP client
+			CustomHttpClient client = new CustomHttpClient(params[0]);
+			client.setUseBasicAuthentication(true);
+			client.setUsernamePassword(params[1], params[2]);
+			
+			// Send HTTP request to web service
+			try {
+				client.execute(RequestMethod.GET);
+			} catch (Exception e) {
+				// Most exceptions already handled by client
+				e.printStackTrace();
+			}
+
+			return client;
+
+		}
+
+		@Override
+		protected void onPostExecute(CustomHttpClient client) {
+			// Check for server response
+			switch (client.getResponseCode()) {
+			case HttpStatus.SC_OK:
+				// Extract chat message from response
+				int nrUnreadMessages = 0;
+				try {
+		        	JSONObject jsonObject = new JSONObject(client.getResponse());
+		        	nrUnreadMessages = Integer.parseInt(jsonObject.getString("count"));
+		        } catch (JSONException e) {
+					// Log exception
+					Log.e(TAG, e.toString());
+				}
+		        
+		        
+				if (nrUnreadMessages > 0) {
+					mUnreadMessagesView.setText(String.valueOf(nrUnreadMessages));
+					mUnreadMessagesView.setVisibility(View.VISIBLE);
+				} else {
+					mUnreadMessagesView.setVisibility(View.GONE);
+				}
+				mTabHost.invalidate();		        
+				
+				break;
+			case 0:
+				// No server response
+				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+			case HttpStatus.SC_UNAUTHORIZED:
+			case HttpStatus.SC_REQUEST_TIMEOUT:
+			case HttpStatus.SC_BAD_GATEWAY:
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+			case HttpStatus.SC_BAD_REQUEST:
+				Log.e(TAG, "Failed to read chat count: "
+						+ client.getErrorMessage());
+			}
+
+		}
+
+	}	
 
 }

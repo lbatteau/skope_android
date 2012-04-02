@@ -66,6 +66,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	private User mSelectedOOI;
 	ObjectOfInterestList mFavoritesList;
 	ObjectOfInterestArrayAdapter mFavoritesListAdapter;
+	private boolean mStopUpdatingMap = false;
 	
 	
     @Override
@@ -441,24 +442,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         initializeMapView();
 		populateItemizedOverlays();
 		
-		// Update map to span and center between user and ooi
-		if (getCache().getCurrentLocation() != null) {
-			MapController mapController = mMapView.getController();
 
-			int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
-			int userLongitude = (int) (getCache().getCurrentLocation()
-					.getLongitude() * 1E6);
-			int ooiLatitude = (int) (mSelectedOOI.getLocation()
-					.getLatitude() * 1E6);
-			int ooiLongitude = (int) (mSelectedOOI.getLocation()
-					.getLongitude() * 1E6);
-	
-			mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
-					(userLongitude + ooiLongitude) / 2));
-	
-			mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
-					Math.abs(userLongitude - ooiLongitude));
-		}
 	}
 	
 	private void updateListFromCache() {
@@ -519,6 +503,25 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
 		ooiOverlay.addOverlay(createOverlay(mSelectedOOI));
 		mMapOverlays.add(1, ooiOverlay);
+		
+		// Update map to span and center between user and ooi
+		if (getCache().getCurrentLocation() != null) {
+			MapController mapController = mMapView.getController();
+
+			int userLatitude = (int) (getCache().getCurrentLocation().getLatitude() * 1E6);
+			int userLongitude = (int) (getCache().getCurrentLocation()
+					.getLongitude() * 1E6);
+			int ooiLatitude = (int) (mSelectedOOI.getLocation()
+					.getLatitude() * 1E6);
+			int ooiLongitude = (int) (mSelectedOOI.getLocation()
+					.getLongitude() * 1E6);
+	
+			mapController.animateTo(new GeoPoint((userLatitude + ooiLatitude) / 2,
+					(userLongitude + ooiLongitude) / 2));
+	
+			mapController.zoomToSpan(Math.abs(userLatitude - ooiLatitude),
+					Math.abs(userLongitude - ooiLongitude));
+		}
 
 	}
 

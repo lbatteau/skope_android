@@ -112,7 +112,7 @@ public class WorkerThread extends Thread {
      */
     protected final void add(final Message message) {
         synchronized (mWorkQueue) {
-            Log.i(SkopeApplication.LOG_TAG, "WorkerThread.add() "
+            Log.i(TAG, "WorkerThread.add() "
                     + "Message type[" + Type.getType(message.what) + "]");
             mWorkQueue.add(message);
             showQueue();
@@ -139,7 +139,7 @@ public class WorkerThread extends Thread {
             Bundle bundle = null;
             synchronized (mWorkQueue) {
                 Message message = mWorkQueue.remove(0);
-                Log.i(SkopeApplication.LOG_TAG, "WorkerThread.run() "
+                Log.i(TAG, "WorkerThread.run() "
                         + "Message type[" + Type.getType(message.what) + "]");
                 type = Type.getType(message.what);
                 if (message.obj != null
@@ -270,7 +270,8 @@ public class WorkerThread extends Thread {
 	        	jsonResponse = new JSONArray(response);
 			} catch (JSONException e) {
 				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
+				return;
 			}
 			
 			// Copy the JSON list of objects to our OOI list
@@ -352,7 +353,7 @@ public class WorkerThread extends Thread {
 	        	jsonResponse = new JSONArray(response);
 			} catch (JSONException e) {
 				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
 			}
 			
 			// Copy the JSON list of objects to our OOI list
@@ -437,7 +438,7 @@ public class WorkerThread extends Thread {
         	user = new User(jsonObject);
         } catch (JSONException e) {
 			// Log exception
-			Log.e(SkopeApplication.LOG_TAG, e.toString());
+			Log.e(TAG, e.toString());
 		}
 		
         Bundle outBundle = new Bundle();
@@ -486,7 +487,7 @@ public class WorkerThread extends Thread {
 	        	jsonResponse = new JSONArray(response);
 			} catch (JSONException e) {
 				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
 			}
 			
 			// Copy the JSON list of objects to our OOI list
@@ -525,22 +526,6 @@ public class WorkerThread extends Thread {
         // Replace cached list with new list
         mCache.getUserChatsList().update(chatsList);
         
-        // Now retrieve all corresponding
-    	// Update status message
-    	for (ObjectOfInterest ooi: chatsList) {
-    		Bundle messagesBundle = new Bundle();
-        	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
-        	readUserChatMessages(messagesBundle);
-    	}
-    	
-    	// Update nr unread messages
-    	for (ObjectOfInterest ooi: chatsList) {
-    		Bundle messagesBundle = new Bundle();
-        	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
-        	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_UNREAD, true);
-        	readUserChatMessages(messagesBundle);
-    	}
-        
         mUiQueue.postToUi(Type.READ_USER_CHATS_END, null, true);
 
         /*if (bundle != null) {
@@ -565,13 +550,23 @@ public class WorkerThread extends Thread {
 
 		// Check for 'unread' flag
 		boolean filterUnreadMessages = false;
-		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
-			filterUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_UNREAD);
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_UNREAD)) {
+			filterUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD);
 		}
 
 		boolean markAsRead = false;
-		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_MARKASREAD)) {
-			markAsRead = bundle.getBoolean(SkopeApplication.BUNDLEKEY_MARKASREAD);
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_MARKASREAD)) {
+			markAsRead = bundle.getBoolean(SkopeApplication.BUNDLEKEY_CHAT_MARKASREAD);
+		}
+		
+		boolean filterFrom = false;
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_FROM)) {
+			filterFrom = bundle.getBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM);
+		}
+		
+		boolean lastMessage = false;
+		if (bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_LAST)) {
+			lastMessage = bundle.getBoolean(SkopeApplication.BUNDLEKEY_CHAT_LAST);
 		}
 
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
@@ -593,6 +588,22 @@ public class WorkerThread extends Thread {
 			}
 		}
 		
+		if (filterFrom) {
+			if (filterUnreadMessages || markAsRead) {
+				serviceUrl += "&from";				
+			} else {
+				serviceUrl += "?from";
+			}
+		}
+		
+		if (lastMessage) {
+			if (filterUnreadMessages || markAsRead || filterFrom) {
+				serviceUrl += "&last";
+			} else {
+				serviceUrl += "?last";
+			}
+		}
+		
 		// Set up HTTP client
         CustomHttpClient client = new CustomHttpClient(serviceUrl, mLocationService.getApplicationContext());
         client.setUseBasicAuthentication(true);
@@ -608,13 +619,8 @@ public class WorkerThread extends Thread {
         
         String response = client.getResponse();
         
-        Bundle outBundle = new Bundle();
-        outBundle.putString(SkopeApplication.BUNDLEKEY_RESPONSE, response);
-        outBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userFromId);
-        if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
-			outBundle.putBoolean(SkopeApplication.BUNDLEKEY_UNREAD, filterUnreadMessages);
-		}
-        mUiQueue.postToUi(Type.READ_USER_CHAT_MESSAGES_END, outBundle, false);
+        bundle.putString(SkopeApplication.BUNDLEKEY_RESPONSE, response);
+        mUiQueue.postToUi(Type.READ_USER_CHAT_MESSAGES_END, bundle, false);
     }
 
 
@@ -747,7 +753,7 @@ public class WorkerThread extends Thread {
 	        	jsonResponse = new JSONArray(response);
 			} catch (JSONException e) {
 				// Log exception
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
 			}
 			
 			// Copy the JSON list of objects to our OOI list
@@ -810,16 +816,18 @@ public class WorkerThread extends Thread {
      * UI.
      */
     private void showQueue() {
-        StringBuffer stringBuffer = new StringBuffer();
-        Iterator<Message> queue = mWorkQueue.iterator();
-        while (queue.hasNext()) {
-            Message message = queue.next();
-        	stringBuffer.append("Message type[");
-            stringBuffer.append(Type.getType(message.what));
-            stringBuffer.append("]\n");
-        }
-        mCache.setQueue(stringBuffer.toString());
-        mUiQueue.postToUi(Type.UPDATE_QUEUE, null, true);
+    	synchronized(mWorkQueue) {
+            StringBuffer stringBuffer = new StringBuffer();
+            Iterator<Message> queue = mWorkQueue.iterator();
+            while (queue.hasNext()) {
+                Message message = queue.next();
+            	stringBuffer.append("Message type[");
+                stringBuffer.append(Type.getType(message.what));
+                stringBuffer.append("]\n");
+            }
+            mCache.setQueue(stringBuffer.toString());
+            mUiQueue.postToUi(Type.UPDATE_QUEUE, null, true);
+    	}
     }
 
     /***

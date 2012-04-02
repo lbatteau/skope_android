@@ -29,7 +29,7 @@
                 android:id="@+id/chat_header_label"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Lukas Batteau"
+                android:text=""
                 android:layout_weight="1"
                 android:gravity="right"
                 android:layout_gravity="center"

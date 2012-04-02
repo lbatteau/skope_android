@@ -9,6 +9,7 @@
  */
 package nl.skope.android.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nl.skope.android.R;
@@ -16,6 +17,7 @@ import nl.skope.android.application.ChatMessage;
 import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
+import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.util.Type;
 
@@ -23,12 +25,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,6 +65,9 @@ public class UserChatsActivity extends BaseActivity {
     
     private ProgressBar mProgressBar;
     
+    // C2DM Intent Filter
+	private IntentFilter mIntentFilter;
+	
 	private OnItemClickListener mOOISelectListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
@@ -107,22 +114,56 @@ public class UserChatsActivity extends BaseActivity {
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mChatsListAdapter); 
         listView.setOnItemClickListener(mOOISelectListener);
+        
+        mIntentFilter = new IntentFilter("com.google.android.c2dm.intent.RECEIVE");
+		mIntentFilter.setPriority(2); // Make sure it overrides receiver in MainTabActivity
+		mIntentFilter.addCategory("nl.skope.android");
     }
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		int userId; 
-		Bundle bundle = new Bundle();
-		userId = getCache().getUser().getId();
-		bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userId);
-		getServiceQueue().postToService(Type.READ_USER_CHATS, bundle);
+		if (checkCacheSanity()) {
+			requestChatUsersUpdate();
+			registerReceiver(mIntentReceiver, mIntentFilter);			
+		}
 	}
 	
 	@Override
 	protected void onPause() {
+		try {
+			unregisterReceiver(mIntentReceiver);
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}
 		super.onPause();
-	}	
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		ArrayList<User> list = new ArrayList<User>();
+		list.addAll(mChatsList);
+		savedInstanceState.putParcelableArrayList("chat_users", list);
+		super.onSaveInstanceState(savedInstanceState);
+	}
+	
+	@Override
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		ArrayList<User> list = new ArrayList<User>();
+		list = savedInstanceState.getParcelableArrayList("chat_users");
+		for (User user: list) {
+			mChatsList.add((ObjectOfInterest) user);
+		}
+	}
+
+	private void requestChatUsersUpdate() {
+		int userId; 
+		Bundle bundle = new Bundle();
+		userId = getCache().getUser().getId();
+		bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userId);
+		getServiceQueue().postToService(Type.READ_USER_CHATS, bundle);		
+	}
 	
 	private void updateListFromCache() {
 		mChatsList.clear();
@@ -156,9 +197,27 @@ public class UserChatsActivity extends BaseActivity {
             case READ_USER_CHATS_END:
             	updateListFromCache();
             	MainTabActivity parent = (MainTabActivity) getParent();
-            	parent.updateNrUnreadMessages(mNrUnreadMessages);
+            	parent.updateChatNotification();
             	mProgressBar.setVisibility(ProgressBar.INVISIBLE);
             	
+                // Now retrieve all last messages to display in the list
+            	for (ObjectOfInterest ooi: mChatsList) {
+            		Bundle messagesBundle = new Bundle();
+                	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
+                	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM, true);
+                	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_LAST, true);
+                	getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, messagesBundle);
+            	}
+            	
+            	// Retrieve number of unread messages
+            	for (ObjectOfInterest ooi: mChatsList) {
+            		Bundle messagesBundle = new Bundle();
+                	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
+                	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD, true);
+                	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM, true);
+                	getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, messagesBundle);
+            	}
+                
             	break;
             	
     		case READ_USER_CHAT_MESSAGES_START:
@@ -171,8 +230,8 @@ public class UserChatsActivity extends BaseActivity {
     			String response = bundle.getString(SkopeApplication.BUNDLEKEY_RESPONSE);
     			// Check for 'unread' flag
     			boolean isUnreadMessages = false;
-    			if (bundle.containsKey(SkopeApplication.BUNDLEKEY_UNREAD)) {
-    				isUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_UNREAD);
+    			if (bundle.containsKey(SkopeApplication.BUNDLEKEY_CHAT_UNREAD)) {
+    				isUnreadMessages = bundle.getBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD);
     			}		
     			JSONArray jsonArray = null;
     			if (response == null) {
@@ -307,4 +366,23 @@ public class UserChatsActivity extends BaseActivity {
             return convertView;
         }
     }
+    
+	private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// Update chats
+			requestChatUsersUpdate();
+        	
+			// Get instance of Vibrator from current Context
+			Vibrator v = (Vibrator) context
+					.getSystemService(Context.VIBRATOR_SERVICE);
+
+			// Vibrate for 300 milliseconds
+			v.vibrate(300);
+
+			abortBroadcast();
+		}
+	};
+	
+    
 }

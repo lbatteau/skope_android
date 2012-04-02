@@ -44,22 +44,9 @@ public class LoginActivity extends BaseActivity {
 		mPreferences = getCache().getPreferences();
 
 		// Read username and password from shared preferences
-		String username = mPreferences.getString(SkopeApplication.PREFS_USERNAME, "");
-		String password = mPreferences.getString(SkopeApplication.PREFS_PASSWORD, "");
+		mUsername = mPreferences.getString(SkopeApplication.PREFS_USERNAME, "");
+		mPassword = mPreferences.getString(SkopeApplication.PREFS_PASSWORD, "");
 		
-		// Check for intent parameters
-		if (getIntent() != null && getIntent().getExtras() != null) {
-			// Check for auto login
-        	boolean isAutoLogin = getIntent().getExtras().getBoolean(INTENT_AUTOLOGIN);
-        	if (isAutoLogin) {
-        		// Auto login: Check for username and password
-        		if (!username.equals("") && !password.equals("")) {
-        			// Username and password present
-        			new LoginTask().execute(username, password);
-        		}
-        	}
-        }		
-	    
 		// load up the layout
 		setContentView(R.layout.login);
 		
@@ -78,13 +65,18 @@ public class LoginActivity extends BaseActivity {
 		}
 		
         // Check if username and password already present
-		if (!username.equals("") && !password.equals("")) {
-			// Present, fill edit fields
+		if (!mUsername.equals("") && !mPassword.equals("")) {
+			// Present, auto login if user not present
+			if (getCache().getUser() == null) {
+				new LoginTask().execute(mUsername, mPassword);
+			}
+			
+			// Fill in edit fields
 			EditText usernameEditText = (EditText) findViewById(R.id.txt_username);
 			EditText passwordEditText = (EditText) findViewById(R.id.txt_password);
-			usernameEditText.setText(username);
-			passwordEditText.setText(password);
-		}		
+			usernameEditText.setText(mUsername);
+			passwordEditText.setText(mPassword);
+		}	
 
 		// Login button action
 		Button login = (Button) findViewById(R.id.login_button);

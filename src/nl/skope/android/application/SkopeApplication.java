@@ -43,10 +43,13 @@ public class SkopeApplication extends Application {
 	public final static String BUNDLEKEY_BACKACTIVITY = "BACK";
 	public final static String BUNDLEKEY_TAB = "TAB";
 	public final static String BUNDLEKEY_USERID = "USERID";
-	public final static String BUNDLEKEY_UNREAD = "UNREAD";
-	public final static String BUNDLEKEY_MARKASREAD = "MARKASREAD";
+	public final static String BUNDLEKEY_CHAT_UNREAD = "UNREAD";
+	public final static String BUNDLEKEY_CHAT_FROM = "FROM";
+	public final static String BUNDLEKEY_CHAT_LAST = "LAST";
+	public final static String BUNDLEKEY_CHAT_MARKASREAD = "MARKASREAD";
 	public final static String BUNDLEKEY_USER = "USER";
 	public final static String BUNDLEKEY_RESPONSE = "RESPONSE";
+	public final static String NOTIFICATION_CHATMESSAGE = "CHATMESSAGE";
 
 
 

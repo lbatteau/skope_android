@@ -99,20 +99,17 @@ public class User implements Parcelable {
 		this.mEducationStudy = in.readString();
 		this.mEducationCollege = in.readString();
 		this.mInterests = in.readString();
-		try {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-			this.mDateOfBirth = df.parse(in.readString());
-		} catch(ParseException e) {
-			Log.i(TAG, "Unreadable date format in parcel " + e);
+		String dateOfBirth = in.readString();
+		if (!dateOfBirth.equals("")) {
+			this.mDateOfBirth = new Date(Long.parseLong(dateOfBirth));
 		}
 		this.mIsDateofBirthPublic = Boolean.parseBoolean(in.readString());
 		this.mSex = in.readString();
 		this.mIsSexPublic = Boolean.parseBoolean(in.readString());
 		this.mLocation = in.readParcelable(Location.class.getClassLoader());
-		try {
-			this.mLocationTimestamp = Timestamp.valueOf(in.readString());
-		} catch(IllegalArgumentException e) {
-			Log.i(TAG, "Unreadable timestamp in parcel " + e);
+		String locationTimestamp = in.readString();
+		if (!locationTimestamp.equals("")) {
+			this.mLocationTimestamp = new Timestamp(Long.parseLong(locationTimestamp));
 		}
 		this.mIsFirstTime = Boolean.parseBoolean(in.readString());
 	}
@@ -137,12 +134,12 @@ public class User implements Parcelable {
 		dest.writeString(this.mEducationStudy != null ? this.mEducationStudy : "");
 		dest.writeString(this.mEducationCollege != null ? this.mEducationCollege : "");
 		dest.writeString(this.mInterests != null ? this.mInterests : "");
-		dest.writeString(this.mDateOfBirth != null ? this.mDateOfBirth.toString() : "");
+		dest.writeString(this.mDateOfBirth != null ? String.valueOf(this.mDateOfBirth.getTime()) : "");
 		dest.writeString(String.valueOf(this.mIsDateofBirthPublic));
 		dest.writeString(this.mSex);
 		dest.writeString(String.valueOf(this.mIsSexPublic));
 		dest.writeParcelable(this.mLocation, 0);
-		dest.writeString(this.mLocationTimestamp != null ? this.mLocationTimestamp.toString() : "");
+		dest.writeString(this.mLocationTimestamp != null ? String.valueOf(this.mLocationTimestamp.getTime()) : "");
 		dest.writeString(String.valueOf(this.mIsFirstTime));
 	}
 
