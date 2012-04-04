@@ -1,5 +1,7 @@
 package nl.skope.android.ui;
 
+import java.util.Date;
+
 import nl.skope.android.R;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
@@ -29,8 +31,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class LoginActivity extends BaseActivity {
-	public final static String INTENT_AUTOLOGIN = "AUTOLOGIN";
-	
+
 	String mUsername;
 	String mPassword;
 	
@@ -50,6 +51,9 @@ public class LoginActivity extends BaseActivity {
 		// load up the layout
 		setContentView(R.layout.login);
 		
+		/**
+		 * User
+		 */
 		// Check if user already present
 		if (getCache().getUser() != null && !getCache().isUserSignedOut()) {
 			// Present, unmark first time login
@@ -59,6 +63,7 @@ public class LoginActivity extends BaseActivity {
 	        Intent i = new Intent();
         	i.setClassName("nl.skope.android",
         				   "nl.skope.android.ui.MainTabActivity");
+        	i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         	startActivity(i);
         	finish();
         	return;
@@ -68,6 +73,7 @@ public class LoginActivity extends BaseActivity {
 		if (!mUsername.equals("") && !mPassword.equals("")) {
 			// Present, auto login if user not present
 			if (getCache().getUser() == null) {
+				// Auto login
 				new LoginTask().execute(mUsername, mPassword);
 			}
 			
@@ -194,15 +200,46 @@ public class LoginActivity extends BaseActivity {
     	editor.putString(SkopeApplication.PREFS_USERNAME, mUsername);
     	editor.putString(SkopeApplication.PREFS_PASSWORD, mPassword);
     	editor.putInt(SkopeApplication.PREFS_USERID, user.getId());
+    	
+    	// Store preference defaults
+        editor.putBoolean(SkopeApplication.PREFS_GPSENABLED, false);
     	editor.commit();
-        
-        // Retrieve favorites
+
+    	// Retrieve favorites
         Bundle favoritesBundle = new Bundle();
         favoritesBundle.putInt("USER_ID", user.getId());
 		getServiceQueue().postToService(Type.READ_USER_FAVORITES, favoritesBundle);
 		
 		// Set flag
 		getCache().setUserSignedOut(false);
+		
+		/**
+		 * C2DM Registration
+		 */
+		String registrationId = getCache().getPreferences().getString(
+				SkopeApplication.PREFS_C2DM_REGISTRATIONID, "");
+
+		// Determine age of registration ID
+		long registrationTimestamp = getCache().getPreferences().getLong(
+				SkopeApplication.PREFS_C2DM_REGISTRATIONTIMESTAMP, new Date().getTime());
+		long now = new Date().getTime();
+		long daysDifference = (now - registrationTimestamp) / (24 * 60 * 60 * 1000);
+		// TODO arbitrary expiration time
+		boolean isRegistrationExpired = daysDifference > 7;
+		boolean isRegistrationIdPresent = registrationId == null || !registrationId.equals("");
+
+		if (!isRegistrationIdPresent || isRegistrationExpired) {
+			// Register for C2DM
+			Intent c2dmIntent = new Intent(
+					"com.google.android.c2dm.intent.REGISTER");
+			c2dmIntent.putExtra("app",
+					PendingIntent.getBroadcast(this, 0, new Intent(), 0));
+			c2dmIntent.putExtra("sender", "google@sko.pe");
+			// Start registration
+			startService(c2dmIntent);
+		}
+		
+		
 
 		// Return server response
         return client.getResponseCode();
@@ -270,8 +307,9 @@ public class LoginActivity extends BaseActivity {
 	        	Bundle bundle = new Bundle();
 		        bundle.putInt(SkopeApplication.BUNDLEKEY_TAB, MainTabActivity.TAB_PROFILE);
 		        Intent i = new Intent();
-	        	i.setClassName("nl.skope.android",
-	        				   "nl.skope.android.ui.GatewayActivity");
+		        	i.setClassName("nl.skope.android",
+				   "nl.skope.android.ui.MainTabActivity");
+		        	i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		        i.putExtras(bundle);
 	        	startActivity(i);
 	        	finish();

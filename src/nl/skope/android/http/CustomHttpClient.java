@@ -246,7 +246,7 @@ public class CustomHttpClient {
 
 					// Convert bitmap to byte array
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+					scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 					
 					// Speed up garbage collection
 					scaledBitmap.recycle();

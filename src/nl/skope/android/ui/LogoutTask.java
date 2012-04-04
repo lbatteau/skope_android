@@ -69,6 +69,7 @@ public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
         Intent i = new Intent();
     	i.setClassName("nl.skope.android",
     				   "nl.skope.android.ui.LoginActivity");
+    	i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);    	
     	mActivity.startActivity(i);
     	mActivity.finish();	
 	}

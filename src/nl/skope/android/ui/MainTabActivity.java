@@ -199,7 +199,8 @@ public class MainTabActivity extends TabActivity {
 						"nl.skope.android.ui.LoginActivity");
 				// Add auto login flag
 				Bundle bundle = new Bundle();
-				bundle.putBoolean(LoginActivity.INTENT_AUTOLOGIN, true);
+				bundle.putString(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY, getIntent().getClass().getName());
+				i.putExtras(bundle);
 				startActivity(i);
 				finish();
 				return false;

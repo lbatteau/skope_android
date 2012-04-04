@@ -39,11 +39,11 @@ import nl.skope.android.R;
 public abstract class OOIMapActivity extends MapActivity {
 
 	/** Pointer to the ServiceQueue. **/
-	private ServiceQueue mServiceQueue;
+	protected ServiceQueue mServiceQueue;
 	/** Pointer to the Application Cache. **/
 	protected Cache mCache;
 	/** Pointer to the UiQueue. **/
-	private UiQueue mUiQueue;
+	protected UiQueue mUiQueue;
 	
 	protected MyLocationOverlay mMyLocationOverlay;
 	/***
@@ -241,7 +241,8 @@ public abstract class OOIMapActivity extends MapActivity {
 						"nl.skope.android.ui.LoginActivity");
 				// Add auto login flag
 				Bundle bundle = new Bundle();
-				bundle.putBoolean(LoginActivity.INTENT_AUTOLOGIN, true);
+				bundle.putString(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY, getIntent().getClass().getName());
+				i.putExtras(bundle);
 				startActivity(i);
 				finish();
 				return false;

@@ -2,10 +2,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 <PreferenceCategory
 	android:title="Location settings">
-	<CheckBoxPreference
-		android:key="prefs_gps"
-		android:title="@string/prefs_gps_title"
-		android:summary="@string/prefs_gps_summary" />
+	<Preference android:key="prefs_gps_global"
+	    android:title="System GPS"/>
+    <CheckBoxPreference
+        android:key="prefs_gps_local"
+        android:title="@string/prefs_gps_title"
+        android:summary="@string/prefs_gps_summary"
+        android:dependency="prefs_gps_global"
+        android:enabled="false"/>
+		
 </PreferenceCategory>
 	        
 </PreferenceScreen>

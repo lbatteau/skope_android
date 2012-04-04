@@ -1,5 +1,6 @@
 package nl.skope.android.application;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -102,6 +103,11 @@ public class ChatMessage implements Parcelable {
     
 	public String createTimeLabel() {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("H:mm");
+		return dateFormat.format(this.getTimestamp());
+	}
+	
+	public String createDateLabel() {
+		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 		return dateFormat.format(this.getTimestamp());
 	}
 	

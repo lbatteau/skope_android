@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import nl.skope.android.R;
 import nl.skope.android.http.CustomHttpClient.FlushedInputStream;
 
 import org.json.JSONArray;
@@ -31,6 +32,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -38,8 +41,6 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
-
-import nl.skope.android.R;
 
 public class User implements Parcelable {
 	private static final String TAG = User.class.getName();	
@@ -595,6 +596,21 @@ public class User implements Parcelable {
 		
 		if (this.getRelationship() != null) {
 			Spinner relationship = (Spinner) activity.findViewById(R.id.relationship);
+			relationship.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					Object item = arg0.getSelectedItem();
+					
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> arg0) {
+					// TODO Auto-generated method stub
+					
+				}
+			});
 			relationship.setSelection(Arrays.asList(Cache.RELATIONSHIP_CHOICES).indexOf(this.getRelationship()));
 		}
 		

@@ -12,6 +12,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -103,6 +104,7 @@ public class LocationService extends Service implements LocationListener  {
         mCache = skopeApplication.getCache();
         mUiQueue = skopeApplication.getUiQueue();
         mServiceQueue = skopeApplication.getServiceQueue();
+        SharedPreferences mPreferences = mCache.getPreferences();
         
         /**
          * Resister with the ServiceQueue that the Service is now ready to
@@ -137,7 +139,9 @@ public class LocationService extends Service implements LocationListener  {
 		// Register service as mLocation event listener
 		try {
 			m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-			m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+			if (mPreferences.getBoolean(SkopeApplication.PREFS_GPSENABLED, false)) {
+				m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+			}
 		} catch(IllegalArgumentException e) {
 			// provider is disabled
 			// TODO: notify user
@@ -154,6 +158,21 @@ public class LocationService extends Service implements LocationListener  {
      *            Message from UI.
      */
     private void processMessage(final Message message) {
+    	// Check type before passing it to worker thread
+    	Type type = Type.getType(message.what);
+    	switch(type) {
+    	case ENABLE_GPS:
+    		m_locationManager.removeUpdates(this);
+    		m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+    		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+    		return;
+    	case DISABLE_GPS:
+    		m_locationManager.removeUpdates(this);
+    		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+    		return;
+    	}
+    	
+    	// Message intended for worker thread
         synchronized (mWorkerThreadLock) {
             if (mWorkerThread == null || mWorkerThread.isStopping()) {
                 mWorkerThread = new WorkerThread(mCache, mUiQueue, this);

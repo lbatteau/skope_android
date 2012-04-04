@@ -76,7 +76,7 @@ public class OOIListActivity extends BaseActivity {
 			
 	        new AlertDialog.Builder(OOIListActivity.this)
 	        .setTitle("Update Status")
-	        .setMessage("Including hash tags (#) will allow you to filter the results by tag")
+	        //.setMessage("Including hash tags (#) will allow you to filter the results by tag")
 	        .setView(statusEditText)
 	        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 	            public void onClick(DialogInterface dialog, int whichButton) {

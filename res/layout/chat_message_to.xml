@@ -1,41 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/container"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:layout_height="wrap_content" >
 
-    <LinearLayout
-        android:id="@+id/group_header"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:orientation="vertical"
-        android:paddingBottom="5dip"
-        android:visibility="gone"  >
-        
-        <FrameLayout
-            android:layout_width="fill_parent"
-            android:layout_height="1dip"
-            android:background="@color/skope_grey"
-            android:layout_marginLeft="5dip"
-            android:layout_marginRight="5dip">
-            
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/date_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TextView"
-            android:textColor="@color/skope_grey_dark"
-            android:layout_gravity="center"/>
-    </LinearLayout>
+    <include layout="@layout/chat_group_header"/>
 
     <LinearLayout
         android:id="@+id/chat_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/group_header"
         android:paddingBottom="5dip" >
 
         <TextView
@@ -43,14 +18,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_marginBottom="5dip"
             android:layout_weight="0"
+            android:layout_marginBottom="5dip"
             android:paddingLeft="5dip"
             android:paddingRight="5dip"
             android:text=""
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/skope_grey_dark"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
         <TextView
             android:id="@+id/message"
@@ -62,9 +37,9 @@
             android:paddingLeft="10dip"
             android:paddingRight="10dip"
             android:paddingTop="7dp"
-            android:text="Loret ipsum"
+            android:text=""
             android:textColor="@android:color/white"
             android:textSize="14sp" />
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

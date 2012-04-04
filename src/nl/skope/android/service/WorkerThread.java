@@ -24,7 +24,6 @@ import nl.skope.android.R;
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
-import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
 import nl.skope.android.application.User;

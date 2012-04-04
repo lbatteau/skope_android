@@ -13,6 +13,7 @@
     <string name="delete">Delete</string>
     <string name="at">at</string>
     <string name="send">Send</string>
+    <string name="yesterday">Yesterday</string>
     <string name="retrieving_data">Retrieving data</string>
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
     <string name="error_connection_failed">Please make sure you are connected to the internet</string>
@@ -37,8 +38,11 @@
     <string name="login_hint_user">Email</string>
     <string name="login_hint_password">Password</string>
     <string name="mystore_password">g3h31m</string>
-    <string name="prefs_gps_title">Enable GPS</string>
-    <string name="prefs_gps_summary">Click here to change the GPS settings</string>
+    <string name="prefs_gps_title">Use GPS</string>
+    <string name="prefs_gps_summary">Let the Skope location service make use of GPS (more accurate, but heavier battery usage)</string>
+    <string name="prefs_gps_global_title">GPS</string>
+    <string name="prefs_gps_global_on">GPS on this device is currently enabled. Click here to change.</string>
+    <string name="prefs_gps_global_off">GPS on this device is currently disabled. Click here to change.</string>
     <string name="home_status_empty">Tap to update your status&#8230;</string>
     <string name="signup_title">Create a Skope account</string>
     <string name="signup_hint_email">Email</string>

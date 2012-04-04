@@ -22,23 +22,23 @@
         <LinearLayout
             android:id="@+id/chat_header"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:padding="5dip">
 
             <TextView
                 android:id="@+id/chat_header_label"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text=""
                 android:layout_weight="1"
-                android:gravity="right"
-                android:layout_gravity="center"
+                android:padding="5dip"
+                android:gravity="right|center_vertical"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@android:color/white" />
             <ImageView
                 android:id="@+id/chat_header_thumbnail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="40dip"
+                android:layout_height="40dip"
                 android:layout_weight="0" />
 
             </LinearLayout>

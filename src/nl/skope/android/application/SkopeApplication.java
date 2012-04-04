@@ -33,12 +33,20 @@ public class SkopeApplication extends Application {
     public static final String LOG_TAG = "Skope";
     
     /** Application wide constants **/
+
+    // Logging
+    public static int LOGLEVEL = 1;
+    public static boolean WARN = LOGLEVEL > 1;
+    public static boolean DEBUG = LOGLEVEL > 0;
+    
+    // Preferences
 	public static final String PREFS_USERNAME = "USERNAME";
 	public static final String PREFS_PASSWORD = "PASSWORD";
 	public static final String PREFS_USERID = "USERID";
 	public static final String PREFS_C2DM_REGISTRATIONID = "REGISTRATIONID";
 	public static final String PREFS_C2DM_REGISTRATIONTIMESTAMP = "REGISTRATIONTIMESTAMP";
 	public static final String PREFS_RANGE = "RANGE";
+	public static final String PREFS_GPSENABLED = "GPSENABLED";
 	public final static String BUNDLEKEY_REDIRECTACTIVITY = "REDIRECT";
 	public final static String BUNDLEKEY_BACKACTIVITY = "BACK";
 	public final static String BUNDLEKEY_TAB = "TAB";
@@ -50,8 +58,6 @@ public class SkopeApplication extends Application {
 	public final static String BUNDLEKEY_USER = "USER";
 	public final static String BUNDLEKEY_RESPONSE = "RESPONSE";
 	public final static String NOTIFICATION_CHATMESSAGE = "CHATMESSAGE";
-
-
 
 	/** Skope server response codes **/
 	public static final int RESPONSECODE_OK = 0;

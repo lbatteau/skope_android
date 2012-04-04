@@ -10,6 +10,7 @@
 package nl.skope.android.ui;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import nl.skope.android.R;
@@ -20,6 +21,7 @@ import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.util.Type;
+import nl.skope.android.util.Utility;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -204,7 +206,7 @@ public class UserChatsActivity extends BaseActivity {
             	for (ObjectOfInterest ooi: mChatsList) {
             		Bundle messagesBundle = new Bundle();
                 	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
-                	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM, true);
+                	//messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM, true);
                 	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_LAST, true);
                 	getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, messagesBundle);
             	}
@@ -272,7 +274,15 @@ public class UserChatsActivity extends BaseActivity {
     					if (lastChat != null) {
     						if (ooi != null) {
 		    					// Update user's last message and notify adapter
-								ooi.setLastChatMessage(lastChat.createTimeLabel() + ": " + lastChat.getMessage());
+    							if (Utility.isDateSameDay(lastChat.getTimestamp(), new Date())) {
+    								ooi.setLastChatMessage(lastChat.createTimeLabel() + ": " + lastChat.getMessage());
+    							} else if (Utility.isYesterday(lastChat.getTimestamp())){
+    								ooi.setLastChatMessage(getResources().getString(R.string.yesterday) + 
+    										": " + lastChat.getMessage());
+    							} else {
+    								ooi.setLastChatMessage(lastChat.createDateLabel() + ": " + lastChat.getMessage());
+    							}
+								
     						}
     					}
 					}

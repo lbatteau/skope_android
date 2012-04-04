@@ -28,6 +28,9 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -408,6 +411,35 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		mSelectedOOI = savedInstanceState.getParcelable(SkopeApplication.BUNDLEKEY_USER);
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.skope_menu_detail, menu);
+	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    case R.id.signout:
+	    	mServiceQueue.stopService();
+	    	mCache.setUserSignedOut(true);
+	    	String logoutURL = mCache.getProperty("skope_service_url") + "/logout/";
+	    	String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+	    	String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+	    	new LogoutTask().execute(this, logoutURL, username, password);
+            return true;
+	    case R.id.refresh:
+	    	mServiceQueue.postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+	    	return true;   	
+	    case R.id.options:
+	    	startActivity(new Intent(this, SkopePreferenceActivity.class));
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
+	}
+	
 	/**
 	 * Retrieves the currently selected object of interest, updates the
 	 * information in the view, and calls the necessary methods to update the
@@ -444,16 +476,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		
 
 	}
-	
-	private void updateListFromCache() {
-		mFavoritesList.clear();
-    	ObjectOfInterestList cacheList = getCache().getUserFavoritesList();
-    	if (cacheList != null && !cacheList.isEmpty()) {
-        	// Cache contains items
-        	mFavoritesList.addAll(cacheList);
-		}
-    	mFavoritesListAdapter.notifyDataSetChanged();
-    }
 	
 	protected void goToNext() {
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();

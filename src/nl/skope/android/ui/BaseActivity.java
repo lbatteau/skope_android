@@ -79,6 +79,7 @@ public class BaseActivity extends Activity {
 			Intent i = new Intent();
 			i.setClassName("nl.skope.android",
 					"nl.skope.android.ui.LoginActivity");
+			i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			startActivity(i);
 			finish();
 			return false;
@@ -90,9 +91,12 @@ public class BaseActivity extends Activity {
 				Intent i = new Intent();
 				i.setClassName("nl.skope.android",
 						"nl.skope.android.ui.LoginActivity");
+				i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				// Add auto login flag
-				Bundle bundle = new Bundle();
-				bundle.putBoolean(LoginActivity.INTENT_AUTOLOGIN, true);
+				//TODO Redirect doesn't work, target Activity needs onNewIntent method implemented
+				//Bundle bundle = new Bundle();
+				//bundle.putString(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY, getIntent().getClass().getName());
+				//i.putExtras(bundle);
 				startActivity(i);
 				finish();
 				return false;

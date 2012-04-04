@@ -1,13 +1,11 @@
 package nl.skope.android.ui;
 
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import nl.skope.android.R;
 import nl.skope.android.application.ChatMessage;
-import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
@@ -16,6 +14,7 @@ import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
 import nl.skope.android.ui.OOIDetailMapActivity.AsyncTaskListener;
 import nl.skope.android.util.Type;
+import nl.skope.android.util.Utility;
 
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
@@ -34,6 +33,9 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -131,6 +133,35 @@ public class OOIChatActivity extends BaseActivity {
 	public void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		mChatMessages = savedInstanceState.getParcelableArrayList("chat_messages");
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.skope_menu_detail, menu);
+	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    case R.id.signout:
+	    	getServiceQueue().stopService();
+	    	getCache().setUserSignedOut(true);
+	    	String logoutURL = getCache().getProperty("skope_service_url") + "/logout/";
+	    	String username = getCache().getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
+	    	String password = getCache().getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
+	    	new LogoutTask().execute(this, logoutURL, username, password);
+            return true;
+	    case R.id.refresh:
+	    	getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
+	    	return true;   	
+	    case R.id.options:
+	    	startActivity(new Intent(this, SkopePreferenceActivity.class));
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
 	}
 	
 	protected void handleIntent(Intent intent) {
@@ -362,12 +393,7 @@ public class OOIChatActivity extends BaseActivity {
 	}
 
 	private boolean isMessageOnDifferentDay(ChatMessage message1, ChatMessage message2) {
-		Calendar cal1 = Calendar.getInstance();
-		Calendar cal2 = Calendar.getInstance();
-		cal1.setTime(message1.getTimestamp());
-		cal2.setTime(message2.getTimestamp());
-		return !(cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-		         cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR));
+		return !(Utility.isDateSameDay(message1.getTimestamp(), message2.getTimestamp()));
 	}
 	
 	private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
@@ -384,13 +410,6 @@ public class OOIChatActivity extends BaseActivity {
 				bundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD, true);
 				bundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_MARKASREAD, true);
 				getServiceQueue().postToService(Type.READ_USER_CHAT_MESSAGES, bundle);
-
-				// Get instance of Vibrator from current Context
-				Vibrator v = (Vibrator) context
-						.getSystemService(Context.VIBRATOR_SERVICE);
-
-				// Vibrate for 300 milliseconds
-				v.vibrate(300);
 
 				abortBroadcast();
 			}
@@ -488,7 +507,7 @@ public class OOIChatActivity extends BaseActivity {
 	}
 	
 	private class ChatArrayAdapter extends ArrayAdapter<ChatMessage> {
-		SimpleDateFormat mDateFormat = new SimpleDateFormat("MMM d");
+		DateFormat mDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
 
 		public ChatArrayAdapter(Context context, int textViewResourceId, List<ChatMessage> list) {
 			super(context, textViewResourceId, list);
