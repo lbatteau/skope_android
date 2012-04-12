@@ -47,6 +47,7 @@ public class SkopeApplication extends Application {
 	public static final String PREFS_C2DM_REGISTRATIONTIMESTAMP = "REGISTRATIONTIMESTAMP";
 	public static final String PREFS_RANGE = "RANGE";
 	public static final String PREFS_GPSENABLED = "GPSENABLED";
+	public static final String PREFS_FBHASPOSTED = "FBHASPOSTED";
 	public final static String BUNDLEKEY_REDIRECTACTIVITY = "REDIRECT";
 	public final static String BUNDLEKEY_BACKACTIVITY = "BACK";
 	public final static String BUNDLEKEY_TAB = "TAB";

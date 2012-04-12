@@ -4,14 +4,14 @@ import java.util.List;
 
 import nl.skope.android.R;
 import nl.skope.android.application.Cache;
-import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
-import nl.skope.android.maps.OOIOverlay;
+import nl.skope.android.maps.UserOverlay;
+import nl.skope.android.maps.SkopeMapView;
 import nl.skope.android.util.Type;
 
 import org.apache.http.HttpStatus;
@@ -40,6 +40,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SlidingDrawer;
@@ -48,6 +49,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
+import com.google.android.maps.MyLocationOverlay;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
 	private static final int SWIPE_MIN_DISTANCE = 120;
@@ -68,7 +70,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	private TextView mPhotosLabel, mFavoritesLabel;
 	private User mSelectedOOI;
 	ObjectOfInterestList mFavoritesList;
-	ObjectOfInterestArrayAdapter mFavoritesListAdapter;
+	UserArrayAdapter mFavoritesListAdapter;
 	private boolean mStopUpdatingMap = false;
 	
 	
@@ -78,17 +80,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    
 	    mSelectedOOI = getIntent().getExtras().getParcelable(SkopeApplication.BUNDLEKEY_USER);
 
-        // Redirect?
-        if (getIntent() != null && getIntent().hasExtra(SkopeApplication.BUNDLEKEY_REDIRECTACTIVITY)) {
-        	Intent i = new Intent();
-			// Redirect to detail chat activity
-	        Bundle bundle = new Bundle();
-	        bundle.putParcelable("USER", mSelectedOOI);
-	        i.putExtras(bundle);
-			i.setClassName("nl.skope.android","nl.skope.android.ui.OOIChatActivity");
-			startActivity(i);
-        }
-
         mSelectedOOI.setCache(getCache());
 	    
 	    mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -96,13 +87,6 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	    // Need this for passing on touch events
 	    mUserProfile = findViewById(R.id.user_profile);
 
-	    // Open map drawer
-	    mMapDrawer = (SlidingDrawer) findViewById(R.id.mapSlidingDrawer);
-    	// Check if present; no drawer in landscape mode
-	    if (mMapDrawer != null) {
-	    	mMapDrawer.animateOpen();
-	    }
-	    
 	    // Back button
 	    View backButton = findViewById(R.id.detail_back_button);
 	    backButton.setOnClickListener(new OnClickListener() {
@@ -500,6 +484,26 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	@Override
 	protected void setContentView() {
 		setContentView(R.layout.detail);
+
+	    // Open map drawer
+	    mMapDrawer = (SlidingDrawer) findViewById(R.id.mapSlidingDrawer);
+    	// Check if present; no drawer in landscape mode
+	    if (mMapDrawer != null) {
+	    	mMapDrawer.animateOpen();
+	    }
+	    
+		// Overwrite map view
+	    mMapView = new SkopeMapView(this, this.getString(R.string.maps_api_key));
+	    mMapView.setEnabled(true);
+	    mMapView.setClickable(true);
+		mMyLocationOverlay = new MyLocationOverlay(this, mMapView);	
+		mMyLocationOverlay.enableMyLocation();
+		//mMyLocationOverlay.runOnFirstFix(new Runnable() { public void run() {
+			//mMapView.getController().animateTo(mMyLocationOverlay.getMyLocation());
+		//}});
+		mMapView.getOverlays().add(0, mMyLocationOverlay);
+	    FrameLayout mapContainer = (FrameLayout) mMapDrawer.findViewById(R.id.map_container);
+	    mapContainer.addView(mMapView);
 	}
 
 	@Override
@@ -522,7 +526,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		LayerDrawable marker = (LayerDrawable) getResources().getDrawable(
 				R.drawable.marker);
 
-		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
+		UserOverlay ooiOverlay = new UserOverlay(marker, mMapView);
 		ooiOverlay.addOverlay(createOverlay(mSelectedOOI));
 		mMapOverlays.add(1, ooiOverlay);
 		
@@ -813,18 +817,18 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 		
 	}
 	
-    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
+    private class UserArrayAdapter extends ArrayAdapter<User> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
     	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
 			@Override
 			public void onImageLoaded(Bitmap thumbnail) {
-				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
+				UserArrayAdapter.this.notifyDataSetChanged();
 			}
 		};
     	
-    	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
-    			List<ObjectOfInterest> objects) {
+    	public UserArrayAdapter(Context context, int textViewResourceId,
+    			List<User> objects) {
     		super(context, textViewResourceId, objects);
     	}
 
@@ -842,11 +846,11 @@ public class OOIDetailMapActivity extends OOIMapActivity {
             	holder = (ViewHolder) convertView.getTag();
             }             
             
-            ObjectOfInterest ooi = getItem(position);
+            User user = getItem(position);
             
-            if (ooi != null) {
+            if (user != null) {
                 if (holder.nameText != null) {
-                	holder.nameText.setText(ooi.createName());                            
+                	holder.nameText.setText(user.createName());                            
                 }
                 
                 if (holder.distanceText != null) {
@@ -855,10 +859,10 @@ public class OOIDetailMapActivity extends OOIMapActivity {
                 }
                 
                 if (holder.icon != null) {
-                	holder.icon.setImageBitmap(ooi.getProfilePicture()); // even when null, otherwise previous values remain
+                	holder.icon.setImageBitmap(user.getProfilePicture()); // even when null, otherwise previous values remain
             		// Lazy loading
-                	if (ooi.getProfilePicture() == null) {
-                		ooi.loadProfilePicture(mProfilePictureListener);
+                	if (user.getProfilePicture() == null) {
+                		user.loadProfilePicture(mProfilePictureListener);
                 	}
                 }
             }

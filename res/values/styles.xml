@@ -14,7 +14,7 @@
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
     </style>
-    <style name="FacebookConnect" parent="@style/Button">
+    <style name="FacebookConnect" parent="@android:style/Widget.Button">
         <item name="android:gravity">center_vertical|center_horizontal</item>
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:textSize">14dip</item>
@@ -22,6 +22,8 @@
         <item name="android:background">@drawable/button_fbconnect</item>
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
+        <item name="android:textOn">""</item>
+        <item name="android:textOff">""</item>
     </style>
     <style name="Thumbnail">
         <item name="android:background">@drawable/thumbnail_box</item>

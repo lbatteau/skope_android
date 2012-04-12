@@ -78,13 +78,9 @@ public class UserFormActivity extends BaseActivity {
 			client.addParam("work_company", form.work_company);
 			client.addParam("education_study", form.education_study);
 			client.addParam("education_college", form.education_college);
-			if (form.isGenderPublic) {
-				client.addParam("is_gender_public", "on");
-			}
-			if (form.isDateOfBirthPublic) {
-				client.addParam("is_date_of_birth_public", "on");
-			}			
-			//client.addParam("interests", form.interests);
+			client.addParam("is_gender_public", form.isGenderPublic ? "on" : "");
+			client.addParam("is_date_of_birth_public", 
+										form.isDateOfBirthPublic ? "on" : "");
 
 			// Send HTTP request to web service
 			try {

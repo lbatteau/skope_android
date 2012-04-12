@@ -15,7 +15,6 @@ import java.util.List;
 
 import nl.skope.android.R;
 import nl.skope.android.application.ChatMessage;
-import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
@@ -74,7 +73,7 @@ public class UserChatsActivity extends BaseActivity {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
 			// Check if selected ooi is current user
-			ObjectOfInterest ooi = mChatsListAdapter.getItem(position);
+			User ooi = mChatsListAdapter.getItem(position);
 			Intent i = new Intent();
 			// Redirect to detail chat activity
 	        Bundle bundle = new Bundle();
@@ -155,7 +154,7 @@ public class UserChatsActivity extends BaseActivity {
 		ArrayList<User> list = new ArrayList<User>();
 		list = savedInstanceState.getParcelableArrayList("chat_users");
 		for (User user: list) {
-			mChatsList.add((ObjectOfInterest) user);
+			mChatsList.add((User) user);
 		}
 	}
 
@@ -203,7 +202,7 @@ public class UserChatsActivity extends BaseActivity {
             	mProgressBar.setVisibility(ProgressBar.INVISIBLE);
             	
                 // Now retrieve all last messages to display in the list
-            	for (ObjectOfInterest ooi: mChatsList) {
+            	for (User ooi: mChatsList) {
             		Bundle messagesBundle = new Bundle();
                 	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
                 	//messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_FROM, true);
@@ -212,7 +211,7 @@ public class UserChatsActivity extends BaseActivity {
             	}
             	
             	// Retrieve number of unread messages
-            	for (ObjectOfInterest ooi: mChatsList) {
+            	for (User ooi: mChatsList) {
             		Bundle messagesBundle = new Bundle();
                 	messagesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, ooi.getId());
                 	messagesBundle.putBoolean(SkopeApplication.BUNDLEKEY_CHAT_UNREAD, true);
@@ -226,7 +225,7 @@ public class UserChatsActivity extends BaseActivity {
     			break;
     		case READ_USER_CHAT_MESSAGES_END:
     			// Get ooi from bundle
-    			ObjectOfInterest ooi = getCache().getUserChatsList().
+    			User ooi = getCache().getUserChatsList().
     							getById(bundle.getInt(SkopeApplication.BUNDLEKEY_USERID));
 				// Get messages from bundle
     			String response = bundle.getString(SkopeApplication.BUNDLEKEY_RESPONSE);
@@ -314,7 +313,7 @@ public class UserChatsActivity extends BaseActivity {
 
 	}
     
-    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
+    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<User> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
     	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
@@ -325,7 +324,7 @@ public class UserChatsActivity extends BaseActivity {
 		};
     	
     	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
-    			List<ObjectOfInterest> objects) {
+    			List<User> objects) {
     		super(context, textViewResourceId, objects);
     	}
 
@@ -344,7 +343,7 @@ public class UserChatsActivity extends BaseActivity {
             	holder = (ViewHolder) convertView.getTag();
             }             
             
-            ObjectOfInterest ooi = getItem(position);
+            User ooi = getItem(position);
             
             if (ooi != null) {
                 if (holder.nameText != null) {

@@ -84,7 +84,7 @@ public class Cache {
     private Location mCurrentLocation;
     
     /** The current selected object of interest */
-    private ObjectOfInterest mSelectedObjectOfInterest;
+    private User mSelectedUser;
     
     /** The current user */
     private User user;

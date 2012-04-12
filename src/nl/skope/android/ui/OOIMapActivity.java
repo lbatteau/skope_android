@@ -1,19 +1,19 @@
 package nl.skope.android.ui;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import nl.skope.android.R;
 import nl.skope.android.application.Cache;
-import nl.skope.android.application.ObjectOfInterest;
+import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
-import nl.skope.android.maps.OOIOverlayItem;
+import nl.skope.android.maps.UserClusterOverlayItem;
+import nl.skope.android.maps.UserOverlayItem;
 import nl.skope.android.maps.SkopeMapView;
 import nl.skope.android.util.Type;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -34,7 +34,6 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
-import nl.skope.android.R;
 
 public abstract class OOIMapActivity extends MapActivity {
 
@@ -89,8 +88,16 @@ public abstract class OOIMapActivity extends MapActivity {
 	    super.onCreate(savedInstanceState);
 	    
 	    setContentView();
+
+	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
 	    
-	   mMapView = (SkopeMapView) findViewById(R.id.mapview);
+	    initializeMapView();		
+	}
+	
+	protected void setContentView() {
+		setContentView(R.layout.map_gallery);
+
+		mMapView = (SkopeMapView) findViewById(R.id.mapview);
 	    
 		mMyLocationOverlay = new MyLocationOverlay(this, mMapView);	
 		mMyLocationOverlay.enableMyLocation();
@@ -99,13 +106,6 @@ public abstract class OOIMapActivity extends MapActivity {
 		//}});
 		mMapView.getOverlays().add(0, mMyLocationOverlay);
  
-	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	    
-	    initializeMapView();		
-	}
-	
-	protected void setContentView() {
-		setContentView(R.layout.map_gallery);
 	}
 
 	/**
@@ -113,36 +113,38 @@ public abstract class OOIMapActivity extends MapActivity {
 	 * @param user 
 	 * @return
 	 */
-	protected OOIOverlayItem createOverlay(User user) {
+	protected UserOverlayItem createOverlay(User user) {
 		// Create the drawable containing a profile picture 
         final LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
-        final int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicWidth(), getResources().getDisplayMetrics());
-	    final int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, marker.getIntrinsicHeight(), getResources().getDisplayMetrics());
+        final int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+	    final int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+
+		GeoPoint point = new GeoPoint((int) (user.getLocation()
+				.getLatitude() * 1e6), (int) (user.getLocation()
+				.getLongitude() * 1e6));
+		
+		final UserOverlayItem overlayItem = new UserOverlayItem(user, point);
+		marker.setBounds(0, 0, marker.getIntrinsicWidth(), marker.getIntrinsicHeight());
+		overlayItem.setMarker(marker);
+		
 	    Bitmap profilePicture = user.getProfilePicture();
 	    if (profilePicture != null) {
 	    	Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, false));
 	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);
 	    } else {
 	    	// Lazy loading
-	    	marker.setDrawableByLayerId(R.id.marker_thumbnail, new BitmapDrawable());
+	    	//marker.setDrawableByLayerId(R.id.marker_thumbnail, new BitmapDrawable());
 	    	user.loadProfilePicture(new OnImageLoadListener() {
 				
 				@Override
 				public void onImageLoaded(Bitmap profilePicture) {
 					Drawable profilePictureDrawable = new BitmapDrawable(Bitmap.createScaledBitmap(profilePicture, width, height, false));
-			    	marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);					
+					//profilePictureDrawable.setBounds(0, 0, width, height);
+					marker.setDrawableByLayerId(R.id.marker_thumbnail, profilePictureDrawable);
+					overlayItem.setMarker(marker);
 				}
 			});
 	    }
-		
-		GeoPoint point = new GeoPoint((int) (user.getLocation()
-				.getLatitude() * 1e6), (int) (user.getLocation()
-				.getLongitude() * 1e6));
-		
-		OOIOverlayItem overlayItem = new OOIOverlayItem(point, user.createName(),
-				"Last update: " + user.createLabelTimePassedSinceLastUpdate());
-		
-		overlayItem.setMarker(marker);
 		
 		return overlayItem;
 	}
@@ -152,7 +154,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	 * @param user 
 	 * @return
 	 */
-	protected OOIOverlayItem createClusterOverlay(ArrayList<ObjectOfInterest> oois) {
+	protected UserClusterOverlayItem createClusterOverlay(ObjectOfInterestList users) {
 	    // Get the overlay item
 	    Drawable cluster = getResources().getDrawable(R.drawable.cluster);
 		
@@ -174,21 +176,29 @@ public abstract class OOIMapActivity extends MapActivity {
 		// Add text
 		paint.setColor(Color.BLACK);
 		
-		String clusterSize = String.valueOf(oois.size());
+		String clusterSize = String.valueOf(users.size());
         float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics());
         float textPosX = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicWidth()/2, getResources().getDisplayMetrics());
 		float textPosY = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cluster.getIntrinsicHeight()/2 + 7, getResources().getDisplayMetrics());
 		paint.setTextSize(textSize);
 		canvas.drawText(clusterSize, textPosX, textPosY, paint);
 		
-		GeoPoint point = new GeoPoint((int) (oois.get(0).getLocation()
-				.getLatitude() * 1e6), (int) (oois.get(0).getLocation()
-				.getLongitude() * 1e6));
+		// Center cluster
+		int minLat = Integer.MAX_VALUE;
+	    int minLong = Integer.MAX_VALUE;
+	    int maxLat = Integer.MIN_VALUE;
+	    int maxLong = Integer.MIN_VALUE;
+
+	    for (User user: users) {
+	        minLat = (int) Math.min(user.getLocation().getLatitude() * 1e6, minLat);
+	        minLong = (int) Math.min(user.getLocation().getLongitude() * 1e6, minLong);
+	        maxLat = (int) Math.max(user.getLocation().getLatitude() * 1e6, maxLat);
+	        maxLong = (int) Math.max(user.getLocation().getLongitude() * 1e6, maxLong);
+	    }
 		
-		OOIOverlayItem overlayItem = new OOIOverlayItem(point, "Cluster",
-				String.valueOf(oois.size()));
+		GeoPoint point = new GeoPoint((maxLat + minLat) / 2, (maxLong + minLong) / 2);
 		
-		overlayItem.setIsCluster(true);
+		UserClusterOverlayItem overlayItem = new UserClusterOverlayItem(users, point);
 		
 		overlayItem.setMarker(new BitmapDrawable(bmOverlay));
 		

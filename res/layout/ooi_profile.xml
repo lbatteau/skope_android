@@ -33,9 +33,8 @@
                     android:paddingLeft="120dip"
                     android:paddingRight="10dip"
                     android:paddingTop="5dip"
-                    android:text="Status"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:text=""
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/username_text"

@@ -2,7 +2,7 @@ package nl.skope.android.application;
 
 import java.util.ArrayList;
 
-public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
+public class ObjectOfInterestList extends ArrayList<User> {
 
 	/**
 	 * Generated serial version UID
@@ -18,12 +18,12 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 * objects of interest.
 	 * @return distance
 	 */
-	public synchronized ObjectOfInterest determineFarthestOOI() {
+	public synchronized User determineFarthestOOI() {
 		if (this.size() == 0) {
 			return null;
 		} else {
-			ObjectOfInterest farthestOOI = this.get(0);
-			for (ObjectOfInterest ooi : this) {
+			User farthestOOI = this.get(0);
+			for (User ooi : this) {
 	            if (farthestOOI.getDistance() < ooi.getDistance()) {
 	            	farthestOOI = ooi;
 	            }
@@ -38,8 +38,8 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	 * @return The object of interest with the given username.
 	 * If not found it returns null.
 	 */
-	public synchronized ObjectOfInterest find(int id) {
-		for (ObjectOfInterest ooi : this) {
+	public synchronized User find(int id) {
+		for (User ooi : this) {
             if (ooi.getId() == id) {
             	return ooi;
             }
@@ -55,7 +55,7 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		this.selectedPosition = selectedPosition;
 	}
 
-	public synchronized ObjectOfInterest getSelectedOOI() {
+	public synchronized User getSelectedUser() {
 		try {
 			return this.get(selectedPosition);
 		} catch(IndexOutOfBoundsException e) {
@@ -65,7 +65,7 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 	}
 	
 	@Override
-	public synchronized ObjectOfInterest get(int position) {
+	public synchronized User get(int position) {
 		return super.get(position);
 	}
 	
@@ -74,8 +74,8 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		this.addAll(list);
 	}
 	
-	public synchronized boolean exists(ObjectOfInterest ooi) {
-		for (ObjectOfInterest existingOOI: this) {
+	public synchronized boolean exists(User ooi) {
+		for (User existingOOI: this) {
 			if (existingOOI.getId() == ooi.getId()) {
 				return true;
         	}
@@ -84,8 +84,8 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		return false;
 	}
 
-	public synchronized ObjectOfInterest exists(int id) {
-		for (ObjectOfInterest existingOOI: this) {
+	public synchronized User exists(int id) {
+		for (User existingOOI: this) {
 			if (id == existingOOI.getId()) {
 				return existingOOI;
         	}
@@ -94,8 +94,8 @@ public class ObjectOfInterestList extends ArrayList<ObjectOfInterest> {
 		return null;
 	}
 	
-	public synchronized ObjectOfInterest getById(int id) {
-		for (ObjectOfInterest ooi: this) {
+	public synchronized User getById(int id) {
+		for (User ooi: this) {
 			if (ooi.getId() == id) {
 				return ooi;
         	}

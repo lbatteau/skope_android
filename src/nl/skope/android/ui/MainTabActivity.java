@@ -2,19 +2,14 @@ package nl.skope.android.ui;
 
 import nl.skope.android.R;
 import nl.skope.android.application.Cache;
-import nl.skope.android.application.ChatMessage;
-import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
-import nl.skope.android.ui.OOIChatActivity.ChatPost;
-import nl.skope.android.ui.OOIDetailMapActivity.AsyncTaskListener;
 import nl.skope.android.util.Type;
 
 import org.apache.http.HttpStatus;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,8 +20,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,9 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
-import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainTabActivity extends TabActivity {
 	private static final String TAG = "MainTabActivity";

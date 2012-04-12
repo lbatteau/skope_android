@@ -2,32 +2,34 @@ package nl.skope.android.ui;
 
 import java.util.ArrayList;
 
+import nl.skope.android.R;
 import nl.skope.android.application.MapOverlayClusterer;
-import nl.skope.android.application.ObjectOfInterest;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
-import nl.skope.android.maps.OOIOverlay;
+import nl.skope.android.application.User;
 import nl.skope.android.maps.SkopeMapView;
+import nl.skope.android.maps.UserOverlay;
+import nl.skope.android.maps.UserOverlayItem;
 import nl.skope.android.util.Type;
-
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.Gallery;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.Gallery;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
-import nl.skope.android.R;
 
 public class OOIListMapActivity extends OOIMapActivity {
-	private ArrayList<ArrayList<ObjectOfInterest>> mClusters;
+	private ArrayList<ObjectOfInterestList> mClusters;
 	private Gallery mGallery;
 	private ProfilePictureAdapter mImageAdapter;
+	private UserOverlay<UserOverlayItem> mOOIOverlay;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -45,22 +47,45 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    mGallery.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 			@Override
-			public void onItemSelected(AdapterView parent, View view,
+			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id) {
+				User user = (User) 
+								((Gallery) parent).getItemAtPosition(position);
 				getCache().getObjectOfInterestList().setSelectedPosition(position);
-				ObjectOfInterest ooi = getCache().getObjectOfInterestList().getSelectedOOI();
 				mMapView.getController().animateTo(
-						new GeoPoint((int) (ooi.getLocation().getLatitude() * 1E6),
-	            					 (int) (ooi.getLocation().getLongitude() * 1E6)));
+						new GeoPoint((int) (user.getLocation().getLatitude() * 1E6),
+	            					 (int) (user.getLocation().getLongitude() * 1E6)));
+				mOOIOverlay.showBalloon(createOverlay(user));
 			}
 
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {
 								
 			}
-		});		
-	
+		});
+	    
+		LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+		mOOIOverlay = new UserOverlay<UserOverlayItem>(marker, mMapView);
+		// Calculate offset (to place them on top of thumbnails) for overlay balloons
+		int offset = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
+		mOOIOverlay.setBalloonBottomOffset(offset);
+		
+		mMapOverlays = mMapView.getOverlays();
+		mMapOverlays.add(1, mOOIOverlay);
+	    
 	}
+	
+	@Override 
+	protected void onResume() {
+		super.onResume();
+		User user = getCache().getObjectOfInterestList().getSelectedUser();
+		if (user != null) {
+			mMapView.getController().animateTo(
+					new GeoPoint((int) (user.getLocation().getLatitude() * 1E6),
+	        					 (int) (user.getLocation().getLongitude() * 1E6)));		
+		}
+	}
+	
 	@Override
 	protected void initializeMapView() {
 		super.initializeMapView();
@@ -80,7 +105,7 @@ public class OOIListMapActivity extends OOIMapActivity {
         mapController.setCenter(center);
         
         // Determine correct zoom level to include all oois
-        ObjectOfInterest farthestOOI = mCache.getObjectOfInterestList().determineFarthestOOI();
+        User farthestOOI = mCache.getObjectOfInterestList().determineFarthestOOI();
         
         if (farthestOOI != null) {
             // Create point in Google Maps format, but a little bit farther away, 
@@ -106,13 +131,17 @@ public class OOIListMapActivity extends OOIMapActivity {
         mMapView.invalidate();
 	}
 	
+	public void updateGallery(User user) {
+		mGallery.setSelection(mImageAdapter.getPosition(user));		
+	}
+	
 	public void zoomToCluster(int clusterIndex) {
 		int minLat = Integer.MAX_VALUE;
 	    int minLong = Integer.MAX_VALUE;
 	    int maxLat = Integer.MIN_VALUE;
 	    int maxLong = Integer.MIN_VALUE;
 
-	    for (ObjectOfInterest ooi: mClusters.get(clusterIndex)) {
+	    for (User ooi: mClusters.get(clusterIndex)) {
 	        minLat = (int) Math.min(ooi.getLocation().getLatitude() * 1e6, minLat);
 	        minLong = (int) Math.min(ooi.getLocation().getLongitude() * 1e6, minLong);
 	        maxLat = (int) Math.max(ooi.getLocation().getLatitude() * 1e6, maxLat);
@@ -137,46 +166,38 @@ public class OOIListMapActivity extends OOIMapActivity {
 		case FIND_OBJECTS_OF_INTEREST_FINISHED:
 			super.post(type, bundle);
 			mImageAdapter.notifyDataSetChanged();
+			populateItemizedOverlays();
 			break;
 		}
 	}
 
 	@Override
 	protected void populateItemizedOverlays() {
-		mMapOverlays = mMapView.getOverlays();
-	    
-		// Clear ooi overlay
-		if (mMapOverlays.size() > 1) {
-			mMapOverlays.remove(1);
-		}
-        
 		// Add objects of interest
-		LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
 		ObjectOfInterestList ooiList = getCache().getObjectOfInterestList();
 		mClusters = MapOverlayClusterer.cluster(ooiList, 100, mMapView.getZoomLevel());
         
-		//itemizedOverlay.addOverlay(overlayitem);
-		OOIOverlay ooiOverlay = new OOIOverlay(marker, this);
-		for (ArrayList<ObjectOfInterest> cluster: mClusters) {
+		mOOIOverlay.clear();		
+		
+		for (ObjectOfInterestList cluster: mClusters) {
 			// Check length of cluster
 			if (cluster.size() > 1) {
 				// Multiple objects in cluster
 				if (mMapView.getZoomLevel() == mMapView.getMaxZoomLevel()) {
 					// Max zoom level, add all objects in cluster
-					for (ObjectOfInterest ooi: cluster) {
-						ooiOverlay.addOverlay(createOverlay(ooi));
+					for (User ooi: cluster) {
+						mOOIOverlay.addOverlay(createOverlay(ooi));
 					}
 				} else {
 					// Create cluster overlay
 					//ooiPin = createClusteredPin(cluster, cluster.size());
-					ooiOverlay.addOverlay(createClusterOverlay(cluster));
+					mOOIOverlay.addOverlay(createClusterOverlay(cluster));
 				}
 			} else {
 				// One object in cluster, create regular overlay
-				ooiOverlay.addOverlay(createOverlay(cluster.get(0)));	
+				mOOIOverlay.addOverlay(createOverlay(cluster.get(0)));
 			}
 		}
-		mMapOverlays.add(1, ooiOverlay);
 	}
 	
 	@Override

@@ -72,6 +72,8 @@ public class User implements Parcelable {
 	protected String mEducationCollege;
 	protected String mInterests;
 	protected boolean mIsFirstTime;
+	protected boolean mIsFacebookConnect;
+	protected String mFBProfilePictureURL;	
 	protected ArrayList<Integer> mFavorites = new ArrayList<Integer>();
 	
 	protected boolean mHasNoProfilePicture;
@@ -81,6 +83,8 @@ public class User implements Parcelable {
 	
 	/** Placeholder for number of unread messages **/
 	protected int mNrUnreadMessages;
+	
+	private float mDistance;
 	
 	public interface OnImageLoadListener {
 		public void onImageLoaded(Bitmap image);
@@ -113,6 +117,8 @@ public class User implements Parcelable {
 			this.mLocationTimestamp = new Timestamp(Long.parseLong(locationTimestamp));
 		}
 		this.mIsFirstTime = Boolean.parseBoolean(in.readString());
+		this.mIsFacebookConnect = Boolean.parseBoolean(in.readString());
+		this.mFBProfilePictureURL = in.readString();
 	}
 	
 	@Override
@@ -142,6 +148,8 @@ public class User implements Parcelable {
 		dest.writeParcelable(this.mLocation, 0);
 		dest.writeString(this.mLocationTimestamp != null ? String.valueOf(this.mLocationTimestamp.getTime()) : "");
 		dest.writeString(String.valueOf(this.mIsFirstTime));
+		dest.writeString(String.valueOf(this.mIsFacebookConnect));
+		dest.writeString(this.mFBProfilePictureURL != null ? this.mFBProfilePictureURL : "");
 	}
 
 	public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
@@ -254,6 +262,15 @@ public class User implements Parcelable {
 			this.setIsFirstTime(jsonObject.getBoolean("is_first_time"));
 		}
 		
+		// FB Connect
+		if (!jsonObject.isNull("is_fb_account")) {
+			this.setFacebookConnect(jsonObject.getBoolean("is_fb_account"));
+		}
+		
+		if (!jsonObject.isNull("fb_profile_picture_url")) {
+			this.setFBProfilePictureURL(jsonObject.getString("fb_profile_picture_url"));
+		}
+		
 		// Favorites
 		if (!jsonObject.isNull("favorites")) {
 			this.mFavorites = new ArrayList<Integer>();
@@ -326,7 +343,7 @@ public class User implements Parcelable {
 		if(mStatus == null) {
 			return "";
 		} else {
-			return "\"" + mStatus.trim() + "\"";
+			return mStatus.trim();
 		}
 	}
 	
@@ -635,6 +652,37 @@ public class User implements Parcelable {
 		}		
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public String createLabelDistance() {
+		int distanceReadable;
+		String unit;
+		
+		if (this.mDistance > 1000) {
+			distanceReadable = (int) this.mDistance/1000;
+			unit = "km";
+		} else {
+			distanceReadable = (int) this.mDistance;
+			unit = "m";
+		}
+		
+		return "" + String.valueOf(distanceReadable) + unit;
+	}
+	
+	public void setDistanceToLocation(Location location) {
+		this.mDistance = location.distanceTo(this.mLocation);
+	}
+	
+	public float getDistance() {
+		return mDistance;
+	}
+
+	public void setDistance(float distance) {
+		this.mDistance = distance;
+	}
+	
 	public Bitmap getProfilePicture() {
 		if (mProfilePicture == null && mHasNoProfilePicture == false) {
 			// Not loaded, check cache
@@ -895,6 +943,22 @@ public class User implements Parcelable {
 
 	public void setNrUnreadMessages(int nrUnreadMessages) {
 		this.mNrUnreadMessages = nrUnreadMessages;
+	}
+
+	public boolean isFacebookConnect() {
+		return mIsFacebookConnect;
+	}
+
+	public void setFacebookConnect(boolean isFacebookConnect) {
+		this.mIsFacebookConnect = isFacebookConnect;
+	}
+
+	public String getFBProfilePictureURL() {
+		return mFBProfilePictureURL;
+	}
+
+	public void setFBProfilePictureURL(String fBProfilePictureURL) {
+		mFBProfilePictureURL = fBProfilePictureURL;
 	}
 	
 }

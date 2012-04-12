@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Skope</string>
+    <!-- DEBUG <string name="maps_api_key">0C3qD704heE7tJLoDlJFfMgTBhd453_mAxwsosw</string> -->
+    <!-- PRIVATE --><string name="maps_api_key">0C3qD704heE6cUdySBC0j5xKSlqJDg-fuQR9_tA</string> 
     <string name="service_description">Skope location service</string>
+    <string name="public_beta">This is a public beta release. Please send us your feedback if you have any problems or good ideas. http://sko.pe/feedback</string>
     <string name="main_no_items">Nothing found</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -14,7 +17,7 @@
     <string name="at">at</string>
     <string name="send">Send</string>
     <string name="yesterday">Yesterday</string>
-    <string name="retrieving_data">Retrieving data</string>
+    <string name="retrieving_data">Please wait…</string>
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
     <string name="error_connection_failed">Please make sure you are connected to the internet</string>
     <string name="error_username_password">Invalid username or password</string>
@@ -102,6 +105,8 @@
     <string name="user_report_title">Report user</string>
     <string name="user_report_message">If you have found %s to behave inappropriately, please let us know and we will take immediate action.</string>
     <string name="facebook_connect_confirm_title">Connect with Facebook?</string>
-    <string name="facebook_connect_confirm_message">Facebook Connect will retrieve some of your basic Facebook profile information and profile picture and use it as your Skope profile. This is a one time action, which you can repeat as often as you like. Proceed?</string>
+    <string name="facebook_connect_confirm_message">Facebook Connect will make use of your Facebook profile information and profile picture and place occasional updates on your wall. Proceed?</string>
+    <string name="facebook_disconnect_confirm_title">Disconnect from Facebook?</string>
+    <string name="facebook_disconnect_confirm_message">This will stop Skope from accessing your profile information and placing updates on your wall. Your current profile information will go unchanged. Proceed?</string>
     <string name="message_received">You have received a message</string>
 </resources>

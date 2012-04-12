@@ -22,7 +22,7 @@ import java.util.List;
 
 import nl.skope.android.R;
 import nl.skope.android.application.Cache;
-import nl.skope.android.application.ObjectOfInterest;
+import nl.skope.android.application.User;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
@@ -280,15 +280,15 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
-					objectOfInterest.setCache(mCache);
+					User user = new User(jsonObject);
+					user.setCache(mCache);
 					
 					// If current user, skip
-					if (objectOfInterest.getId() != mCache.getUser().getId()) {
+					if (user.getId() != mCache.getUser().getId()) {
 						// Set distance
-						objectOfInterest.setDistanceToLocation(currentLocation);
+						user.setDistanceToLocation(currentLocation);
 						// Add to list
-						objectOfInterestList.add(objectOfInterest);
+						objectOfInterestList.add(user);
 					}
 					
 				} catch (JSONException e) {
@@ -361,7 +361,7 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Create new object of interest
-					ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
+					User objectOfInterest = new User(jsonObject);
 					objectOfInterest.setCache(mCache);
 					
 					if (currentLocation != null) {
@@ -383,7 +383,7 @@ public class WorkerThread extends Thread {
         // If current user, store in User object
         if (userId == mCache.getUser().getId()) {
         	mCache.getUser().getFavorites().clear();
-        	for (ObjectOfInterest ooi: favoritesList) {
+        	for (User ooi: favoritesList) {
         		mCache.getUser().getFavorites().add(ooi.getId());
         	}
         }
@@ -495,21 +495,21 @@ public class WorkerThread extends Thread {
 					JSONObject jsonObject = jsonResponse.getJSONObject(i);
 					
 					// Check if this OOI is already in our cached list
-					ObjectOfInterest ooiInCache = cachedList.exists(jsonObject.getInt("id"));
+					User ooiInCache = cachedList.exists(jsonObject.getInt("id"));
 					if (ooiInCache == null) {
 						// Not cached
 						
 						// Create new object of interest
-						ObjectOfInterest objectOfInterest = new ObjectOfInterest(jsonObject);
-						objectOfInterest.setCache(mCache);
+						User user = new User(jsonObject);
+						user.setCache(mCache);
 						
 						if (currentLocation != null) {
 							// Set distance
-							objectOfInterest.setDistanceToLocation(currentLocation);
+							user.setDistanceToLocation(currentLocation);
 						}
 						
 						// Add to list
-						chatsList.add(objectOfInterest);
+						chatsList.add(user);
 					} else {
 						// Already in cache, add cached OOI instead
 						chatsList.add(ooiInCache);

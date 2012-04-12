@@ -61,28 +61,36 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:background="@null"
-            android:content="@+id/mapview"
+            android:content="@+id/map_container"
             android:handle="@+id/map_slider"
-            android:topOffset="240dip" >
+            android:topOffset="200dip" >
 
             <include
                 android:id="@+id/map_slider"
                 layout="@layout/detail_map_slider" />
 
-            <include
+            <FrameLayout
+                android:id="@+id/map_container"
+                android:layout_height="match_parent"
+                android:layout_width="fill_parent" >
+            </FrameLayout>
+
+            <!--
+                 <include
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
                 layout="@layout/map" />
+            -->
         </SlidingDrawer>
 
         <!-- Listens to touch events for navigation buttons -->
+
         <FrameLayout
             android:id="@+id/overlay"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:background="@null">
+            android:background="@null" >
         </FrameLayout>
-
     </FrameLayout>
 
 </LinearLayout>

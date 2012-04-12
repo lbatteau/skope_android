@@ -29,7 +29,6 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -506,6 +505,15 @@ public class OOIChatActivity extends BaseActivity {
 
 	}
 	
+    private static class ViewHolder {
+		public View header;
+		public View chatMessage;
+		public TextView message;
+		public TextView dateGroup;
+		public TextView timestamp;
+		public boolean isFrom = false;
+	}
+    
 	private class ChatArrayAdapter extends ArrayAdapter<ChatMessage> {
 		DateFormat mDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
 
@@ -515,34 +523,41 @@ public class OOIChatActivity extends BaseActivity {
 		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			View row;
-	 
+			ViewHolder holder;
 			ChatMessage chat = getItem(position);
+			boolean isFrom = chat.getUserFromId() == mUser.getId();
 			
-			if (chat.getUserFromId() == mUser.getId()) {
-				// From chat
-				row = mInflater.inflate(R.layout.chat_message_from, null);
-			} else {
-				// To chat
-				row = mInflater.inflate(R.layout.chat_message_to, null);
-			}
+			if (convertView == null || ((ViewHolder)convertView.getTag()).isFrom != isFrom) {
+				holder = new ViewHolder();
+                if (isFrom) {
+					// From chat
+                	holder.isFrom = true;
+					convertView = mInflater.inflate(R.layout.chat_message_from, null);
+				} else {
+					// To chat
+					holder.isFrom = false;
+					convertView = mInflater.inflate(R.layout.chat_message_to, null);
+				}
+                holder.header = convertView.findViewById(R.id.group_header);
+                holder.chatMessage = convertView.findViewById(R.id.chat_message);
+                holder.message = (TextView) convertView.findViewById(R.id.message);
+                holder.dateGroup = (TextView) convertView.findViewById(R.id.date_group);
+                holder.timestamp = (TextView) convertView.findViewById(R.id.timestamp);
+                convertView.setTag(holder);
+            } else {
+            	holder = (ViewHolder) convertView.getTag();
+            }
 			
 			if (chat.isGroupHeader()) {
-				View header = row.findViewById(R.id.group_header);
-				header.setVisibility(View.VISIBLE);
-				View message = row.findViewById(R.id.chat_message);
-				message.setVisibility(View.GONE);
-				TextView dateGroup = (TextView) row.findViewById(R.id.date_group); 
-				dateGroup.setText(mDateFormat.format(chat.getTimestamp()));			
+				holder.header.setVisibility(View.VISIBLE);
+				holder.chatMessage.setVisibility(View.GONE);
+				holder.dateGroup.setText(mDateFormat.format(chat.getTimestamp()));			
 			} else {
-				TextView message = (TextView) row.findViewById(R.id.message);
-				message.setText(chat.getMessage());
-				
-				TextView timestamp = (TextView) row.findViewById(R.id.timestamp);
-				timestamp.setText(chat.createTimeLabel());				
+				holder.message.setText(chat.getMessage());
+				holder.timestamp.setText(chat.createTimeLabel());				
 			}
 			
-			return row;
+			return convertView;
 		}
 		
 	}

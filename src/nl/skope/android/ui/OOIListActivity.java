@@ -11,12 +11,11 @@ package nl.skope.android.ui;
 
 import java.util.List;
 
-import nl.skope.android.application.ObjectOfInterest;
+import nl.skope.android.R;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.util.Type;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -41,8 +40,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import nl.skope.android.R;
-
 /**
  * Class description goes here.
  *
@@ -53,7 +50,7 @@ public class OOIListActivity extends BaseActivity {
 	private static final String TAG = OOIListActivity.class.getName();
 	
     private ObjectOfInterestList mObjectOfInterestList = null;
-    private ObjectOfInterestArrayAdapter mObjectOfInterestListAdapter;
+    private UserArrayAdapter mObjectOfInterestListAdapter;
 
     protected Dialog mSplashDialog;
     
@@ -154,7 +151,7 @@ public class OOIListActivity extends BaseActivity {
     	
     	// Set up the list adapter
         mObjectOfInterestList = new ObjectOfInterestList();
-        mObjectOfInterestListAdapter = new ObjectOfInterestArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
+        mObjectOfInterestListAdapter = new UserArrayAdapter(OOIListActivity.this, R.layout.skope_view, mObjectOfInterestList);
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(mObjectOfInterestListAdapter); 
         listView.setOnItemClickListener(mOOISelectListener);
@@ -239,18 +236,18 @@ public class OOIListActivity extends BaseActivity {
 
 	}
     
-    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
+    private class UserArrayAdapter extends ArrayAdapter<User> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
     	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
 			@Override
 			public void onImageLoaded(Bitmap thumbnail) {
-				ObjectOfInterestArrayAdapter.this.notifyDataSetChanged();
+				UserArrayAdapter.this.notifyDataSetChanged();
 			}
 		};
     	
-    	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
-    			List<ObjectOfInterest> objects) {
+    	public UserArrayAdapter(Context context, int textViewResourceId,
+    			List<User> objects) {
     		super(context, textViewResourceId, objects);
     	}
 
@@ -268,7 +265,7 @@ public class OOIListActivity extends BaseActivity {
             	holder = (ViewHolder) convertView.getTag();
             }             
             
-            ObjectOfInterest ooi = getItem(position);
+			User ooi = getItem(position);
             
             if (ooi != null) {
                 if (holder.nameText != null) {

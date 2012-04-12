@@ -11,6 +11,29 @@
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:gravity="center"
+            android:paddingTop="10dip" >
+
+            <ToggleButton
+                android:id="@+id/facebook_connect"
+                style="@style/FacebookConnect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dip" />
+
+            <Button
+                android:id="@+id/button_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dip"
+                android:text="@string/edit" />
+        </LinearLayout>
+
         <FrameLayout
             android:id="@+id/user_main"
             android:layout_width="fill_parent"
@@ -27,15 +50,13 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:layout_weight="1"
-                    android:gravity="right|bottom"
                     android:minHeight="60dip"
+                    android:gravity="right|bottom"
                     android:paddingBottom="5dip"
                     android:paddingLeft="120dip"
                     android:paddingRight="10dip"
                     android:paddingTop="5dip"
-                    android:text="Status"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/username_text"
@@ -79,29 +100,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 layout="@layout/user_info_block" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/buttons"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="0dip"
-            android:paddingRight="10dip"
-            android:paddingLeft="10dip"
-            android:paddingBottom="10dip" >
-
-            <Button
-                android:id="@+id/button_edit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="10dip"
-                android:text="@string/edit" />
-
-            <Button
-                android:id="@+id/facebook_connect"
-                style="@style/FacebookConnect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
         </LinearLayout>
 
         <FrameLayout
@@ -161,10 +159,10 @@
             android:id="@+id/button_add_photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="right"
             android:layout_margin="10dip"
             android:layout_weight="0"
             android:text="@string/user_photos_add" />
-
     </LinearLayout>
 
 </ScrollView>

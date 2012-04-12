@@ -11,7 +11,7 @@ package nl.skope.android.ui;
 
 import java.util.List;
 
-import nl.skope.android.application.ObjectOfInterest;
+import nl.skope.android.application.User;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.util.Type;
@@ -57,7 +57,7 @@ public class UserFavoritesActivity extends BaseActivity {
 		@Override
 		public void onItemClick(AdapterView<?> a, View v, int position, long id) {
 			// Check if selected ooi is current user
-			ObjectOfInterest ooi = mFavoritesListAdapter.getItem(position);
+			User ooi = mFavoritesListAdapter.getItem(position);
 			Intent i = new Intent();
 			if (ooi.getId() == getCache().getUser().getId()) {
 				// Current user, redirect to profile
@@ -167,7 +167,7 @@ public class UserFavoritesActivity extends BaseActivity {
 
 	}
     
-    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<ObjectOfInterest> {
+    private class ObjectOfInterestArrayAdapter extends ArrayAdapter<User> {
     	private LayoutInflater mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     	
     	OnImageLoadListener mProfilePictureListener = new OnImageLoadListener() {
@@ -178,7 +178,7 @@ public class UserFavoritesActivity extends BaseActivity {
 		};
     	
     	public ObjectOfInterestArrayAdapter(Context context, int textViewResourceId,
-    			List<ObjectOfInterest> objects) {
+    			List<User> objects) {
     		super(context, textViewResourceId, objects);
     	}
 
@@ -196,7 +196,7 @@ public class UserFavoritesActivity extends BaseActivity {
             	holder = (ViewHolder) convertView.getTag();
             }             
             
-            ObjectOfInterest ooi = getItem(position);
+            User ooi = getItem(position);
             
             if (ooi != null) {
                 if (holder.nameText != null) {

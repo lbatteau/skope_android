@@ -44,22 +44,22 @@ public class MapOverlayClusterer {
 	 * @param zoom The current map zoom level (0-21)
 	 * @return A clustered list. Clusters may contain just one item.
 	 */
-	public static ArrayList<ArrayList<ObjectOfInterest>> cluster(ObjectOfInterestList ooiList, int minimalDistance, int zoom) {
+	public static ArrayList<ObjectOfInterestList> cluster(ObjectOfInterestList ooiList, int minimalDistance, int zoom) {
 		// The clustered list
-		ArrayList<ArrayList<ObjectOfInterest>>  clusters = new ArrayList<ArrayList<ObjectOfInterest>>();
+		ArrayList<ObjectOfInterestList>  clusters = new ArrayList<ObjectOfInterestList>();
 		
 		// Loop through the object of interest list
-		for (ObjectOfInterest ooi: ooiList) {
+		for (User user: ooiList) {
 			boolean isClustered = false;
 			// Check if there is a cluster within the minimal distance
-			for (ArrayList<ObjectOfInterest> cluster: clusters) {
+			for (ArrayList<User> cluster: clusters) {
 				// We determine the distance to the first item
-				ObjectOfInterest clusterOOI = cluster.get(0);
-				int distance = pixelDistance(ooi.getLocation(), clusterOOI.getLocation(), zoom);
+				User clusterOOI = cluster.get(0);
+				int distance = pixelDistance(user.getLocation(), clusterOOI.getLocation(), zoom);
 				// Check distance
 				if (minimalDistance > distance) {
 					// Distance is below minimum, cluster this object
-					cluster.add(ooi);
+					cluster.add(user);
 					isClustered = true;
 					break;
 				}
@@ -68,8 +68,8 @@ public class MapOverlayClusterer {
 			// Check if clustered
 			if (!isClustered) {
 				// Add the current object as a new cluster.
-				ArrayList<ObjectOfInterest> cluster = new ArrayList<ObjectOfInterest>();
-				cluster.add(ooi);
+				ObjectOfInterestList cluster = new ObjectOfInterestList();
+				cluster.add(user);
 				clusters.add(cluster);
 			}
 		}

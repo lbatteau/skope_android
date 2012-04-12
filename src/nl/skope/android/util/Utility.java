@@ -3,6 +3,7 @@ package nl.skope.android.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
@@ -11,9 +12,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 public class Utility {
-	public static Bitmap getBitmapFromURL(String src) {
+	public static Bitmap getBitmapFromURL(URL url) {
 	    try {
-	        URL url = new URL(src);
 	        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 	        connection.setDoInput(true);
 	        connection.connect();
@@ -25,7 +25,20 @@ public class Utility {
 	    } catch (IOException e) {
 	        e.printStackTrace();
 	        return null;
-	    }
+	    }		
+	}
+	
+	public static Bitmap getBitmapFromURL(String src) {
+		URL url;
+		try {
+			url = new URL(src);
+			return Utility.getBitmapFromURL(url);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;		
 	}
 	
 	public static boolean isDateSameDay(Date date1, Date date2) {
