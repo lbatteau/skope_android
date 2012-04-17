@@ -39,11 +39,14 @@ public class LoginActivity extends BaseActivity {
 	String mPassword;
 	
 	private SharedPreferences mPreferences;
+	private static ProgressDialog mDialog;
 	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
+		
+		mDialog = new ProgressDialog(this);
 		
 		mPreferences = getCache().getPreferences();
 
@@ -290,12 +293,11 @@ public class LoginActivity extends BaseActivity {
 	}
 	
 	private class LoginTask extends AsyncTask<String, Void, Integer> {
-		private ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
 		
 		// can use UI thread here
 		protected void onPreExecute() {
-			this.dialog.setMessage("Contacting server...");
-			this.dialog.show();
+			mDialog.setMessage("Contacting server...");
+			mDialog.show();
 		}
 		
 		protected Integer doInBackground(String... args) {
@@ -303,7 +305,7 @@ public class LoginActivity extends BaseActivity {
 	    }
 
 	    protected void onPostExecute(Integer httpResponseCode) {
-	    	this.dialog.dismiss();
+	    	mDialog.dismiss();
 	    	
 	    	if (handleLoginResultCode(httpResponseCode)) {
 		        // Redirect to list activity

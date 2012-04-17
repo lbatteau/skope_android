@@ -125,6 +125,7 @@ public class OOIChatActivity extends BaseActivity {
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		savedInstanceState.putParcelableArrayList("chat_messages", mChatMessages);
+		savedInstanceState.putParcelable("user", mUser);
 		super.onSaveInstanceState(savedInstanceState);
 	}
 	
@@ -132,6 +133,7 @@ public class OOIChatActivity extends BaseActivity {
 	public void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		mChatMessages = savedInstanceState.getParcelableArrayList("chat_messages");
+		mUser = savedInstanceState.getParcelable("user");
 	}
 	
 	@Override
@@ -525,6 +527,7 @@ public class OOIChatActivity extends BaseActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ViewHolder holder;
 			ChatMessage chat = getItem(position);
+			
 			boolean isFrom = chat.getUserFromId() == mUser.getId();
 			
 			if (convertView == null || ((ViewHolder)convertView.getTag()).isFrom != isFrom) {

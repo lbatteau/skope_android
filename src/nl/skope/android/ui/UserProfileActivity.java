@@ -79,6 +79,7 @@ public class UserProfileActivity extends BaseActivity {
 	public static final int ACTION_ADD_PHOTO_FILE = 4;
 	
 	private ImageView mProfilePictureView;
+	private Button mEditButton; 
 	private View mMainProfile;
     private LayoutInflater mInflater;
     private Uri mImageUri = Uri.EMPTY;
@@ -162,14 +163,9 @@ public class UserProfileActivity extends BaseActivity {
 		});
 		
 		// Edit button action
-		final Button editButton = (Button) findViewById(R.id.button_edit);
+		mEditButton = (Button) findViewById(R.id.button_edit);
 		
-		if (getCache().getUser().isFacebookConnect()) {
-			mProfilePictureView.setClickable(false);
-			editButton.setVisibility(View.GONE);
-		}		
-
-		editButton.setOnClickListener(new OnClickListener() {
+		mEditButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
@@ -270,7 +266,7 @@ public class UserProfileActivity extends BaseActivity {
 			        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
 			            public void onClick(DialogInterface dialog, int whichButton) {
 			            	updateProfileFromFacebook();
-			            	editButton.setVisibility(View.GONE);
+			            	mEditButton.setVisibility(View.GONE);
 			            	mProfilePictureView.setClickable(false);
 			            	mChangeProfilePictureToFB = true;
 			            }
@@ -309,7 +305,7 @@ public class UserProfileActivity extends BaseActivity {
 			    				  @Override
 			    				  public void onFacebookError(FacebookError e, Object state) {}
 			    				});
-			    			editButton.setVisibility(View.VISIBLE);
+			    			mEditButton.setVisibility(View.VISIBLE);
 			    			mProfilePictureView.setClickable(true);
 			    			mChangeProfilePictureToFB = false;
 			            }
@@ -454,6 +450,8 @@ public class UserProfileActivity extends BaseActivity {
 			mFacebook.extendAccessTokenIfNeeded(this, null);
 			
 			if (getCache().getUser().isFacebookConnect()) {
+				mProfilePictureView.setClickable(false);
+				mEditButton.setVisibility(View.GONE);
 				updateProfileFromFacebook();
 			}
 			
@@ -935,7 +933,7 @@ public class UserProfileActivity extends BaseActivity {
 		 */
 		private JSONObject findMostRecentWorkItem(JSONArray array) {
 			JSONObject mostRecentItem = null;
-			Date date, mostRecentDate = null;
+			Date mostRecentDate = null;
 			for (int i=0; i<array.length(); i++) {
 				// Get object at index
 				JSONObject item;
@@ -947,12 +945,15 @@ public class UserProfileActivity extends BaseActivity {
 				
 				// Extract date
 				SimpleDateFormat formatFrom = new SimpleDateFormat("yyyy-MM");
-				try {
-					date = formatFrom.parse(item.getString("start_date"));
-				} catch (ParseException e) {
-					continue;
-				} catch (JSONException e) {
-					continue;
+				Date date = null;
+				if (item.has("start_date")) {
+					try {
+						date = formatFrom.parse(item.getString("start_date"));
+					} catch (ParseException e) {
+						continue;
+					} catch (JSONException e) {
+						continue;
+					}
 				}
 				
 				// Compare
@@ -960,7 +961,7 @@ public class UserProfileActivity extends BaseActivity {
 					// First date found
 					mostRecentDate = date;
 					mostRecentItem = item;
-				} else {
+				} else if (date != null){
 					// Check if current date is after our most recent date 
 					if (date.after(mostRecentDate)) {
 						// After, replace most recent date
