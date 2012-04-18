@@ -17,7 +17,6 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Gallery;
@@ -60,11 +59,11 @@ public class OOIListMapActivity extends OOIMapActivity {
 
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {
-								
+				mOOIOverlay.hideBalloon();
 			}
 		});
 	    
-		LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
+	    LayerDrawable marker = (LayerDrawable) getResources().getDrawable(R.drawable.marker);
 		mOOIOverlay = new UserOverlay<UserOverlayItem>(marker, mMapView);
 		// Calculate offset (to place them on top of thumbnails) for overlay balloons
 		int offset = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
@@ -75,15 +74,17 @@ public class OOIListMapActivity extends OOIMapActivity {
 	    
 	}
 	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (sanityCheck()) {
+			animateMapToUser(getCache().getUser());
+		}
+	}
+	
 	@Override 
 	protected void onResume() {
 		super.onResume();
-		User user = getCache().getObjectOfInterestList().getSelectedUser();
-		if (user != null) {
-			mMapView.getController().animateTo(
-					new GeoPoint((int) (user.getLocation().getLatitude() * 1E6),
-	        					 (int) (user.getLocation().getLongitude() * 1E6)));		
-		}
 	}
 	
 	@Override
@@ -129,6 +130,12 @@ public class OOIListMapActivity extends OOIMapActivity {
 		});
         
         mMapView.invalidate();
+	}
+	
+	protected void animateMapToUser(User user) {
+		mMapView.getController().animateTo(
+				new GeoPoint((int) (user.getLocation().getLatitude() * 1E6),
+        					 (int) (user.getLocation().getLongitude() * 1E6)));		
 	}
 	
 	public void updateGallery(User user) {

@@ -79,7 +79,8 @@ public class UserProfileActivity extends BaseActivity {
 	public static final int ACTION_ADD_PHOTO_FILE = 4;
 	
 	private ImageView mProfilePictureView;
-	private Button mEditButton; 
+	private Button mEditButton;
+	private ToggleButton mFacebookConnect;
 	private View mMainProfile;
     private LayoutInflater mInflater;
     private Uri mImageUri = Uri.EMPTY;
@@ -251,13 +252,12 @@ public class UserProfileActivity extends BaseActivity {
 		/*
 		 * FACEBOOK
 		 */
-		final ToggleButton facebookConnect = (ToggleButton) findViewById(R.id.facebook_connect);
-		facebookConnect.setChecked(getCache().getUser().isFacebookConnect());
-		facebookConnect.setOnClickListener(new OnClickListener() {
+		mFacebookConnect = (ToggleButton) findViewById(R.id.facebook_connect);
+		mFacebookConnect.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
-				if (facebookConnect.isChecked()) {
+				if (mFacebookConnect.isChecked()) {
 					String title = getResources().getString(R.string.facebook_connect_confirm_title);
 					String message = getResources().getString(R.string.facebook_connect_confirm_message);
 					new AlertDialog.Builder(UserProfileActivity.this)
@@ -272,7 +272,7 @@ public class UserProfileActivity extends BaseActivity {
 			            }
 			        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			            public void onClick(DialogInterface dialog, int whichButton) {
-			                facebookConnect.setChecked(false);
+			                mFacebookConnect.setChecked(false);
 			            }
 			        }).show();
 				} else {
@@ -311,7 +311,7 @@ public class UserProfileActivity extends BaseActivity {
 			            }
 			        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			            public void onClick(DialogInterface dialog, int whichButton) {
-			                facebookConnect.setChecked(true);
+			                mFacebookConnect.setChecked(true);
 			            }
 			        }).show();
 				}
@@ -447,9 +447,10 @@ public class UserProfileActivity extends BaseActivity {
 		if (checkCacheSanity()) {
 			update();
 
-			mFacebook.extendAccessTokenIfNeeded(this, null);
-			
-			if (getCache().getUser().isFacebookConnect()) {
+			boolean isFacebookConnect = getCache().getUser().isFacebookConnect();
+			mFacebookConnect.setChecked(isFacebookConnect);
+			if (isFacebookConnect) {
+				mFacebook.extendAccessTokenIfNeeded(this, null);
 				mProfilePictureView.setClickable(false);
 				mEditButton.setVisibility(View.GONE);
 				updateProfileFromFacebook();

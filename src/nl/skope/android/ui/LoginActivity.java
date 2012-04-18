@@ -14,23 +14,23 @@ import org.apache.http.HttpStatus;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class LoginActivity extends BaseActivity {
@@ -276,7 +276,20 @@ public class LoginActivity extends BaseActivity {
 		        	Toast.makeText(LoginActivity.this, getResources().getText(R.string.error_server_error), Toast.LENGTH_SHORT).show();
 		        	break;
 		        case 430: // UPGRADE_REQUIRED
-		        	Toast.makeText(LoginActivity.this, "Please update Skope to the latest version", Toast.LENGTH_SHORT).show();
+		        	//Toast.makeText(LoginActivity.this, "Please update Skope to the latest version", Toast.LENGTH_SHORT).show();
+		        	new AlertDialog.Builder(LoginActivity.this)
+			        .setTitle(getResources().getString(R.string.login_update_title))
+			        .setMessage(getResources().getString(R.string.login_update_message))
+			        .setPositiveButton(getResources().getString(R.string.login_update_ok), new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			            	Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://sko.pe/downloads/android-latest.apk"));
+			            	startActivity(browserIntent);
+			            }
+			        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			            public void onClick(DialogInterface dialog, int whichButton) {
+			                // Do nothing.
+			            }
+			        }).show();
 		        	break;
 		        case 431: // EMAIL NOT VERIFIED
 		        	Toast.makeText(LoginActivity.this, "Please verify you email address", Toast.LENGTH_SHORT).show();
