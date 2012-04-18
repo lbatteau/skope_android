@@ -1,6 +1,5 @@
 package nl.skope.android.ui;
 
-import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
 
@@ -13,6 +12,7 @@ import android.util.Log;
 
 
 public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
+	private static final String TAG = LogoutTask.class.getSimpleName();
 	Activity mActivity;
 	
 	@Override
@@ -46,7 +46,7 @@ public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
     	// Check for server response
     	if (httpResponseCode == 0) {
     		// No server response
-    		Log.e(SkopeApplication.LOG_TAG, "Connection failed during signout");
+    		Log.e(TAG, "Connection failed during signout");
     	} else {
     		// Check for error
     		if (httpResponseCode != HttpStatus.SC_OK) {
@@ -54,13 +54,13 @@ public class LogoutTask extends AsyncTask<Object, Void, CustomHttpClient> {
 		        switch(client.getResponseCode()) {
 		        case HttpStatus.SC_UNAUTHORIZED:
 		        	// Login not successful, authorization required 
-		        	Log.e(SkopeApplication.LOG_TAG, "Authorization failed during signout");
+		        	Log.e(TAG, "Authorization failed during signout");
 		        	break;
 		        case HttpStatus.SC_REQUEST_TIMEOUT:
 		        case HttpStatus.SC_BAD_GATEWAY:
 		        case HttpStatus.SC_GATEWAY_TIMEOUT:
 		        	// Connection timeout
-		        	Log.e(SkopeApplication.LOG_TAG, "Connection failed during signout");
+		        	Log.e(TAG, "Connection failed during signout");
 		        }
     		}
     	}

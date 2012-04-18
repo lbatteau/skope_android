@@ -10,8 +10,8 @@ import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
-import nl.skope.android.maps.UserOverlay;
 import nl.skope.android.maps.SkopeMapView;
+import nl.skope.android.maps.UserOverlay;
 import nl.skope.android.util.Type;
 
 import org.apache.http.HttpStatus;
@@ -52,6 +52,8 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MyLocationOverlay;
 
 public class OOIDetailMapActivity extends OOIMapActivity {
+	private static final String TAG = OOIDetailMapActivity.class.getSimpleName();
+	
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
@@ -72,6 +74,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	ObjectOfInterestList mFavoritesList;
 	UserArrayAdapter mFavoritesListAdapter;
 	private boolean mStopUpdatingMap = false;
+	View mFavoriteIcon, mFavoriteButton;
 	
 	
     @Override
@@ -100,17 +103,11 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 	     *  Favorites button
 	     */
 	    
-	    final View favoriteButton = findViewById(R.id.favorite_button);
-	    final View favoriteIcon = findViewById(R.id.favorite_icon);
+	    mFavoriteButton = findViewById(R.id.favorite_button);
+	    mFavoriteIcon = findViewById(R.id.favorite_icon);
     	
-	    // Check for highlighting
-	    if (getCache().getUser().getFavorites().contains(mSelectedOOI.getId())) {
-	    	// Selected user is a favorite of the current user. Highlight.
-	    	favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
-	    } 
-	    
 	    // Favorites button event
-	    favoriteButton.setOnClickListener(new OnClickListener() {
+	    mFavoriteButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
@@ -134,7 +131,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 								public void onTaskDone(boolean isSuccess, String message) {
 									if (isSuccess) {
 										getCache().getUser().getFavorites().remove(new Integer(mSelectedOOI.getId()));
-										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_selector);
+										mFavoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_selector);
 									} else {
 										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
 									}
@@ -167,7 +164,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 								public void onTaskDone(boolean isSuccess, String message) {
 									if (isSuccess) {
 										getCache().getUser().getFavorites().add(mSelectedOOI.getId());
-										favoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
+										mFavoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
 									} else {
 										Toast.makeText(OOIDetailMapActivity.this, "Sorry, please try again", Toast.LENGTH_SHORT).show();
 									}
@@ -267,7 +264,7 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				case USERMENU_FAVORITES:
 					// Go to favorites
 					Intent favoritesIntent = new Intent(OOIDetailMapActivity.this, UserFavoritesActivity.class);
-					favoritesIntent.putExtra("USER_ID", mSelectedOOI.getId());
+					favoritesIntent.putExtra(SkopeApplication.BUNDLEKEY_USERID, mSelectedOOI.getId());
 			        startActivity(favoritesIntent);
 			        break;
 				}
@@ -440,19 +437,25 @@ public class OOIDetailMapActivity extends OOIMapActivity {
         	startActivity(i);
         	finish();	
 		}
-
+		
+	    // Check if selected user is a favorite of the current user
+	    if (getCache().getUser().getFavorites().contains(mSelectedOOI.getId())) {
+	    	// Favorite of the current user. Enable marker.
+	    	mFavoriteIcon.setBackgroundResource(R.drawable.detail_button_favorite_active_selector);
+	    } 
+	    
 		mSelectedOOI.createUserProfile(mUserProfile, mInflater);
 		
 		// Empty current photo list
 		Cache.USER_PHOTOS.clear();
 		// Read photos
 		Bundle photosBundle = new Bundle();
-        photosBundle.putInt("USER_ID", mSelectedOOI.getId());
+        photosBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mSelectedOOI.getId());
         getServiceQueue().postToService(Type.READ_USER_PHOTOS, photosBundle);
         
         // Read favorites
         Bundle favoritesBundle = new Bundle();
-        favoritesBundle.putInt("USER_ID", mSelectedOOI.getId());
+        favoritesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, mSelectedOOI.getId());
 		getServiceQueue().postToService(Type.READ_USER_FAVORITES, favoritesBundle);
 		
         initializeMapView();
@@ -626,14 +629,14 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to add favorite: " + client.getErrorMessage());
+				Log.e(TAG, "Failed to add favorite: " + client.getErrorMessage());
 				// Call back failed
 				mListener.onTaskDone(false, "Failed to add favorite");
 			}
@@ -693,14 +696,14 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to delete favorite: " + client.getErrorMessage());
+				Log.e(TAG, "Failed to delete favorite: " + client.getErrorMessage());
 				// Call back failed
 				if (mListener != null) {
 					mListener.onTaskDone(false, "Failed to delete favorite");
@@ -758,14 +761,14 @@ public class OOIDetailMapActivity extends OOIMapActivity {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to report user: " + client.getErrorMessage());
+				Log.e(TAG, "Failed to report user: " + client.getErrorMessage());
 				// Call back failed
 				mListener.onTaskDone(false, "Failed to report user");
 			}

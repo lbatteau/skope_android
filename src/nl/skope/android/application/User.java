@@ -43,7 +43,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 public class User implements Parcelable {
-	private static final String TAG = User.class.getName();	
+	private static final String TAG = User.class.getSimpleName();
 	public static final int PROFILE_PICTURE_WIDTH = 200;
 	public static final int PROFILE_PICTURE_HEIGHT = 200;
 
@@ -226,7 +226,7 @@ public class User implements Parcelable {
 				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 				this.setDateOfBirth(df.parse(jsonObject.getString("date_of_birth")));
 			} catch(ParseException e) {
-				Log.w(SkopeApplication.LOG_TAG, "Invalid date format: " + e);
+				Log.w(TAG, "Invalid date format: " + e);
 			}
 		}
 		
@@ -875,7 +875,7 @@ public class User implements Parcelable {
 			try {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
-				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				Log.e(TAG, error.toString());
 				mHasNoProfilePicture = true;
 				return null;
 			}
@@ -888,7 +888,7 @@ public class User implements Parcelable {
 				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
 				return BitmapFactory.decodeStream(input);
 			} catch (IOException e) {
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
 				mHasNoProfilePicture = true;
 			}
 			

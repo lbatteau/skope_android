@@ -37,6 +37,9 @@ import android.util.Log;
  * overwriting lower priority pending messages.
  */
 public class UiQueue {
+	
+	private static final String TAG = UiQueue.class.getSimpleName();
+	
     /** Handler of the currently subscribed Activity. **/
     private Handler mHandler;
     /**
@@ -80,7 +83,7 @@ public class UiQueue {
                     + "Handler cannot be NULL.");
         }
         if (handler != mHandler) {
-            Log.w(SkopeApplication.LOG_TAG, "ServiceQueue.unsubscribe() "
+            Log.w(TAG, "ServiceQueue.unsubscribe() "
                     + "Activity is trying to unsubscribe with a different "
                     + "handler");
         } else {
@@ -120,7 +123,7 @@ public class UiQueue {
 
         } else if (update) {
             /** Suppress update. **/
-            Log.w(SkopeApplication.LOG_TAG, "UiQueue.postToUi() Suppressing "
+            Log.w(TAG, "UiQueue.postToUi() Suppressing "
                     + "message[" + message.what + "], as update requests "
                     + "should not be queued");
 
@@ -133,7 +136,7 @@ public class UiQueue {
                 if (queue == null || message.what < queue.what) {
                     queue = message;
                 } else {
-                    Log.w(SkopeApplication.LOG_TAG, "UiQueue.postToUi() "
+                    Log.w(TAG, "UiQueue.postToUi() "
                             + "Ignoring message[" + message.what + "], as "
                             + "highter priority message[" + message.what
                             + "] is already pending");

@@ -25,6 +25,8 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 
 public class OOIListMapActivity extends OOIMapActivity {
+	private static final String TAG = OOIListMapActivity.class.getSimpleName();
+	
 	private ArrayList<ObjectOfInterestList> mClusters;
 	private Gallery mGallery;
 	private ProfilePictureAdapter mImageAdapter;
@@ -78,7 +80,11 @@ public class OOIListMapActivity extends OOIMapActivity {
 	protected void onStart() {
 		super.onStart();
 		if (sanityCheck()) {
-			animateMapToUser(getCache().getUser());
+			// Check if current location is known
+			if (getCache().getCurrentLocation() != null) {
+				// Location is known, center it on map
+				animateMapToLocation(getCache().getCurrentLocation());
+			}
 		}
 	}
 	
@@ -132,10 +138,11 @@ public class OOIListMapActivity extends OOIMapActivity {
         mMapView.invalidate();
 	}
 	
-	protected void animateMapToUser(User user) {
+	protected void animateMapToLocation(Location location) {
+		// Check if user location is set
 		mMapView.getController().animateTo(
-				new GeoPoint((int) (user.getLocation().getLatitude() * 1E6),
-        					 (int) (user.getLocation().getLongitude() * 1E6)));		
+					new GeoPoint((int) (location.getLatitude() * 1E6),
+	        					 (int) (location.getLongitude() * 1E6)));		
 	}
 	
 	public void updateGallery(User user) {

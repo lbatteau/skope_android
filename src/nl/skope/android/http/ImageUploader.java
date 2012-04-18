@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.SkopeApplication;
+import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
 
 import org.apache.http.HttpStatus;
@@ -16,6 +17,8 @@ import android.util.Log;
 
 
 public class ImageUploader {
+	private static final String TAG = ImageUploader.class.getSimpleName();
+	
 	Cache mCache;
 	Context mContext;
 	String mUsername, mPassword, mUserId;
@@ -79,14 +82,14 @@ public class ImageUploader {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to upload image: " + client.getErrorMessage());
+				Log.e(TAG, "Failed to upload image: " + client.getErrorMessage());
 				if (mOnUploadListener != null) {
 					mOnUploadListener.onUploadComplete(false, client.getErrorMessage());
 				}
@@ -140,7 +143,7 @@ public class ImageUploader {
 			return client.getResponse();
 		case 0:
 			// No server response
-			Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+			Log.e(TAG, "Connection failed");
 			break;
 		case HttpStatus.SC_UNAUTHORIZED:
 		case HttpStatus.SC_REQUEST_TIMEOUT:
@@ -148,7 +151,7 @@ public class ImageUploader {
 		case HttpStatus.SC_GATEWAY_TIMEOUT:
 		case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 		case HttpStatus.SC_BAD_REQUEST:
-			Log.e(SkopeApplication.LOG_TAG, "Failed to upload image: " + client.getErrorMessage());
+			Log.e(TAG, "Failed to upload image: " + client.getErrorMessage());
 		}
 		
 		return "";

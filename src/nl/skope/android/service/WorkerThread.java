@@ -34,6 +34,7 @@ import nl.skope.android.http.ImageUploader;
 import nl.skope.android.util.NotificationUtils;
 import nl.skope.android.util.Type;
 
+import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,7 +55,7 @@ import android.util.Log;
  */
 public class WorkerThread extends Thread {
     
-	private static final String TAG = WorkerThread.class.getName();
+	private static final String TAG = WorkerThread.class.getSimpleName();
 	
 	/**
      * [Optional] Execution state of the currently running long process, used by
@@ -323,7 +324,7 @@ public class WorkerThread extends Thread {
     	mUiQueue.postToUi(Type.READ_USER_FAVORITES_START, null, true);
     	
 		// Bundle present, extract mId
-		int userId = bundle.getInt("USER_ID");
+		int userId = bundle.getInt(SkopeApplication.BUNDLEKEY_USERID);
 
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");
@@ -372,8 +373,7 @@ public class WorkerThread extends Thread {
 					// Add to list
 					favoritesList.add(objectOfInterest);
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.e(TAG, e.toString());
 				}
 			}				
         }
@@ -387,7 +387,7 @@ public class WorkerThread extends Thread {
         		mCache.getUser().getFavorites().add(ooi.getId());
         	}
         }
-       
+        
         mUiQueue.postToUi(Type.READ_USER_FAVORITES_END, null, true);
 
         /*if (bundle != null) {
@@ -723,7 +723,7 @@ public class WorkerThread extends Thread {
     	}
 		
 		// Bundle present, extract mUsername
-		userId = bundle.getInt("USER_ID");
+		userId = bundle.getInt(SkopeApplication.BUNDLEKEY_USERID);
 
 		String username = mCache.getPreferences().getString(SkopeApplication.PREFS_USERNAME, "");
 		String password = mCache.getPreferences().getString(SkopeApplication.PREFS_PASSWORD, "");

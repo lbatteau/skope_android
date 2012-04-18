@@ -243,7 +243,7 @@ public class UserChatsActivity extends BaseActivity {
     					jsonArray = new JSONArray(response);
     				} catch (JSONException e) {
     					// Log exception
-    					Log.e(SkopeApplication.LOG_TAG, e.toString());
+    					Log.e(TAG, e.toString());
     				}
     				
     				if (isUnreadMessages) {
@@ -267,7 +267,7 @@ public class UserChatsActivity extends BaseActivity {
     						JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
     	    				lastChat = new ChatMessage(jsonObject);
     					} catch (JSONException e) {
-    						Log.e(SkopeApplication.LOG_TAG, e.toString());
+    						Log.e(TAG, e.toString());
     					}
     					
     					if (lastChat != null) {

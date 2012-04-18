@@ -8,6 +8,7 @@ import java.util.GregorianCalendar;
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
+import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
 
@@ -38,6 +39,7 @@ import android.widget.Toast;
 import nl.skope.android.R;
 
 public class UserFormActivity extends BaseActivity {
+	private static final String TAG = UserFormActivity.class.getSimpleName();
 
 	private static class UserForm {
 		public String firstName, lastName, dateOfBirth, homeTown, work_job_title,
@@ -113,7 +115,7 @@ public class UserFormActivity extends BaseActivity {
 					getCache().setUser(user);
 		        } catch (JSONException e) {
 					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Log.e(TAG, e.toString());
 					Toast.makeText(UserFormActivity.this, "Invalid content", Toast.LENGTH_SHORT).show();
 					return;
 				}
@@ -146,7 +148,7 @@ public class UserFormActivity extends BaseActivity {
 						jsonResponse = new JSONObject(client.getResponse());
 					} catch (JSONException e) {
 						// Log exception
-						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Log.e(TAG, e.toString());
 						Toast.makeText(UserFormActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -158,7 +160,7 @@ public class UserFormActivity extends BaseActivity {
 							String error = errorList.getString(0);
 							Toast.makeText(UserFormActivity.this, error, Toast.LENGTH_LONG).show();
 						} catch (JSONException e) {
-							Log.e(SkopeApplication.LOG_TAG, e.toString());
+							Log.e(TAG, e.toString());
 						}
 						break;
 					}

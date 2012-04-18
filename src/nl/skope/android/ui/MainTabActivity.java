@@ -31,7 +31,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 public class MainTabActivity extends TabActivity {
-	private static final String TAG = "MainTabActivity";
+	private static final String TAG = MainTabActivity.class.getSimpleName();
 	public final static int TAB_LIST = 0;
 	public final static int TAB_MAP = 1;
 	public final static int TAB_PROFILE = 2;
@@ -278,7 +278,7 @@ public class MainTabActivity extends TabActivity {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:

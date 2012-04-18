@@ -7,6 +7,7 @@ import java.util.Date;
 
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.SkopeApplication;
+import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient;
 import nl.skope.android.http.CustomHttpClient.RequestMethod;
 
@@ -40,6 +41,7 @@ import android.widget.Toast;
 import nl.skope.android.R;
 
 public class UserSignupActivity extends BaseActivity {
+	private static final String TAG = UserSignupActivity.class.getSimpleName();
 	private static String VALIDATION_MESSAGE_REQUIRED = "This field is required.";
 
 	/** ID for date picker dialog */
@@ -141,7 +143,7 @@ public class UserSignupActivity extends BaseActivity {
 						jsonResponse = new JSONObject(client.getResponse());
 					} catch (JSONException e) {
 						// Log exception
-						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Log.e(TAG, e.toString());
 						Toast.makeText(UserSignupActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -160,7 +162,7 @@ public class UserSignupActivity extends BaseActivity {
 								Toast.makeText(UserSignupActivity.this, error, Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
-							Log.e(SkopeApplication.LOG_TAG, e.toString());
+							Log.e(TAG, e.toString());
 						}
 						break;
 					}
@@ -232,7 +234,7 @@ public class UserSignupActivity extends BaseActivity {
 					df.applyPattern("yyyy-MM-dd");
 					mForm.dateOfBirth = df.format(dateOfBirth);
 				} catch (ParseException e) {
-					Log.e(SkopeApplication.LOG_TAG, "Couldn't parse "
+					Log.e(TAG, "Couldn't parse "
 							+ dateOfBirthUnformatted);
 				}
 

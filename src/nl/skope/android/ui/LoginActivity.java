@@ -34,6 +34,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class LoginActivity extends BaseActivity {
+	
+	private static final String TAG = LoginActivity.class.getSimpleName();
 
 	String mUsername;
 	String mPassword;
@@ -175,7 +177,7 @@ public class LoginActivity extends BaseActivity {
         	jsonResponse = new JSONObject(client.getResponse());
 		} catch (JSONException e) {
 			// Log exception
-			Log.e(SkopeApplication.LOG_TAG, e.toString());
+			Log.e(TAG, e.toString());
 			return 0;
 		}
 		
@@ -194,7 +196,7 @@ public class LoginActivity extends BaseActivity {
         	}
         } catch (JSONException e) {
 			// Log exception
-			Log.e(SkopeApplication.LOG_TAG, e.toString());
+			Log.e(TAG, e.toString());
 			return 0;
         }
         
@@ -213,7 +215,7 @@ public class LoginActivity extends BaseActivity {
 
     	// Retrieve favorites
         Bundle favoritesBundle = new Bundle();
-        favoritesBundle.putInt("USER_ID", user.getId());
+        favoritesBundle.putInt(SkopeApplication.BUNDLEKEY_USERID, user.getId());
 		getServiceQueue().postToService(Type.READ_USER_FAVORITES, favoritesBundle);
 		
 		// Set flag

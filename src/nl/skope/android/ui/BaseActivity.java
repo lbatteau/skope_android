@@ -17,7 +17,6 @@
 package nl.skope.android.ui;
 
 import java.security.InvalidParameterException;
-import java.util.Date;
 
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.ServiceQueue;
@@ -27,7 +26,6 @@ import nl.skope.android.util.Type;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,6 +41,8 @@ import android.util.Log;
  * onResume() and onPause() which can also be overridden in your Activity.
  */
 public class BaseActivity extends Activity {
+	
+	private static final String TAG = BaseActivity.class.getSimpleName();
 
 	/** Pointer to the ServiceQueue. **/
 	private ServiceQueue mServiceQueue;
@@ -135,7 +135,7 @@ public class BaseActivity extends Activity {
 			/** TEST: Try and catch an error condition **/
 			if (message.what == Type.SHOW_DIALOG.ordinal()
 					&& message.obj == null) {
-				Log.e(SkopeApplication.LOG_TAG, "BaseActivity.Handler."
+				Log.e(TAG, "BaseActivity.Handler."
 						+ "handleMessage() ERROR");
 			}
 			/** TEST: Try and catch an error condition **/

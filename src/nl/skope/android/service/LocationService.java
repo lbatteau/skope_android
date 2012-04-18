@@ -1,5 +1,6 @@
 package nl.skope.android.service;
 
+import nl.skope.android.R;
 import nl.skope.android.application.Cache;
 import nl.skope.android.application.ServiceQueue;
 import nl.skope.android.application.SkopeApplication;
@@ -21,13 +22,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
-
-import nl.skope.android.R;
 
 public class LocationService extends Service implements LocationListener  {
 	
-	private static final String TAG = LocationService.class.getName();
+	private static final String TAG = LocationService.class.getSimpleName();
 	
 	/** Constants for time and distance */
 	private static final int ONE_MINUTE = 60000;
@@ -51,8 +51,8 @@ public class LocationService extends Service implements LocationListener  {
 	
 	private NotificationManager m_notificationManager;
 	
-    private LocationManager m_locationManager;
-    private Location m_currentLocation;
+    private LocationManager mLocationManager;
+    private Location mCurrentLocation;
     
     /** Performs all long running tasks in a separate thread. **/
     private WorkerThread mWorkerThread;
@@ -99,7 +99,7 @@ public class LocationService extends Service implements LocationListener  {
 	@Override
 	public void onCreate() {
         SkopeApplication skopeApplication = (SkopeApplication) getApplication();
-        Log.i(SkopeApplication.LOG_TAG, "LocationService.onCreate() " + "Skope["
+        Log.i(TAG, "LocationService.onCreate() " + "Skope["
                 + skopeApplication + "]");
         mCache = skopeApplication.getCache();
         mUiQueue = skopeApplication.getUiQueue();
@@ -121,30 +121,25 @@ public class LocationService extends Service implements LocationListener  {
         }
 
         // Get the mLocation manager
-		m_locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		
 		// Get the notification manager
 		m_notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		// Determine mLocation. Start with fine.
-		m_currentLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		if (m_currentLocation == null) {
+		mCurrentLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		if (mCurrentLocation == null) {
 			// Fall back to coarse mLocation.
-			m_currentLocation = m_locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			mCurrentLocation = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		}
 		
 		// Store current mLocation in cache
-		mCache.setCurrentLocation(m_currentLocation);
+		mCache.setCurrentLocation(mCurrentLocation);
 
 		// Register service as mLocation event listener
-		try {
-			m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-			if (mPreferences.getBoolean(SkopeApplication.PREFS_GPSENABLED, false)) {
-				m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
-			}
-		} catch(IllegalArgumentException e) {
-			// provider is disabled
-			// TODO: notify user
+		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+		if (mPreferences.getBoolean(SkopeApplication.PREFS_GPSENABLED, false)) {
+			mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
 		}
 		
 		showNotification();
@@ -162,13 +157,13 @@ public class LocationService extends Service implements LocationListener  {
     	Type type = Type.getType(message.what);
     	switch(type) {
     	case ENABLE_GPS:
-    		m_locationManager.removeUpdates(this);
-    		m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
-    		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+    		mLocationManager.removeUpdates(this);
+    		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, ONE_MINUTE, 0, this);
+    		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
     		return;
     	case DISABLE_GPS:
-    		m_locationManager.removeUpdates(this);
-    		m_locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+    		mLocationManager.removeUpdates(this);
+    		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
     		return;
     	}
     	
@@ -198,17 +193,17 @@ public class LocationService extends Service implements LocationListener  {
         // Cancel the persistent notification.
     	m_notificationManager.cancel(NOTIFICATION);
     	
-    	m_locationManager.removeUpdates(this);
+    	mLocationManager.removeUpdates(this);
 
-    	Log.i(SkopeApplication.LOG_TAG, "LocationService.MyBinder.onDestroy()");
+    	Log.i(TAG, "LocationService.MyBinder.onDestroy()");
         mServiceQueue.registerServiceHandler(null);
         super.onDestroy();
     }
 
 	@Override
 	public void onLocationChanged(Location location) {
-		if (isBetterLocation(location, m_currentLocation)) {
-			Log.d(SkopeApplication.LOG_TAG, "Location changed");
+		if (isBetterLocation(location, mCurrentLocation)) {
+			Log.d(TAG, "Location changed");
 			mCache.setCurrentLocation(location);
 			Bundle bundle = new Bundle();
             bundle.putDouble(LATITUDE, location.getLatitude());
@@ -228,13 +223,27 @@ public class LocationService extends Service implements LocationListener  {
 
 	@Override
 	public void onProviderEnabled(String provider) {
-		Log.i(TAG, "Enabled provider" + provider);
+		Log.i(TAG, "Enabled provider " + provider);
+		checkProvidersEnabled();
 
 	}
 
 	@Override
 	public void onProviderDisabled(String provider) {
-		Log.i(TAG, "Disabled provider" + provider);
+		Log.i(TAG, "Disabled provider " + provider);
+		checkProvidersEnabled();
+	}
+	
+	private boolean checkProvidersEnabled() {
+		// Determine if their are any location service providers available
+		String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+		boolean isProviderAvailable = provider != null && !provider.equals("");
+		mCache.setLocationProviderAvailable(isProviderAvailable);
+		if (!isProviderAvailable) {
+			mCache.setCurrentLocation(null);
+		}
+		
+		return isProviderAvailable;
 	}
 
     /**
@@ -317,5 +326,5 @@ public class LocationService extends Service implements LocationListener  {
 	    }
 	    return provider1.equals(provider2);
 	}
-	
+
 }

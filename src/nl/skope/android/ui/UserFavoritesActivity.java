@@ -11,6 +11,7 @@ package nl.skope.android.ui;
 
 import java.util.List;
 
+import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.User;
 import nl.skope.android.application.ObjectOfInterestList;
 import nl.skope.android.application.User.OnImageLoadListener;
@@ -228,11 +229,11 @@ public class UserFavoritesActivity extends BaseActivity {
 			int userId; 
 			Bundle bundle = new Bundle();
 			if (getIntent() != null && getIntent().getExtras() != null) {
-				userId = getIntent().getExtras().getInt("USER_ID");
+				userId = getIntent().getExtras().getInt(SkopeApplication.BUNDLEKEY_USERID);
 			} else {
 				userId = getCache().getUser().getId();
 			}
-			bundle.putInt("USER_ID", userId);
+			bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, userId);
 			getServiceQueue().postToService(Type.READ_USER_FAVORITES, bundle);
 		}
 	}

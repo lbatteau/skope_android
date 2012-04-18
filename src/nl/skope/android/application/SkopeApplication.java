@@ -29,9 +29,6 @@ import android.app.Application;
  * handling framework (ServiceQueue + UiQueue).
  */
 public class SkopeApplication extends Application {
-    /** [Optional] Tag for all application logs. **/
-    public static final String LOG_TAG = "Skope";
-    
     /** Application wide constants **/
 
     // Logging

@@ -24,7 +24,7 @@ import android.util.Log;
 
 
 public class UserPhoto {
-	private final static String LOG_TAG = "UserPhoto";
+	private static final String TAG = UserPhoto.class.getSimpleName();
 	public static final int USER_PHOTO_MAX_PIXELS = 640000;
 
 	
@@ -211,7 +211,7 @@ public class UserPhoto {
 			try {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
-				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				Log.e(TAG, error.toString());
 				return null;
 			}
 			
@@ -223,7 +223,7 @@ public class UserPhoto {
 				FlushedInputStream input = new FlushedInputStream(connection.getInputStream());
 				return BitmapFactory.decodeStream(input);
 			} catch (IOException e) {
-				Log.e(SkopeApplication.LOG_TAG, e.toString());
+				Log.e(TAG, e.toString());
 			}
 			
 			return null;
@@ -262,7 +262,7 @@ public class UserPhoto {
 			try {
 				url = new URL(params[0]);
 			} catch (MalformedURLException error) {
-				Log.e(SkopeApplication.LOG_TAG, error.toString());
+				Log.e(TAG, error.toString());
 				return null;
 			}
 			
@@ -308,7 +308,7 @@ public class UserPhoto {
 				}
 			} catch (IOException e1) {
 				// Error setting up URL connection
-				Log.e(LOG_TAG, e1.toString());
+				Log.e(TAG, e1.toString());
 			}
 			
 			return null;

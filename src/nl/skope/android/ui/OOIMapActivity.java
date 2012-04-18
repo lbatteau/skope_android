@@ -10,10 +10,13 @@ import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UiQueue;
 import nl.skope.android.application.User;
 import nl.skope.android.application.User.OnImageLoadListener;
+import nl.skope.android.maps.SkopeMapView;
 import nl.skope.android.maps.UserClusterOverlayItem;
 import nl.skope.android.maps.UserOverlayItem;
-import nl.skope.android.maps.SkopeMapView;
+import nl.skope.android.service.LocationService;
 import nl.skope.android.util.Type;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -26,9 +29,9 @@ import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.TypedValue;
-import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -36,6 +39,8 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 
 public abstract class OOIMapActivity extends MapActivity {
+	
+	private static final String TAG = OOIMapActivity.class.getSimpleName();
 
 	/** Pointer to the ServiceQueue. **/
 	protected ServiceQueue mServiceQueue;
@@ -64,7 +69,7 @@ public abstract class OOIMapActivity extends MapActivity {
 				/** TEST: Try and catch an error condition **/
 				if (message.what == Type.SHOW_DIALOG.ordinal()
 						&& message.obj == null) {
-					Log.e(SkopeApplication.LOG_TAG, "BaseActivity.Handler."
+					Log.e(TAG, "BaseActivity.Handler."
 							+ "handleMessage() ERROR");
 				}
 				/** TEST: Try and catch an error condition **/
@@ -89,9 +94,7 @@ public abstract class OOIMapActivity extends MapActivity {
 	    
 	    setContentView();
 
-	    getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
-	    
-	    initializeMapView();		
+	    initializeMapView();
 	}
 	
 	protected void setContentView() {
@@ -213,6 +216,7 @@ public abstract class OOIMapActivity extends MapActivity {
 		mUiQueue.subscribe(mHandler);
 		super.onResume();
 		mMyLocationOverlay.enableMyLocation();
+		getServiceQueue().postToService(Type.FIND_OBJECTS_OF_INTEREST, null);
 	}
 
 	/***
@@ -231,6 +235,17 @@ public abstract class OOIMapActivity extends MapActivity {
 		mMapView.setBuiltInZoomControls(true);
 	}
 
+	/**
+	 * Checks if vital information concerning the currently 
+	 * logged in user is present in the cache:
+	 * <ul>
+	 * <li>Whether the user object is present at all (cache could have been 
+	 * recreated after activity restart)</li>
+	 * <li>Whether the user is signed in</li>
+	 * </ul>
+	 * @return true if user information is present. If not, false, and an 
+	 * intent for LoginActivity is started. The current activity is finished.
+	 */
 	protected boolean sanityCheck() {
 		// Check user signed out
 		if (mCache.isUserSignedOut()) {
@@ -293,7 +308,28 @@ public abstract class OOIMapActivity extends MapActivity {
 			populateItemizedOverlays();
 			break;
         case UNDETERMINED_LOCATION:
-        	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
+        	String message;
+        	if (getCache().isLocationProviderAvailable()) {
+        		message = getResources().getString(R.string.no_location_message);
+        	} else {
+        		message = getResources().getString(R.string.no_location_message_disabled);
+        	}
+        	
+        	new AlertDialog.Builder(this)
+	        .setTitle(getResources().getString(R.string.no_location_title))
+	        .setMessage(message)
+	        .setPositiveButton(getResources().getString(R.string.no_location_ok), new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int whichButton) {
+	            	// Redirect the user to the system mLocation settings menu
+            		Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            		startActivity(intent);
+            		dialog.dismiss();
+	            }
+	        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int whichButton) {
+	                // Do nothing.
+	            }
+	        }).show();
         	break;
         	
 	

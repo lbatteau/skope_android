@@ -9,10 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.skope.android.application.Cache;
-import nl.skope.android.application.SkopeApplication;
 import nl.skope.android.application.UserPhoto;
 import nl.skope.android.http.CustomHttpClient.FlushedInputStream;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -20,6 +18,8 @@ import android.widget.ImageView;
 
 
 public class ThumbnailManager {
+	
+	private static final String TAG = ThumbnailManager.class.getSimpleName();
 	
 	private Cache mCache;
     private ThumbnailWorker mWorker;
@@ -91,7 +91,7 @@ public class ThumbnailManager {
     			try {
     				url = new URL(userPhoto.getThumbnailURL());
     			} catch (MalformedURLException error) {
-    				Log.e(SkopeApplication.LOG_TAG, error.toString());
+    				Log.e(TAG, error.toString());
     				return;
     			}
     			
@@ -113,7 +113,7 @@ public class ThumbnailManager {
     			        };
     				});
     			} catch (IOException e) {
-    				Log.e(SkopeApplication.LOG_TAG, e.toString());
+    				Log.e(TAG, e.toString());
     			}
             }
             

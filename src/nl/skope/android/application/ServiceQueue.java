@@ -22,7 +22,6 @@ import java.util.List;
 
 import nl.skope.android.service.LocationService;
 import nl.skope.android.util.Type;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -41,6 +40,8 @@ import android.util.Log;
  * message.
  */
 public class ServiceQueue {
+	private static final String TAG = ServiceQueue.class.getSimpleName();
+	
     /** Cached application context. **/
     private final Context mContext;
     /** Handler of the service to which we can send messages. **/
@@ -105,7 +106,7 @@ public class ServiceQueue {
      * any waiting Service messages.
      */
     private void startService() {
-        Log.i(SkopeApplication.LOG_TAG, "ServiceQueue.startService()");
+        Log.i(TAG, "ServiceQueue.startService()");
         doBindService();
     }
 

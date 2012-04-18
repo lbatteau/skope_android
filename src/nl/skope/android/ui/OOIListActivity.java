@@ -214,7 +214,32 @@ public class OOIListActivity extends BaseActivity {
             	break;
             	
             case UNDETERMINED_LOCATION:
-            	Toast.makeText(this, "Location currently unavailable", Toast.LENGTH_LONG).show();
+            	// Do update list, to make sure last known time is up to date
+            	updateListFromCache();
+            	
+            	// Display alert
+            	String message;
+            	if (getCache().isLocationProviderAvailable()) {
+            		message = getResources().getString(R.string.no_location_message);
+            	} else {
+            		message = getResources().getString(R.string.no_location_message_disabled);
+            	}
+            	
+            	new AlertDialog.Builder(this)
+    	        .setTitle(getResources().getString(R.string.no_location_title))
+    	        .setMessage(message)
+    	        .setPositiveButton(getResources().getString(R.string.no_location_ok), new DialogInterface.OnClickListener() {
+    	            public void onClick(DialogInterface dialog, int whichButton) {
+    	            	// Redirect the user to the system mLocation settings menu
+                		Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                		startActivity(intent);
+                		dialog.dismiss();
+    	            }
+    	        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+    	            public void onClick(DialogInterface dialog, int whichButton) {
+    	                // Do nothing.
+    	            }
+    	        }).show();
             	break;
             	
             case LOCATION_CHANGED:

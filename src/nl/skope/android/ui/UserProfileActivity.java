@@ -70,7 +70,7 @@ import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
 
 public class UserProfileActivity extends BaseActivity {
-	private static final String TAG = UserProfileActivity.class.getName();
+	private static final String TAG = UserProfileActivity.class.getSimpleName();
 	
 	public static final int ACTION_PICK_PROFILE_PICTURE_CAMERA = 0;
 	public static final int ACTION_PICK_PROFILE_PICTURE_FILE = 1;
@@ -360,9 +360,9 @@ public class UserProfileActivity extends BaseActivity {
 				image = Bitmap.createScaledBitmap(bitmap, User.PROFILE_PICTURE_HEIGHT, (int)height, true);
 				storeProfilePicture(image);
 			} catch (FileNotFoundException fnfe) {
-				Log.e(SkopeApplication.LOG_TAG, fnfe.toString());
+				Log.e(TAG, fnfe.toString());
 			} catch (IOException ioe) {
-				Log.e(SkopeApplication.LOG_TAG, ioe.toString());
+				Log.e(TAG, ioe.toString());
 			}
 			}
 		}
@@ -526,7 +526,7 @@ public class UserProfileActivity extends BaseActivity {
 		Cache.USER_PHOTOS.clear();
 		// Request new read
 		Bundle bundle = new Bundle();
-        bundle.putInt("USER_ID", user.getId());
+        bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, user.getId());
         getServiceQueue().postToService(Type.READ_USER_PHOTOS, bundle);
 	}
 
@@ -708,7 +708,7 @@ public class UserProfileActivity extends BaseActivity {
 					getCache().setUser(user);
 		        } catch (JSONException e) {
 					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Log.e(TAG, e.toString());
 					Toast.makeText(UserProfileActivity.this, "Invalid content", Toast.LENGTH_SHORT).show();
 					return;
 				}
@@ -747,7 +747,7 @@ public class UserProfileActivity extends BaseActivity {
 						jsonResponse = new JSONObject(client.getResponse());
 					} catch (JSONException e) {
 						// Log exception
-						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Log.e(TAG, e.toString());
 						Toast.makeText(UserProfileActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -759,7 +759,7 @@ public class UserProfileActivity extends BaseActivity {
 							String error = errorList.getString(0);
 							Toast.makeText(UserProfileActivity.this, error, Toast.LENGTH_LONG).show();
 						} catch (JSONException e) {
-							Log.e(SkopeApplication.LOG_TAG, e.toString());
+							Log.e(TAG, e.toString());
 						}
 						break;
 					}
@@ -1051,11 +1051,13 @@ public class UserProfileActivity extends BaseActivity {
 		        		!fbProfilePictureURL.equals(getCache().getUser().getFBProfilePictureURL());
 
 		        	user = new User(jsonResponse);
+		        	// Transfer existing favorites
+		        	user.setFavorites(getCache().getUser().getFavorites());
 		        	user.setCache(getCache());
 					getCache().setUser(user);
 		        } catch (JSONException e) {
 					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Log.e(TAG, e.toString());
 					Toast.makeText(UserProfileActivity.this, "Invalid content", Toast.LENGTH_SHORT).show();
 					return;
 				}
@@ -1098,7 +1100,7 @@ public class UserProfileActivity extends BaseActivity {
 						jsonResponse = new JSONObject(client.getResponse());
 					} catch (JSONException e) {
 						// Log exception
-						Log.e(SkopeApplication.LOG_TAG, e.toString());
+						Log.e(TAG, e.toString());
 						Toast.makeText(UserProfileActivity.this, "Invalid form", Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -1110,7 +1112,7 @@ public class UserProfileActivity extends BaseActivity {
 							String error = errorList.getString(0);
 							Toast.makeText(UserProfileActivity.this, error, Toast.LENGTH_LONG).show();
 						} catch (JSONException e) {
-							Log.e(SkopeApplication.LOG_TAG, e.toString());
+							Log.e(TAG, e.toString());
 						}
 						break;
 					}

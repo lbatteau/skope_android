@@ -47,7 +47,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class OOIChatActivity extends BaseActivity {
-	private static final String TAG = "OOIChatActivity";
+	private static final String TAG = OOIChatActivity.class.getSimpleName();
 	private static final boolean D = true;
 
 	public static final int MESSAGE_READ = 1;
@@ -346,7 +346,7 @@ public class OOIChatActivity extends BaseActivity {
 					jsonResponse = new JSONArray(response);
 				} catch (JSONException e) {
 					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Log.e(TAG, e.toString());
 				}
 
 				// Copy the JSON list of messages to our adapter
@@ -467,7 +467,7 @@ public class OOIChatActivity extends BaseActivity {
 		        	chat = new ChatMessage(jsonObject);
 		        } catch (JSONException e) {
 					// Log exception
-					Log.e(SkopeApplication.LOG_TAG, e.toString());
+					Log.e(TAG, e.toString());
 				}
 		        
 		        if (chat != null) {
@@ -484,14 +484,14 @@ public class OOIChatActivity extends BaseActivity {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to post chat: "
+				Log.e(TAG, "Failed to post chat: "
 						+ client.getErrorMessage());
 				// Call back failed
 				if (mListener != null) {
@@ -514,6 +514,7 @@ public class OOIChatActivity extends BaseActivity {
 		public TextView dateGroup;
 		public TextView timestamp;
 		public boolean isFrom = false;
+		public boolean isGroup = false;
 	}
     
 	private class ChatArrayAdapter extends ArrayAdapter<ChatMessage> {
@@ -530,7 +531,11 @@ public class OOIChatActivity extends BaseActivity {
 			
 			boolean isFrom = chat.getUserFromId() == mUser.getId();
 			
-			if (convertView == null || ((ViewHolder)convertView.getTag()).isFrom != isFrom) {
+			if (convertView != null
+				&& !((ViewHolder)convertView.getTag()).isGroup
+				&& ((ViewHolder)convertView.getTag()).isFrom == isFrom) {
+				holder = (ViewHolder) convertView.getTag();
+			} else {
 				holder = new ViewHolder();
                 if (isFrom) {
 					// From chat
@@ -547,14 +552,13 @@ public class OOIChatActivity extends BaseActivity {
                 holder.dateGroup = (TextView) convertView.findViewById(R.id.date_group);
                 holder.timestamp = (TextView) convertView.findViewById(R.id.timestamp);
                 convertView.setTag(holder);
-            } else {
-            	holder = (ViewHolder) convertView.getTag();
             }
 			
 			if (chat.isGroupHeader()) {
 				holder.header.setVisibility(View.VISIBLE);
 				holder.chatMessage.setVisibility(View.GONE);
-				holder.dateGroup.setText(mDateFormat.format(chat.getTimestamp()));			
+				holder.dateGroup.setText(mDateFormat.format(chat.getTimestamp()));
+				holder.isGroup = true;
 			} else {
 				holder.message.setText(chat.getMessage());
 				holder.timestamp.setText(chat.createTimeLabel());				

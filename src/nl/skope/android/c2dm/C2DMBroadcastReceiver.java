@@ -27,6 +27,8 @@ import android.os.Vibrator;
 import android.util.Log;
 
 public class C2DMBroadcastReceiver extends BroadcastReceiver {
+	private static final String TAG = C2DMBroadcastReceiver.class.getSimpleName();
+	
 	public final static String C2DM_MESSAGE_ID = "id";
 	public final static String C2DM_MESSAGE_SENDER = "sender";
 	public final static String C2DM_MESSAGE_THUMBNAIL = "thumbnail";
@@ -62,9 +64,9 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 			InputStream inputStream = assetManager.open("skope.properties");
 			properties = new Properties();
 			properties.load(inputStream);
-			Log.d(SkopeApplication.LOG_TAG, "properties: " + properties);
+			Log.d(TAG, "properties: " + properties);
 		} catch (IOException e) {
-			Log.e(SkopeApplication.LOG_TAG,
+			Log.e(TAG,
 					"Failed to open skope property file");
 			e.printStackTrace();
 			return;
@@ -189,14 +191,14 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to register device: "
+				Log.e(TAG, "Failed to register device: "
 						+ client.getErrorMessage());
 				// Call back failed
 				if (mListener != null) {
@@ -254,14 +256,14 @@ public class C2DMBroadcastReceiver extends BroadcastReceiver {
 				break;
 			case 0:
 				// No server response
-				Log.e(SkopeApplication.LOG_TAG, "Connection failed");
+				Log.e(TAG, "Connection failed");
 			case HttpStatus.SC_UNAUTHORIZED:
 			case HttpStatus.SC_REQUEST_TIMEOUT:
 			case HttpStatus.SC_BAD_GATEWAY:
 			case HttpStatus.SC_GATEWAY_TIMEOUT:
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 			case HttpStatus.SC_BAD_REQUEST:
-				Log.e(SkopeApplication.LOG_TAG, "Failed to delete registration: "
+				Log.e(TAG, "Failed to delete registration: "
 						+ client.getErrorMessage());
 				// Call back failed
 				if (mListener != null) {

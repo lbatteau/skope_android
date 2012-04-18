@@ -37,6 +37,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import nl.skope.android.R;
+import nl.skope.android.ui.OOIListMapActivity;
 
 
 /***
@@ -44,6 +45,8 @@ import nl.skope.android.R;
  * file), or in memory for the duration of the Application class lifecycle.
  */
 public class Cache {
+	private static final String TAG = Cache.class.getSimpleName();
+	
     /** Preferences file name. **/
     private static final String PREFS_FILE = "CACHE";
 
@@ -82,6 +85,7 @@ public class Cache {
     
     /** The current mLocation */
     private Location mCurrentLocation;
+    private boolean mIsLocationProviderAvailable;
     
     /** The current selected object of interest */
     private User mSelectedUser;
@@ -154,9 +158,9 @@ public class Cache {
             InputStream inputStream = assetManager.open("skope.properties");
             mProperties = new Properties();
             mProperties.load(inputStream);
-            Log.i(SkopeApplication.LOG_TAG, "properties: " + mProperties);            
+            Log.i(TAG, "properties: " + mProperties);            
         } catch (IOException e) {
-            Log.e(SkopeApplication.LOG_TAG, "Failed to open skope property file");
+            Log.e(TAG, "Failed to open skope property file");
             e.printStackTrace();
         }
         
@@ -422,4 +426,12 @@ public class Cache {
 		this.mUserSignedOut = userSignedOut;
 	}
 
+	public boolean isLocationProviderAvailable() {
+		return mIsLocationProviderAvailable;
+	}
+
+	public void setLocationProviderAvailable(boolean isLocationProviderAvailable) {
+		this.mIsLocationProviderAvailable = isLocationProviderAvailable;
+	}
+	
 }

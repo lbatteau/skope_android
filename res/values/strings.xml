@@ -22,12 +22,14 @@
     <string name="login_update_message">There is an update available for Skope. Please download and install the latest version.</string>
     <string name="login_update_ok">Update</string>
     <string name="error_server_error">Sorry, there was a server error. We\&apos;re on it.</string>
-    <string name="error_connection_failed">Please make sure you are connected to the internet</string>
+    <string name="error_connection_failed">Please make sure you are connected to the internet.</string>
     <string name="error_username_password">Invalid username or password</string>
     <string name="error_image_upload_not_found">Sorry, image upload failed</string>
     <string name="error_profile_picture_result">There was a problem saving your new profile picture.</string>
-    <string name="no_location_message">It seems the application cannot determine your location. Quit the application?</string>
-    <string name="no_location_title">Can\&apos;t locate&#8230;</string>
+    <string name="no_location_message">It seems the application cannot determine your location. It might take a while to receive the most recent location, please try again later.</string>
+    <string name="no_location_message_disabled">It seems the location services on this device are disabled. Skope needs your location to find objects of interest in your area. Please enable one of the location services in your device settings.</string>
+    <string name="no_location_title">No location</string>
+    <string name="no_location_ok">Open settings</string>
     <string name="no_result_message">There seems to be a problem with connecting to the server.</string>
     <string name="no_result_title">No server response&#8230;</string>
     <string name="menu_user">User</string>

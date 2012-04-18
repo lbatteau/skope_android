@@ -146,7 +146,7 @@ public class UserPhotoActivity extends BaseActivity {
 		Cache.USER_PHOTOS.clear();
 		// Request new read
 		Bundle bundle = new Bundle();
-        bundle.putInt("USER_ID", getCache().getUser().getId());
+        bundle.putInt(SkopeApplication.BUNDLEKEY_USERID, getCache().getUser().getId());
         getServiceQueue().postToService(Type.READ_USER_PHOTOS, bundle);
 	}
 
